@@ -39,7 +39,7 @@ export default async function handler(req, res) {
   res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=86400');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const { file, season = '2025', position, season_type = 'REG' } = req.query;
+  const { file, season = '2024', position, season_type = 'REG' } = req.query;
 
   if (!file || !FILES[file]) {
     return res.status(400).json({
@@ -62,10 +62,8 @@ export default async function handler(req, res) {
     let rows = parseCSV(await response.text());
 
     if (file === 'player_stats') {
-      rows = rows.filter(r =>
-        r.season === String(season) &&
-        r.season_type === season_type
-      );
+      const seasons = [...new Set(rows.map(r => r.season))].sort();
+      return res.status(200).json({ debug_seasons: seasons, total_rows: rows.length });
     }
 
     if (position) {
