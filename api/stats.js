@@ -2,7 +2,7 @@
 const BASE = 'https://github.com/nflverse/nflverse-data/releases/download';
 
 const FILES = {
-  player_stats:  (season) => `${BASE}/player_stats/player_stats_${season}.csv`,
+  player_stats:  (season) => `${BASE}/stats_player/player_stats_${season}.csv`,
   snap_counts:   (season) => `${BASE}/snap_counts/snap_counts_${season}.csv`,
   injuries:      (season) => `${BASE}/injuries/injuries_${season}.csv`,
   depth_charts:  (season) => `${BASE}/depth_charts/depth_charts_${season}.csv`,
