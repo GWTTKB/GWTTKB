@@ -61,13 +61,10 @@ export default async function handler(req, res) {
 
     let rows = parseCSV(await response.text());
 
-    // Filter by season for files that contain all seasons
     if (file === 'player_stats') {
-      rows = rows.filter(r => r.season === String(season));
-      rows = rows.filter(r => r.season_type === 'REG');
+      rows = rows.filter(r => r.season === String(season) && r.season_type === 'REG');
     }
 
-    // Filter by position if provided
     if (position) {
       const positions = position.toUpperCase().split(',');
       rows = rows.filter(r => positions.includes((r.position || r.pos || '').toUpperCase()));
