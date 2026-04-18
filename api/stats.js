@@ -1,7 +1,11 @@
 const BASE = 'https://github.com/nflverse/nflverse-data/releases/download';
 
 const FILES = {
-  player_stats:  () => `${BASE}/player_stats/player_stats.csv`,
+  // NEW stats_player release - has 2025 data
+  player_stats_week:   (season) => `${BASE}/stats_player/stats_player_week_${season}.csv`,
+  player_stats_reg:    (season) => `${BASE}/stats_player/stats_player_reg_${season}.csv`,
+  player_stats_post:   (season) => `${BASE}/stats_player/stats_player_post_${season}.csv`,
+  // other files
   snap_counts:   (season) => `${BASE}/snap_counts/snap_counts_${season}.csv`,
   injuries:      (season) => `${BASE}/injuries/injuries_${season}.csv`,
   depth_charts:  (season) => `${BASE}/depth_charts/depth_charts_${season}.csv`,
@@ -39,7 +43,7 @@ export default async function handler(req, res) {
   res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=86400');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const { file, season = '2024', position, season_type = 'REG' } = req.query;
+  const { file, season = '2025', position } = req.query;
 
   if (!file || !FILES[file]) {
     return res.status(400).json({
@@ -61,11 +65,6 @@ export default async function handler(req, res) {
 
     let rows = parseCSV(await response.text());
 
-    if (file === 'player_stats') {
-      const seasons = [...new Set(rows.map(r => r.season))].sort();
-      return res.status(200).json({ debug_seasons: seasons, total_rows: rows.length });
-    }
-
     if (position) {
       const positions = position.toUpperCase().split(',');
       rows = rows.filter(r =>
@@ -76,7 +75,6 @@ export default async function handler(req, res) {
     return res.status(200).json({
       file,
       season,
-      season_type,
       count: rows.length,
       rows
     });
