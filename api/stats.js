@@ -1,136 +1,83 @@
-const https = require('https');
-const http = require('http');
+const BASE = 'https://github.com/nflverse/nflverse-data/releases/download';
+
+const FILES = {
+  player_stats_week:   (season) => `${BASE}/stats_player/stats_player_week_${season}.csv`,
+  player_stats_reg:    (season) => `${BASE}/stats_player/stats_player_reg_${season}.csv`,
+  player_stats_post:   (season) => `${BASE}/stats_player/stats_player_post_${season}.csv`,
+  snap_counts:         (season) => `${BASE}/snap_counts/snap_counts_${season}.csv`,
+  injuries:            (season) => `${BASE}/injuries/injuries_${season}.csv`,
+  depth_charts:        (season) => `${BASE}/depth_charts/depth_charts_${season}.csv`,
+  pfr_pass:            (season) => `${BASE}/pfr_advstats/advstats_season_pass_${season}.csv`,
+  pfr_rush:            (season) => `${BASE}/pfr_advstats/advstats_season_rush_${season}.csv`,
+  pfr_rec:             (season) => `${BASE}/pfr_advstats/advstats_season_rec_${season}.csv`,
+  ngs_pass:            (season) => `${BASE}/nextgen_stats/ngs_${season}_passing.csv`,
+  ngs_rush:            (season) => `${BASE}/nextgen_stats/ngs_${season}_rushing.csv`,
+  ngs_rec:             (season) => `${BASE}/nextgen_stats/ngs_${season}_receiving.csv`,
+  players:             () => `${BASE}/players/players.csv`,
+};
 
 function parseCSV(text) {
   const lines = text.trim().split('\n');
   if (lines.length < 2) return [];
-  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+  const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
   return lines.slice(1).map(line => {
-    const values = [];
-    let current = '';
-    let inQuotes = false;
+    const vals = [];
+    let cur = '', inQ = false;
     for (let i = 0; i < line.length; i++) {
-      const char = line[i];
-      if (char === '"') {
-        inQuotes = !inQuotes;
-      } else if (char === ',' && !inQuotes) {
-        values.push(current.trim());
-        current = '';
-      } else {
-        current += char;
-      }
+      if (line[i] === '"') { inQ = !inQ; continue; }
+      if (line[i] === ',' && !inQ) { vals.push(cur.trim()); cur = ''; continue; }
+      cur += line[i];
     }
-    values.push(current.trim());
+    vals.push(cur.trim());
     const obj = {};
-    headers.forEach((header, index) => {
-      obj[header] = values[index] !== undefined ? values[index] : '';
-    });
+    headers.forEach((h, i) => { obj[h] = vals[i] !== undefined ? vals[i] : ''; });
     return obj;
   });
 }
 
-function fetchURL(url) {
-  return new Promise((resolve, reject) => {
-    const protocol = url.startsWith('https') ? https : http;
-    const request = protocol.get(url, (response) => {
-      if (response.statusCode === 301 || response.statusCode === 302) {
-        return fetchURL(response.headers.location).then(resolve).catch(reject);
-      }
-      if (response.statusCode !== 200) {
-        return reject(new Error(`HTTP ${response.statusCode} for ${url}`));
-      }
-      let data = '';
-      response.on('data', chunk => { data += chunk; });
-      response.on('end', () => resolve(data));
-    });
-    request.on('error', reject);
-    request.setTimeout(30000, () => {
-      request.destroy();
-      reject(new Error('Request timeout'));
-    });
-  });
-}
-
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=86400');
+  if (req.method === 'OPTIONS') return res.status(200).end();
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+  const { file, season = '2025', position } = req.query;
+
+  if (!file || !FILES[file]) {
+    return res.status(400).json({
+      error: 'Invalid file',
+      available: Object.keys(FILES)
+    });
   }
 
   try {
-    const {
-      season = '2025',
-      season_type,        // optional: 'reg', 'post', 'week' — defaults to reg
-      position,
-      player_id,
-      player_name,
-      week,
-      limit,
-    } = req.query;
+    const url = FILES[file](season);
+    const response = await fetch(url, {
+      headers: { 'User-Agent': 'GWTTKB/1.0' },
+      redirect: 'follow'
+    });
 
-    // Determine which file to fetch
-    // Files available: stats_player_week_2025.csv, stats_player_reg_2025.csv, stats_player_post_2025.csv
-    const fileType = season_type === 'post' ? 'post' : season_type === 'week' ? 'week' : 'reg';
-    const BASE = 'https://github.com/nflverse/nflverse-data/releases/download/stats_player';
-    const url = `${BASE}/stats_player_${fileType}_${season}.csv`;
+    if (!response.ok) {
+      return res.status(404).json({ error: `File not found: ${file} ${season}`, url });
+    }
 
-    console.log(`Fetching stats from: ${url}`);
-    const csvText = await fetchURL(url);
-    let data = parseCSV(csvText);
+    let rows = parseCSV(await response.text());
 
-    // Filter by position
     if (position) {
-      const positions = position.toUpperCase().split(',').map(p => p.trim());
-      data = data.filter(row => {
-        const pos = (row.position || row.pos || '').toUpperCase();
-        return positions.includes(pos);
-      });
-    }
-
-    // Filter by player_id
-    if (player_id) {
-      data = data.filter(row =>
-        row.player_id === player_id || row.gsis_id === player_id
+      const positions = position.toUpperCase().split(',');
+      rows = rows.filter(r =>
+        positions.includes((r.position || r.pos || '').toUpperCase())
       );
-    }
-
-    // Filter by player name (partial, case-insensitive)
-    if (player_name) {
-      const nameLower = player_name.toLowerCase();
-      data = data.filter(row =>
-        (row.player_name || row.player_display_name || '').toLowerCase().includes(nameLower)
-      );
-    }
-
-    // Filter by week
-    if (week) {
-      data = data.filter(row => String(row.week) === String(week));
-    }
-
-    // Apply limit
-    if (limit) {
-      const n = parseInt(limit, 10);
-      if (!isNaN(n) && n > 0) {
-        data = data.slice(0, n);
-      }
     }
 
     return res.status(200).json({
-      success: true,
+      file,
       season,
-      season_type: fileType,
-      count: data.length,
-      data,
+      count: rows.length,
+      rows
     });
-  } catch (error) {
-    console.error('Stats API error:', error.message);
-    return res.status(500).json({
-      success: false,
-      error: error.message,
-      message: 'Failed to fetch player stats from nflverse',
-    });
+
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
   }
-};
+}
