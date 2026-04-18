@@ -1,7 +1,10 @@
 const BASE = 'https://github.com/nflverse/nflverse-data/releases/download';
 
 const FILES = {
-  player_stats: () => `${BASE}/player_stats/player_stats.csv`,
+  // Per-season player stats (MUCH smaller than the all-time file)
+  player_stats: (season) => `${BASE}/player_stats/player_stats_${season}.csv`,
+  // Fallback: all-time file (large, slower)
+  player_stats_all: () => `${BASE}/player_stats/player_stats.csv`,
   snap_counts:  (season) => `${BASE}/snap_counts/snap_counts_${season}.csv`,
   injuries:     (season) => `${BASE}/injuries/injuries_${season}.csv`,
   depth_charts: (season) => `${BASE}/depth_charts/depth_charts_${season}.csv`,
@@ -28,7 +31,7 @@ function parseCSV(text) {
     }
     vals.push(cur.trim());
     const obj = {};
-    headers.forEach((h, i) => { obj[h] = vals[i] || ''; });
+    headers.forEach((h, i) => { obj[h] = vals[i] !== undefined ? vals[i] : ''; });
     return obj;
   });
 }
@@ -39,7 +42,7 @@ export default async function handler(req, res) {
   res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=86400');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const { file, season = '2025', position } = req.query;
+  const { file, season = '2025', position, season_type } = req.query;
 
   if (!file || !FILES[file]) {
     return res.status(400).json({
@@ -56,15 +59,36 @@ export default async function handler(req, res) {
     });
 
     if (!response.ok) {
+      // If per-season file not found, try fallback for player_stats
+      if (file === 'player_stats') {
+        const fallbackUrl = FILES['player_stats_all']();
+        const fallback = await fetch(fallbackUrl, {
+          headers: { 'User-Agent': 'GWTTKB/1.0' },
+          redirect: 'follow'
+        });
+        if (!fallback.ok) {
+          return res.status(404).json({ error: `File not found: ${file} ${season}`, url });
+        }
+        let rows = parseCSV(await fallback.text());
+        rows = rows.filter(r => r.season === String(season) && r.season_type === 'REG');
+        if (position) {
+          const positions = position.toUpperCase().split(',');
+          rows = rows.filter(r => positions.includes((r.position || '').toUpperCase()));
+        }
+        return res.status(200).json({ file, season, count: rows.length, rows, source: 'fallback' });
+      }
       return res.status(404).json({ error: `File not found: ${file} ${season}`, url });
     }
 
     let rows = parseCSV(await response.text());
 
+    // For per-season player_stats files, filter by season_type only (season is already in filename)
     if (file === 'player_stats') {
-      rows = rows.filter(r => r.season === String(season) && r.season_type === 'REG');
+      const st = season_type || 'REG';
+      rows = rows.filter(r => (r.season_type || 'REG') === st);
     }
 
+    // Position filter - supports comma-separated e.g. position=QB,RB,WR,TE
     if (position) {
       const positions = position.toUpperCase().split(',');
       rows = rows.filter(r => positions.includes((r.position || r.pos || '').toUpperCase()));
