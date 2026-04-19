@@ -4,8 +4,11 @@ on:
   repository_dispatch:
     types: [build-consensus]
   schedule:
-    - cron: '0 7 * * *'  # 2am ET = 7am UTC
-  workflow_dispatch:      # manual trigger from GitHub UI
+    - cron: '0 7 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -15,6 +18,8 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -22,8 +27,6 @@ jobs:
           node-version: '20'
 
       - name: Build consensus rankings
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node scripts/build-consensus.mjs
 
       - name: Commit updated consensus
