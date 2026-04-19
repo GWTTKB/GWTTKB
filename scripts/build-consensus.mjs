@@ -84,7 +84,7 @@ async function getStartupADP(playerMap) {
     if (usersSeen.has(userId)) continue;
     usersSeen.add(userId);
 
-    const leagues = await get(`${SLEEPER}/user/${userId}/leagues/nfl/2025`);
+    const leagues = await get(`${SLEEPER}/user/${userId}/leagues/nfl/2026`);
     if (!Array.isArray(leagues)) continue;
 
     for (const league of leagues) {
