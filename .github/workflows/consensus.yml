@@ -1,0 +1,35 @@
+name: Build Consensus Rankings
+
+on:
+  repository_dispatch:
+    types: [build-consensus]
+  schedule:
+    - cron: '0 7 * * *'  # 2am ET = 7am UTC
+  workflow_dispatch:      # manual trigger from GitHub UI
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build consensus rankings
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/build-consensus.mjs
+
+      - name: Commit updated consensus
+        run: |
+          git config user.name "GWTTKB Bot"
+          git config user.email "bot@gwttkb.com"
+          git add public/data/consensus.json public/data/adp-history/ || true
+          git diff --staged --quiet || git commit -m "chore: update consensus rankings $(date +%Y-%m-%d)"
+          git push
