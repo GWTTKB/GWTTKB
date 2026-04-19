@@ -27,7 +27,7 @@
   --mono:     'JetBrains Mono', monospace;
 }
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-
+ 
 body {
   background: var(--bg);
   color: var(--txt);
@@ -45,12 +45,21 @@ body::before {
   pointer-events: none;
   z-index: 0;
 }
-
+ 
+/* ── SPARKLINE ── */
+.sparkwrap {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+}
+.spark-pct {
+  font-family: var(--mono); font-size: 9px; font-weight: 600;
+  letter-spacing: 0.5px; line-height: 1;
+}
+ 
 /* ── SCROLLBAR ── */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: var(--s1); }
 ::-webkit-scrollbar-thumb { background: var(--s3); border-radius: 3px; }
-
+ 
 /* ── ENTRY SCREEN ── */
 #entry {
   position: fixed; inset: 0; z-index: 100;
@@ -150,10 +159,10 @@ body::before {
   text-align: left;
   display: none;
 }
-
+ 
 /* ── MAIN APP ── */
 #app { position: relative; z-index: 1; min-height: 100vh; display: none; }
-
+ 
 /* ── TOP NAV ── */
 .topnav {
   position: sticky; top: 0; z-index: 50;
@@ -196,7 +205,30 @@ body::before {
   transition: all 0.15s;
 }
 .nav-reset:hover { border-color: var(--teal); color: var(--teal); }
-
+.nav-share {
+  padding: 5px 14px;
+  background: rgba(0,212,255,0.1);
+  border: 1px solid var(--teal);
+  border-radius: 6px;
+  color: var(--teal);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 12px; letter-spacing: 1px;
+  cursor: pointer; transition: all 0.15s;
+}
+.nav-share:hover { background: rgba(0,212,255,0.2); }
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: var(--teal); color: #000;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 14px; font-weight: 700; letter-spacing: 2px;
+  padding: 10px 22px; border-radius: 8px;
+  z-index: 9999; opacity: 0; transition: opacity 0.2s;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; }
+/* Fix line-through on team rows */
+.team-row, .team-row td, .team-row * { text-decoration: none !important; }
+ 
 /* ── TABS ── */
 .tabs {
   display: flex; gap: 2px;
@@ -215,7 +247,7 @@ body::before {
 }
 .tab-btn:hover { color: var(--txt2); }
 .tab-btn.active { color: var(--teal); border-bottom-color: var(--teal); }
-
+ 
 /* ── LEAGUE HEADER ── */
 .league-header {
   padding: 20px 24px 0;
@@ -262,7 +294,7 @@ body::before {
   text-transform: uppercase; color: var(--txt3);
   margin-top: 2px;
 }
-
+ 
 .lh-stat-boxes {
   display: flex; gap: 12px; flex-wrap: wrap;
 }
@@ -281,7 +313,7 @@ body::before {
   text-transform: uppercase; color: var(--txt3);
   margin-top: 3px;
 }
-
+ 
 /* ── POWER RANKINGS ── */
 .section { padding: 20px 24px; }
 .section-header {
@@ -295,7 +327,7 @@ body::before {
 .section-sub {
   font-size: 11px; color: var(--txt3);
 }
-
+ 
 /* Rankings table */
 .rankings-table { width: 100%; border-collapse: collapse; }
 .rankings-table th {
@@ -315,7 +347,7 @@ body::before {
 .team-row.is-me { background: rgba(0,212,255,0.06); }
 .team-row.is-me:hover { background: rgba(0,212,255,0.09); }
 .team-row td { padding: 10px 8px; }
-
+ 
 /* Rank cell */
 .rank-num {
   font-family: 'Bebas Neue', sans-serif;
@@ -323,7 +355,7 @@ body::before {
   line-height: 1; min-width: 28px;
 }
 .rank-num.top3 { color: var(--gold); }
-
+ 
 /* Team cell */
 .team-cell { min-width: 180px; }
 .team-cell-name {
@@ -339,7 +371,7 @@ body::before {
   padding: 1px 5px; border-radius: 3px;
 }
 .team-cell-sub { font-size: 10px; color: var(--txt3); margin-top: 1px; }
-
+ 
 /* Tier badge */
 .tier-badge {
   font-family: 'Barlow Condensed', sans-serif;
@@ -351,7 +383,7 @@ body::before {
 .tier-fringe   { background:rgba(255,140,0,.12);   color:var(--orange); border:1px solid rgba(255,140,0,.3); }
 .tier-rebuild  { background:rgba(155,109,255,.12); color:var(--purple); border:1px solid rgba(155,109,255,.3); }
 .tier-tank     { background:rgba(255,61,87,.12);   color:var(--red);    border:1px solid rgba(255,61,87,.3); }
-
+ 
 /* Position bars */
 .pos-bars { display:flex; gap:4px; align-items:center; }
 .pos-bar-wrap {
@@ -379,7 +411,7 @@ body::before {
 .grade-c  { background: linear-gradient(180deg, #88aacc, #5577aa); }
 .grade-d  { background: linear-gradient(180deg, var(--orange), #cc6600); }
 .grade-f  { background: linear-gradient(180deg, var(--red), #aa0020); }
-
+ 
 /* Value cell */
 .val-cell {
   font-family: 'Bebas Neue', sans-serif;
@@ -390,7 +422,7 @@ body::before {
 .val-sub {
   font-family: var(--mono); font-size: 9px; color: var(--txt3);
 }
-
+ 
 /* Age cell */
 .age-val {
   font-family: var(--mono); font-size: 12px; font-weight: 600;
@@ -399,7 +431,7 @@ body::before {
 .age-mid   { color: var(--teal); }
 .age-old   { color: var(--orange); }
 .age-vold  { color: var(--red); }
-
+ 
 /* Title % arc */
 .title-arc { display: flex; flex-direction: column; align-items: center; gap: 1px; }
 .title-arc svg { display: block; }
@@ -407,12 +439,12 @@ body::before {
   font-family: 'Bebas Neue', sans-serif;
   font-size: 13px; color: var(--txt); text-align: center;
 }
-
+ 
 /* PPG */
 .ppg-val {
   font-family: var(--mono); font-size: 12px; color: var(--txt2);
 }
-
+ 
 /* Team detail expansion */
 .team-detail-row {
   display: none;
@@ -481,7 +513,7 @@ body::before {
   font-family: var(--mono); font-size: 11px; color: var(--txt2);
   font-weight: 600;
 }
-
+ 
 /* ── RECORDS TAB ── */
 .records-grid { display: flex; flex-direction: column; gap: 8px; }
 .record-row {
@@ -506,7 +538,7 @@ body::before {
   margin-left: auto;
   font-family: var(--mono); font-size: 11px; color: var(--txt2);
 }
-
+ 
 /* All-Time Table */
 .alltime-table { width: 100%; border-collapse: collapse; }
 .alltime-table th {
@@ -532,7 +564,7 @@ body::before {
 .win-pct.avg { color: var(--txt2); }
 .win-pct.bad { color: var(--red); }
 .trophy { color: var(--gold); margin-right: 4px; }
-
+ 
 /* ── H2H TAB ── */
 .h2h-selectors {
   display: flex; align-items: center; gap: 12px;
@@ -602,7 +634,7 @@ body::before {
   font-family: var(--mono); font-size: 10px; color: var(--txt3);
   text-align: center; line-height: 1.6;
 }
-
+ 
 /* ── TIERS SECTION ── */
 .tiers-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;
@@ -638,7 +670,7 @@ body::before {
 .tier-chip-val {
   font-family: var(--mono); font-size: 10px; color: var(--txt3);
 }
-
+ 
 /* ── LOADING ── */
 .loading-overlay {
   position: fixed; inset: 0; z-index: 200;
@@ -672,11 +704,11 @@ body::before {
   background: linear-gradient(90deg, var(--teal), var(--green));
   width: 0; transition: width 0.4s ease;
 }
-
+ 
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
-
+ 
 /* ── RESPONSIVE ── */
 @media(max-width:900px) {
   .detail-grid { grid-template-columns: 1fr 1fr; }
@@ -691,7 +723,7 @@ body::before {
 </style>
 </head>
 <body>
-
+ 
 <!-- ── ENTRY ── -->
 <div id="entry">
   <div class="entry-inner">
@@ -702,6 +734,10 @@ body::before {
       <input class="entry-input" id="leagueInput" type="text"
         placeholder="Enter league ID..."
         value="">
+      <div class="entry-label" style="margin-top:8px">Your Sleeper Username</div>
+      <input class="entry-input" id="usernameInput" type="text"
+        placeholder="e.g. trout9"
+        value="trout9">
       <button class="btn-analyze" id="analyzeBtn" onclick="init()">ANALYZE LEAGUE</button>
       <div class="entry-hint">
         Find your League ID in the Sleeper app under League Settings.<br>
@@ -711,7 +747,7 @@ body::before {
     </div>
   </div>
 </div>
-
+ 
 <!-- ── LOADING ── -->
 <div class="loading-overlay" id="loading">
   <div class="loading-logo">ANALYZING LEAGUE</div>
@@ -724,29 +760,31 @@ body::before {
     <div class="loading-step"><div class="step-dot" id="step4"></div>Computing analytics</div>
   </div>
 </div>
-
+ 
 <!-- ── APP ── -->
 <div id="app">
-
+<div class="toast" id="toast"></div>
+ 
   <div class="topnav">
     <div class="nav-logo">GWTTKB</div>
     <div class="nav-league" id="navLeague">—</div>
     <div class="nav-format" id="navFormat">—</div>
     <div class="nav-spacer"></div>
+    <button class="nav-share" onclick="shareLeague()">↑ SHARE LEAGUE</button>
     <button class="nav-reset" onclick="reset()">← CHANGE LEAGUE</button>
   </div>
-
+ 
   <div class="tabs">
     <button class="tab-btn active" onclick="switchTab('analysis',this)">ANALYSIS</button>
     <button class="tab-btn" onclick="switchTab('alltime',this)">ALL-TIME</button>
     <button class="tab-btn" onclick="switchTab('h2h',this)">H2H</button>
     <button class="tab-btn" onclick="switchTab('records',this)">RECORDS</button>
   </div>
-
+ 
   <!-- ANALYSIS TAB -->
   <div id="tab-analysis">
     <div class="league-header" id="leagueHeader"></div>
-
+ 
     <div class="section">
       <div class="section-header">
         <div class="section-title">POWER RANKINGS</div>
@@ -760,8 +798,10 @@ body::before {
               <th>TEAM</th>
               <th>TIER</th>
               <th colspan="4" style="text-align:center">POSITIONAL GRADES</th>
+              <th style="text-align:center">FORECAST</th>
               <th style="text-align:right">VALUE</th>
               <th>AGE</th>
+              <th style="text-align:center">5-YR FORECAST</th>
               <th style="text-align:center">TITLE %</th>
             </tr>
           </thead>
@@ -769,7 +809,7 @@ body::before {
         </table>
       </div>
     </div>
-
+ 
     <div class="section">
       <div class="section-header">
         <div class="section-title">COMPETITIVE TIERS</div>
@@ -778,7 +818,7 @@ body::before {
       <div class="tiers-grid" id="tiersGrid"></div>
     </div>
   </div>
-
+ 
   <!-- ALL-TIME TAB -->
   <div id="tab-alltime" style="display:none">
     <div class="section">
@@ -799,7 +839,7 @@ body::before {
       </div>
     </div>
   </div>
-
+ 
   <!-- H2H TAB -->
   <div id="tab-h2h" style="display:none">
     <div class="section">
@@ -816,7 +856,7 @@ body::before {
     </div>
     <div class="h2h-result" id="h2hResult"></div>
   </div>
-
+ 
   <!-- RECORDS TAB -->
   <div id="tab-records" style="display:none">
     <div class="section">
@@ -827,24 +867,26 @@ body::before {
       <div class="records-grid" id="recordsGrid"></div>
     </div>
   </div>
-
+ 
 </div>
-
+ 
 <script>
 // ============================================================================
 // GWTTKB League Intelligence
 // ============================================================================
-
+ 
 const SL = 'https://api.sleeper.app/v1';
 const CONSENSUS_URL = '/data/consensus.json';
-
+ 
 // ── STATE ──
 let LEAGUE = null, ROSTERS = null, USERS = null, MATCHUPS = {};
 let PLAYERS = {}, CONSENSUS = {};
 let ANALYTICS = [];
 let MY_ROSTER_ID = null;
 const SAVED_KEY = 'gwttkb_league_id';
-
+const SAVED_USER_KEY = 'gwttkb_username';
+let MY_USERNAME = 'trout9';
+ 
 // ── UTILS ──
 const $ = id => document.getElementById(id);
 async function apiFetch(url) {
@@ -876,7 +918,7 @@ function setStep(i, state) {
 function setLoad(pct) {
   $('loadBar').style.width = pct + '%';
 }
-
+ 
 // ── ENTRY ──
 function reset() {
   localStorage.removeItem(SAVED_KEY);
@@ -884,41 +926,123 @@ function reset() {
   $('app').style.display = 'none';
   $('leagueInput').value = '';
 }
-
+ 
 async function init() {
   const id = $('leagueInput').value.trim();
+  const uname = $('usernameInput').value.trim();
   if (!id) { showError('Please enter a league ID'); return; }
+  MY_USERNAME = uname || 'trout9';
   $('analyzeBtn').disabled = true;
   $('entryError').style.display = 'none';
   await runAnalysis(id);
 }
-
+ 
 function showError(msg) {
   const e = $('entryError');
   e.textContent = msg; e.style.display = 'block';
   $('analyzeBtn').disabled = false;
 }
-
+ 
 // ── MAIN PIPELINE ──
 async function runAnalysis(leagueId) {
   $('loading').className = 'loading-overlay show';
   $('entry').style.display = 'none';
   setLoad(5);
-
+ 
   // Step 0: league meta
   setStep(0,'active');
   LEAGUE = await apiFetch(`${SL}/league/${leagueId}`);
   if (!LEAGUE) { $('loading').className='loading-overlay'; showError('League not found. Check the ID.'); $('entry').style.display='flex'; return; }
   setStep(0,'done'); setLoad(20);
-
-  // Step 1: rosters + users
+ 
+  // Step 1: rosters + users + matchup history (current + previous season)
   setStep(1,'active');
-  [ROSTERS, USERS] = await Promise.all([
+  const matchupFetches = [];
+  for (let w = 1; w <= 17; w++) {
+    matchupFetches.push(apiFetch(`${SL}/league/${leagueId}/matchups/${w}`));
+  }
+ 
+  // Also fetch previous season if available
+  const prevLeagueId = LEAGUE.previous_league_id;
+  const prevMatchupFetches = [];
+  if (prevLeagueId) {
+    for (let w = 1; w <= 17; w++) {
+      prevMatchupFetches.push(apiFetch(`${SL}/league/${prevLeagueId}/matchups/${w}`));
+    }
+  }
+ 
+  const [rostersRes, usersRes, ...allMatchupWeeks] = await Promise.all([
     apiFetch(`${SL}/league/${leagueId}/rosters`),
-    apiFetch(`${SL}/league/${leagueId}/users`)
+    apiFetch(`${SL}/league/${leagueId}/users`),
+    ...matchupFetches,
+    ...prevMatchupFetches
   ]);
+  ROSTERS = rostersRes;
+  USERS = usersRes;
+ 
+  const matchupWeeks = allMatchupWeeks.slice(0, matchupFetches.length);
+  const prevMatchupWeeks = allMatchupWeeks.slice(matchupFetches.length);
+ 
+  // Build win/loss/pf records from matchup data (current + previous season)
+  const records = {}; // rosterId -> {wins, losses, pf, pa, highScore, highScoreWeek}
+  let leagueHighScore = 0, leagueHighScoreOwner = '', leagueHighScoreWeek = 0;
+  let leagueLowestScore = Infinity, leagueLowestOwner = '', leagueLowestWeek = 0;
+  let biggestBlowout = 0, biggestBlowoutOwner = '';
+ 
+  const allWeeksToProcess = [...matchupWeeks, ...prevMatchupWeeks];
+ 
+  for (const week of allWeeksToProcess) {
+    if (!Array.isArray(week)) continue;
+    const byMatchup = {};
+    for (const m of week) {
+      if (!m.matchup_id) continue;
+      if (!byMatchup[m.matchup_id]) byMatchup[m.matchup_id] = [];
+      byMatchup[m.matchup_id].push(m);
+    }
+    for (const pair of Object.values(byMatchup)) {
+      if (pair.length !== 2) continue;
+      const [a, b] = pair;
+      if (!records[a.roster_id]) records[a.roster_id] = {wins:0,losses:0,pf:0,pa:0,highScore:0};
+      if (!records[b.roster_id]) records[b.roster_id] = {wins:0,losses:0,pf:0,pa:0,highScore:0};
+      const apts = a.points || 0, bpts = b.points || 0;
+      records[a.roster_id].pf += apts;
+      records[a.roster_id].pa += bpts;
+      records[b.roster_id].pf += bpts;
+      records[b.roster_id].pa += apts;
+      if (apts > records[a.roster_id].highScore) records[a.roster_id].highScore = apts;
+      if (bpts > records[b.roster_id].highScore) records[b.roster_id].highScore = bpts;
+      if (apts > bpts) { records[a.roster_id].wins++; records[b.roster_id].losses++; }
+      else if (bpts > apts) { records[b.roster_id].wins++; records[a.roster_id].losses++; }
+      // Track league-wide records
+      if (apts > leagueHighScore) { leagueHighScore = apts; leagueHighScoreOwner = String(a.roster_id); }
+      if (bpts > leagueHighScore) { leagueHighScore = bpts; leagueHighScoreOwner = String(b.roster_id); }
+      if (apts > 0 && apts < leagueLowestScore) { leagueLowestScore = apts; leagueLowestOwner = String(a.roster_id); }
+      if (bpts > 0 && bpts < leagueLowestScore) { leagueLowestScore = bpts; leagueLowestOwner = String(b.roster_id); }
+      const blowout = Math.abs(apts - bpts);
+      if (blowout > biggestBlowout) {
+        biggestBlowout = blowout;
+        biggestBlowoutOwner = String(apts > bpts ? a.roster_id : b.roster_id);
+      }
+    }
+  }
+  // Store league-wide records for later
+  window._leagueRecords = { leagueHighScore, leagueHighScoreOwner, leagueLowestScore, leagueLowestOwner, biggestBlowout, biggestBlowoutOwner };
+ 
+  // Inject records into roster settings
+  if (ROSTERS) {
+    for (const r of ROSTERS) {
+      if (records[r.roster_id]) {
+        r.settings = r.settings || {};
+        r.settings.wins = records[r.roster_id].wins;
+        r.settings.losses = records[r.roster_id].losses;
+        r.settings.fpts = records[r.roster_id].pf.toFixed(2);
+        r.settings.fpts_against = records[r.roster_id].pa.toFixed(2);
+        r.settings.highScore = records[r.roster_id].highScore;
+      }
+    }
+  }
   setStep(1,'done'); setLoad(40);
-
+ 
   // Step 2: player map (cache)
   setStep(2,'active');
   const cached = sessionStorage.getItem('gwttkb_players');
@@ -934,7 +1058,7 @@ async function runAnalysis(leagueId) {
     }
   }
   setStep(2,'done'); setLoad(60);
-
+ 
   // Step 3: consensus values
   setStep(3,'active');
   try {
@@ -949,66 +1073,145 @@ async function runAnalysis(leagueId) {
   } catch {}
   // Fallback: use an empty consensus (page still works, just shows 0 values)
   setStep(3,'done'); setLoad(80);
-
+ 
   // Step 4: compute
   setStep(4,'active');
   computeAnalytics();
   setStep(4,'done'); setLoad(100);
-
+ 
   // Save and render
   localStorage.setItem(SAVED_KEY, leagueId);
+  localStorage.setItem(SAVED_USER_KEY, MY_USERNAME);
   setTimeout(() => {
     $('loading').className = 'loading-overlay';
     $('app').style.display = 'block';
     renderAll();
   }, 400);
 }
-
+ 
 // ── ANALYTICS ──
+// ── AGE CURVES & FORECAST ──
+const AC = {
+  QB:{20:.50,21:.65,22:.75,23:.88,24:.94,25:.98,26:1.00,27:1.02,28:1.03,29:1.02,30:1.00,31:.97,32:.93,33:.87,34:.79,35:.69,36:.58,37:.48},
+  RB:{20:.72,21:.86,22:.97,23:1.02,24:1.03,25:1.00,26:.95,27:.87,28:.75,29:.62,30:.49,31:.36,32:.24,33:.15},
+  WR:{20:.55,21:.70,22:.83,23:.92,24:.97,25:1.01,26:1.03,27:1.02,28:1.00,29:.95,30:.89,31:.81,32:.71,33:.60,34:.48,35:.37},
+  TE:{20:.40,21:.53,22:.63,23:.74,24:.85,25:.94,26:.99,27:1.02,28:1.03,29:1.01,30:.97,31:.91,32:.82,33:.71,34:.59,35:.47},
+};
+function getAM(pos, age) {
+  const c = AC[pos] || AC.WR;
+  const keys = Object.keys(c).map(Number).sort((a,b)=>a-b);
+  if (age <= keys[0]) return c[keys[0]];
+  if (age >= keys[keys.length-1]) return Math.max(0.05, c[keys[keys.length-1]] - (age-keys[keys.length-1])*0.07);
+  if (c[age] !== undefined) return c[age];
+  for (let i=0;i<keys.length-1;i++) {
+    if (age>keys[i]&&age<keys[i+1]) {
+      const t=(age-keys[i])/(keys[i+1]-keys[i]);
+      return c[keys[i]]*(1-t)+c[keys[i+1]]*t;
+    }
+  }
+  return 1;
+}
+function computeForecast(team) {
+  return [0,1,2,3,4,5].map(yr => {
+    let total = 0;
+    for (const pid of team.players) {
+      const cv = CONSENSUS[pid]; if (!cv?.value) continue;
+      const pd = PLAYERS[pid];
+      const pos = pd?.pos || cv.pos || 'WR';
+      const age = pd?.age;
+      if (!age || !AC[pos]) { total += cv.value; continue; }
+      const now = getAM(pos, age);
+      const future = getAM(pos, age + yr);
+      total += cv.value * (now > 0 ? future/now : 1);
+    }
+    return Math.round(total);
+  });
+}
+function buildSparkline(vals) {
+  const W=88, H=32;
+  const min = Math.min(...vals)*0.94, max = Math.max(...vals)*1.06;
+  const range = Math.max(1, max-min);
+  const pts = vals.map((v,i) => [
+    2 + (i/(vals.length-1))*(W-4),
+    (H-4) - ((v-min)/range)*(H-8) + 2
+  ]);
+  const line = pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+  const area = line+` L${pts[pts.length-1][0].toFixed(1)},${H} L${pts[0][0].toFixed(1)},${H} Z`;
+  const trend = vals[vals.length-1]/Math.max(1,vals[0]);
+  const col = trend>1.04 ? '#00e676' : trend<0.93 ? '#ff3d57' : '#00d4ff';
+  const fill = trend>1.04 ? 'rgba(0,230,118,0.12)' : trend<0.93 ? 'rgba(255,61,87,0.12)' : 'rgba(0,212,255,0.08)';
+  const pctChg = Math.round((trend-1)*100);
+  const chgLabel = (pctChg>0?'+':'')+pctChg+'%';
+  const chgColor = pctChg>0?'#00e676':pctChg<0?'#ff3d57':'#00d4ff';
+  // Build smooth bezier path
+  const smooth = pts.map((p,i,a) => {
+    if (i===0) return `M${p[0].toFixed(1)},${p[1].toFixed(1)}`;
+    const prev = a[i-1];
+    const cx1 = (prev[0]+p[0])/2, cy1 = prev[1];
+    const cx2 = (prev[0]+p[0])/2, cy2 = p[1];
+    return `C${cx1.toFixed(1)},${cy1.toFixed(1)} ${cx2.toFixed(1)},${cy2.toFixed(1)} ${p[0].toFixed(1)},${p[1].toFixed(1)}`;
+  }).join(' ');
+  const smoothArea = smooth+` L${pts[pts.length-1][0].toFixed(1)},${H} L${pts[0][0].toFixed(1)},${H} Z`;
+  return `<div class="sparkwrap">
+    <svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block">
+      <defs>
+        <linearGradient id="sg${Math.random().toString(36).slice(2,6)}" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="${col}" stop-opacity="0.3"/>
+          <stop offset="100%" stop-color="${col}" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <path d="${smoothArea}" fill="${fill}"/>
+      <path d="${smooth}" fill="none" stroke="${col}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="${pts[pts.length-1][0].toFixed(1)}" cy="${pts[pts.length-1][1].toFixed(1)}" r="2.2" fill="${col}"/>
+    </svg>
+    <div class="spark-pct" style="color:${chgColor}">${chgLabel}</div>
+  </div>`;
+}
+ 
 function computeAnalytics() {
   const userMap = {};
   if (USERS) for (const u of USERS) userMap[u.user_id] = u;
-
-  // Figure out which roster is "me" based on saved username
-  const myUsername = 'trout9'; // from project brief
-
+ 
   ANALYTICS = ROSTERS.map(roster => {
     const user = userMap[roster.owner_id] || {};
     const displayName = user.display_name || user.metadata?.team_name || roster.owner_id;
     const players = (roster.players || []).filter(id => PLAYERS[id] || CONSENSUS[id]);
-
-    // Separate starters/bench using roster positions
-    const starterCount = (LEAGUE.roster_positions || []).filter(p => p !== 'BN' && p !== 'TAXI' && p !== 'IR').length;
-    const starters = players.slice(0, starterCount);
-    const bench = players.slice(starterCount);
-
+ 
+    // Use Sleeper's actual starters array — NOT a slice
+    const starterSet = new Set(roster.starters || []);
+    const starters = players.filter(id => starterSet.has(id));
+    const bench = players.filter(id => !starterSet.has(id));
+ 
     // Compute values
     let totalVal = 0, starterVal = 0, benchVal = 0;
     const posVals = { QB:0, RB:0, WR:0, TE:0 };
     const posCount = { QB:0, RB:0, WR:0, TE:0 };
     let ageSum = 0, ageCount = 0;
     const assets = [];
-
+ 
     for (const pid of players) {
       const cv = CONSENSUS[pid];
       const pdata = PLAYERS[pid];
       const val = cv?.value || 0;
       const pos = pdata?.pos || cv?.pos || '?';
       const isStarter = starters.includes(pid);
-
+ 
       totalVal += val;
       if (isStarter) starterVal += val; else benchVal += val;
       if (posVals[pos] !== undefined) { posVals[pos] += val; posCount[pos]++; }
       if (pdata?.age) { ageSum += pdata.age; ageCount++; }
-
+ 
       const name = pdata?.name || cv?.name || pid;
       assets.push({ pid, name, pos, val, team: pdata?.team || '?' });
     }
-
+ 
     assets.sort((a,b) => b.val - a.val);
     const avgAge = ageCount > 0 ? (ageSum / ageCount).toFixed(1) : '?';
-    const isMe = user.username === myUsername || displayName === myUsername;
-
+    const lowerMe = MY_USERNAME.toLowerCase();
+    const isMe = user.username?.toLowerCase() === lowerMe ||
+                 user.display_name?.toLowerCase() === lowerMe ||
+                 (user.metadata?.team_name || '').toLowerCase() === lowerMe;
+ 
     return {
       rosterId: roster.roster_id, ownerId: roster.owner_id,
       displayName, username: user.username || '',
@@ -1023,7 +1226,7 @@ function computeAnalytics() {
       metadata: roster.metadata || {}
     };
   });
-
+ 
   // Rank by total value
   ANALYTICS.sort((a,b) => b.totalVal - a.totalVal);
   ANALYTICS.forEach((t,i) => {
@@ -1031,11 +1234,13 @@ function computeAnalytics() {
     t.titleOdds = computeTitleOdds(t.totalVal, ANALYTICS);
     t.tier = computeTier(i, ANALYTICS.length, t.totalVal, ANALYTICS);
     t.posGrades = computePosGrades(t.posVals, ANALYTICS);
+    t.trajectory = computeTrajectory(t);
+    t.forecast = computeForecast(t);
   });
-
+ 
   MY_ROSTER_ID = ANALYTICS.find(t => t.isMe)?.rosterId || null;
 }
-
+ 
 function computeTitleOdds(val, all) {
   const total = all.reduce((s,t) => s+t.totalVal, 0);
   if (!total) return 0;
@@ -1043,7 +1248,7 @@ function computeTitleOdds(val, all) {
   const rawPct = val / total * n;
   return Math.min(Math.round(rawPct * 18), 65);
 }
-
+ 
 function computeTier(rank, total, val, all) {
   const q1 = Math.ceil(total * 0.25);
   const q2 = Math.ceil(total * 0.50);
@@ -1053,7 +1258,7 @@ function computeTier(rank, total, val, all) {
   if (rank < total - 1) return 'rebuild';
   return 'tank';
 }
-
+ 
 const TIER_LABELS = {
   window: 'DYNASTY WINDOW', contend: 'CONTENDER',
   fringe: 'FRINGE', rebuild: 'REBUILDING', tank: 'TANKING'
@@ -1065,7 +1270,7 @@ const TIER_DESCS = {
   rebuild: 'Building for the future',
   tank: 'Asset accumulation mode'
 };
-
+ 
 function computePosGrades(posVals, all) {
   const grades = {};
   ['QB','RB','WR','TE'].forEach(pos => {
@@ -1078,7 +1283,98 @@ function computePosGrades(posVals, all) {
   });
   return grades;
 }
-
+ 
+// ── AGE CURVES (from v4 engine) ──
+const AGE_CURVES = {
+  QB:{20:0.50,21:0.65,22:0.75,23:0.88,24:0.94,25:0.98,26:1.00,27:1.02,28:1.03,29:1.02,30:1.00,31:0.97,32:0.93,33:0.87,34:0.79,35:0.69,36:0.58},
+  RB:{20:0.72,21:0.86,22:0.97,23:1.02,24:1.03,25:1.00,26:0.95,27:0.87,28:0.75,29:0.62,30:0.49,31:0.36,32:0.24},
+  WR:{20:0.55,21:0.70,22:0.83,23:0.92,24:0.97,25:1.01,26:1.03,27:1.02,28:1.00,29:0.95,30:0.89,31:0.81,32:0.71,33:0.60,34:0.48},
+  TE:{20:0.40,21:0.53,22:0.63,23:0.74,24:0.85,25:0.94,26:0.99,27:1.02,28:1.03,29:1.01,30:0.97,31:0.91,32:0.82,33:0.71,34:0.59}
+};
+ 
+function ageMultiplier(pos, age) {
+  const curve = AGE_CURVES[pos] || AGE_CURVES.WR;
+  if (curve[age] !== undefined) return curve[age];
+  const keys = Object.keys(curve).map(Number).sort((a,b) => a-b);
+  for (let i = keys.length-1; i >= 0; i--) {
+    if (keys[i] <= age) return curve[keys[i]];
+  }
+  return 0.4;
+}
+ 
+function computeTrajectory(t) {
+  // Project roster value over 4 years (now, +1, +2, +3) using age curves
+  // Weighted by current player value so top assets drive the line
+  const yearTotals = [0, 0, 0, 0];
+  let hasData = false;
+ 
+  for (const pid of (t.starters || [])) {
+    const pdata = PLAYERS[pid];
+    const cv = CONSENSUS[pid];
+    if (!pdata || !cv || !cv.value) continue;
+    const pos = pdata.pos;
+    const age = parseInt(pdata.age);
+    if (!age || isNaN(age) || !['QB','RB','WR','TE'].includes(pos)) continue;
+ 
+    const baseMult = ageMultiplier(pos, age);
+    if (baseMult <= 0) continue;
+    const val = cv.value;
+ 
+    for (let yr = 0; yr < 4; yr++) {
+      const futMult = ageMultiplier(pos, age + yr);
+      yearTotals[yr] += val * (futMult / baseMult);
+    }
+    hasData = true;
+  }
+ 
+  if (!hasData || yearTotals[0] === 0) return [100, 100, 100, 100];
+ 
+  // Normalize relative to year 0 → output as % of current
+  const base = yearTotals[0];
+  return yearTotals.map(v => Math.round((v / base) * 1000) / 10);
+}
+ 
+function buildForecastSVG(traj) {
+  // traj: [100, 102.3, 98.5, 91.2] — % of current value each year
+  const W = 72, H = 30;
+  const RANGE = 22; // ±22% maps to full height
+ 
+  const pts = traj.map((v, i) => {
+    const x = 4 + (i / (traj.length - 1)) * (W - 8);
+    const y = H / 2 - ((v - 100) / RANGE) * (H / 2 - 4);
+    return [x, Math.max(3, Math.min(H - 3, y))];
+  });
+ 
+  // Color based on 3-year trajectory
+  const endVal = traj[traj.length - 1];
+  const color = endVal >= 104 ? '#00d4ff'
+    : endVal >= 100 ? '#00e676'
+    : endVal >= 95  ? '#ff8c00'
+    : '#ff3d57';
+ 
+  // Smooth cubic bezier path
+  let d = `M ${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
+  for (let i = 1; i < pts.length; i++) {
+    const p0 = pts[i-1], p1 = pts[i];
+    const cpx = (p0[0] + p1[0]) / 2;
+    d += ` C ${cpx.toFixed(1)} ${p0[1].toFixed(1)} ${cpx.toFixed(1)} ${p1[1].toFixed(1)} ${p1[0].toFixed(1)} ${p1[1].toFixed(1)}`;
+  }
+ 
+  const endPt = pts[pts.length - 1];
+  const uid = 'fg' + Math.random().toString(36).slice(2, 7);
+ 
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="overflow:visible">
+    <defs>
+      <linearGradient id="${uid}" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="${color}" stop-opacity="0.2"/>
+        <stop offset="100%" stop-color="${color}" stop-opacity="1"/>
+      </linearGradient>
+    </defs>
+    <path d="${d}" stroke="url(#${uid})" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="${endPt[0].toFixed(1)}" cy="${endPt[1].toFixed(1)}" r="2.5" fill="${color}"/>
+  </svg>`;
+}
+ 
 // ── RENDER ALL ──
 function renderAll() {
   renderHeader();
@@ -1088,13 +1384,25 @@ function renderAll() {
   renderRecords();
   populateH2H();
 }
-
+ 
 function renderHeader() {
-  const me = ANALYTICS.find(t => t.isMe) || ANALYTICS[0];
+  const me = ANALYTICS.find(t => t.isMe);
+  if (!me) {
+    // No username match — show a prompt to set username
+    $('leagueHeader').innerHTML = `
+      <div class="lh-team-card" style="opacity:0.7">
+        <div class="lh-my-label" style="color:var(--gold)">⚠ YOUR TEAM NOT DETECTED</div>
+        <div class="lh-team-name" style="font-size:16px">Enter your Sleeper username at login to highlight your team</div>
+      </div>
+    `;
+    $('navLeague').textContent = LEAGUE.name || 'League';
+    $('navFormat').textContent = buildFormatStr();
+    return;
+  }
   const fmt_str = buildFormatStr();
   $('navLeague').textContent = LEAGUE.name || 'BYX Dynasty';
   $('navFormat').textContent = fmt_str;
-
+ 
   if (!me) return;
   $('leagueHeader').innerHTML = `
     <div class="lh-team-card">
@@ -1140,7 +1448,7 @@ function renderHeader() {
     </div>
   `;
 }
-
+ 
 function buildFormatStr() {
   const pos = LEAGUE.roster_positions || [];
   const sf = pos.includes('SUPER_FLEX');
@@ -1150,7 +1458,7 @@ function buildFormatStr() {
   const ppr = rec >= 0.75 ? 'PPR' : rec >= 0.4 ? 'Half' : 'STD';
   return `${teams}T · ${sf?'SF':'1QB'} · ${ppr}${tep?' · TEP':''}`;
 }
-
+ 
 function renderRankings() {
   const tbody = $('rankingsBody');
   tbody.innerHTML = ANALYTICS.map(t => {
@@ -1160,7 +1468,7 @@ function renderRankings() {
     const ageCls = !t.avgAge||t.avgAge==='?' ? '' :
       parseFloat(t.avgAge)<23.5 ? 'age-young' : parseFloat(t.avgAge)<25.5 ? 'age-mid' :
       parseFloat(t.avgAge)<27.5 ? 'age-old' : 'age-vold';
-
+ 
     const posBarHTML = ['QB','RB','WR','TE'].map(p => {
       const g = t.posGrades[p];
       return `<div class="pos-bar-wrap">
@@ -1170,9 +1478,9 @@ function renderRankings() {
         <div class="pos-bar-label">${p}</div>
       </div>`;
     }).join('');
-
+ 
     const arcSVG = buildArc(t.titleOdds);
-
+ 
     return `
       <tr class="team-row ${isMe?'is-me':''}" onclick="toggleDetail(${t.rosterId})">
         <td><div class="rank-num ${t.rank<=3?'top3':''}">${t.rank}</div></td>
@@ -1187,6 +1495,7 @@ function renderRankings() {
         </td>
         <td><span class="tier-badge ${tierClass}">${tierLabel}</span></td>
         <td colspan="4"><div class="pos-bars">${posBarHTML}</div></td>
+        <td style="text-align:center">${buildForecastSVG(t.trajectory||[100,100,100,100])}</td>
         <td>
           <div style="text-align:right">
             <div class="val-cell">${fmt(t.totalVal)}</div>
@@ -1194,6 +1503,7 @@ function renderRankings() {
           </div>
         </td>
         <td><div class="age-val ${ageCls}">${t.avgAge}y</div></td>
+        <td style="text-align:center">${t.forecast ? buildSparkline(t.forecast) : '—'}</td>
         <td>
           <div class="title-arc">
             ${arcSVG}
@@ -1202,14 +1512,14 @@ function renderRankings() {
         </td>
       </tr>
       <tr class="team-detail-row" id="detail-${t.rosterId}">
-        <td colspan="9">
+        <td colspan="10">
           ${buildDetailHTML(t)}
         </td>
       </tr>
     `;
   }).join('');
 }
-
+ 
 function buildArc(pct) {
   const r = 14, cx = 16, cy = 16;
   const circ = 2 * Math.PI * r;
@@ -1222,12 +1532,12 @@ function buildArc(pct) {
       stroke-linecap="round" transform="rotate(-90 ${cx} ${cy})"/>
   </svg>`;
 }
-
+ 
 function buildDetailHTML(t) {
   const maxPosVal = Math.max(...ANALYTICS.map(a =>
     Math.max(a.posVals.QB, a.posVals.RB, a.posVals.WR, a.posVals.TE)
   )) || 1;
-
+ 
   const posBarHTML = ['QB','RB','WR','TE'].map(pos => {
     const val = t.posVals[pos];
     const pct = Math.round(val / maxPosVal * 100);
@@ -1238,7 +1548,7 @@ function buildDetailHTML(t) {
       <div class="pos-value">${fmt(val)}</div>
     </div>`;
   }).join('');
-
+ 
   const assetsHTML = t.assets.slice(0,5).map((a,i) => {
     const posColors = {QB:'var(--teal)',RB:'var(--green)',WR:'var(--gold)',TE:'var(--red)'};
     const col = posColors[a.pos] || 'var(--txt3)';
@@ -1250,7 +1560,7 @@ function buildDetailHTML(t) {
       <span class="asset-value">${a.val.toLocaleString()}</span>
     </div>`;
   }).join('');
-
+ 
   return `<div class="team-detail-content">
     <div class="detail-grid">
       <div>
@@ -1293,7 +1603,7 @@ function buildDetailHTML(t) {
     </div>
   </div>`;
 }
-
+ 
 let openDetail = null;
 function toggleDetail(rosterId) {
   const row = $('detail-'+rosterId);
@@ -1306,11 +1616,11 @@ function toggleDetail(rosterId) {
   row.classList.toggle('open');
   openDetail = isOpen ? null : rosterId;
 }
-
+ 
 function renderTiers() {
   const tierGroups = { window:[], contend:[], fringe:[], rebuild:[], tank:[] };
   ANALYTICS.forEach(t => tierGroups[t.tier]?.push(t));
-
+ 
   const tiers = [
     { key:'window', color:'var(--gold)' },
     { key:'contend', color:'var(--teal)' },
@@ -1318,7 +1628,7 @@ function renderTiers() {
     { key:'rebuild', color:'var(--purple)' },
     { key:'tank', color:'var(--red)' }
   ].filter(t => tierGroups[t.key].length > 0);
-
+ 
   $('tiersGrid').innerHTML = tiers.map(({ key, color }) => {
     const teams = tierGroups[key];
     const teamChips = teams.map(t => `
@@ -1337,7 +1647,7 @@ function renderTiers() {
     </div>`;
   }).join('');
 }
-
+ 
 function renderAllTime() {
   if (!ROSTERS) return;
   const sorted = ANALYTICS.map(t => {
@@ -1351,7 +1661,7 @@ function renderAllTime() {
       waiver: s.waiver_position || 0
     };
   }).sort((a,b) => b.wins/(Math.max(1,b.wins+b.losses)) - a.wins/(Math.max(1,a.wins+a.losses)));
-
+ 
   $('alltimeBody').innerHTML = sorted.map((t,i) => {
     const total = t.wins + t.losses;
     const pct = total > 0 ? (t.wins/total*100).toFixed(1) : '0.0';
@@ -1370,48 +1680,75 @@ function renderAllTime() {
     </tr>`;
   }).join('');
 }
-
+ 
 function renderRecords() {
-  const byWins = [...ANALYTICS].sort((a,b) => (b.settings.wins||0) - (a.settings.wins||0));
-  const byPF = [...ANALYTICS].sort((a,b) => {
-    const pfa = parseFloat(b.settings.fpts||0); const pfb = parseFloat(a.settings.fpts||0);
-    return pfa - pfb;
-  });
-
+  const lr = window._leagueRecords || {};
+  const userByRosterId = {};
+  ANALYTICS.forEach(t => { userByRosterId[String(t.rosterId)] = t; });
+ 
+  const findTeam = (rosterId) => userByRosterId[String(rosterId)];
+ 
+  const byWins  = [...ANALYTICS].sort((a,b) => (b.settings?.wins||0) - (a.settings?.wins||0));
+  const byPF    = [...ANALYTICS].sort((a,b) => parseFloat(b.settings?.fpts||0) - parseFloat(a.settings?.fpts||0));
+  const byVal   = [...ANALYTICS];  // already sorted by value
+  const byAge   = [...ANALYTICS].filter(t=>t.avgAge!=='?').sort((a,b)=>parseFloat(a.avgAge)-parseFloat(b.avgAge));
+  const byOldAge= [...ANALYTICS].filter(t=>t.avgAge!=='?').sort((a,b)=>parseFloat(b.avgAge)-parseFloat(a.avgAge));
+  const byWR    = [...ANALYTICS].sort((a,b)=>b.posVals.WR-a.posVals.WR);
+  const byRB    = [...ANALYTICS].sort((a,b)=>b.posVals.RB-a.posVals.RB);
+  const byQB    = [...ANALYTICS].sort((a,b)=>b.posVals.QB-a.posVals.QB);
+  const byTE    = [...ANALYTICS].sort((a,b)=>b.posVals.TE-a.posVals.TE);
+  const byHigh  = [...ANALYTICS].sort((a,b)=>(b.settings?.highScore||0)-(a.settings?.highScore||0));
+ 
+  const hasGames = byWins[0] && (byWins[0].settings?.wins||0) > 0;
+  const t = (arr, field, label, suffix='') => {
+    const top = arr[0];
+    if (!top) return { label, val:'—', sub:'' };
+    const fieldVal = typeof field === 'function' ? field(top) : top[field];
+    return { label, val:`${top.teamName}`, sub: fieldVal ? `${fieldVal}${suffix}` : '' };
+  };
+ 
   const records = [
-    { label:'Most Wins (Current Season)', val:byWins[0] ? `${byWins[0].teamName} · ${byWins[0].settings.wins||0} wins` : '—', sub:'' },
-    { label:'Most Points Scored', val:byPF[0] ? `${byPF[0].teamName} · ${Math.round(byPF[0].settings.fpts||0).toLocaleString()} pts` : '—', sub:'' },
-    { label:'Highest Roster Value', val:ANALYTICS[0] ? `${ANALYTICS[0].teamName} · ${fmt(ANALYTICS[0].totalVal)}` : '—', sub:'' },
-    { label:'Youngest Roster', val:(() => { const s = [...ANALYTICS].filter(t=>t.avgAge!=='?').sort((a,b)=>parseFloat(a.avgAge)-parseFloat(b.avgAge)); return s[0]?`${s[0].teamName} · ${s[0].avgAge}y avg`:'—'; })(), sub:'' },
-    { label:'Oldest Roster', val:(() => { const s = [...ANALYTICS].filter(t=>t.avgAge!=='?').sort((a,b)=>parseFloat(b.avgAge)-parseFloat(a.avgAge)); return s[0]?`${s[0].teamName} · ${s[0].avgAge}y avg`:'—'; })(), sub:'' },
-    { label:'Best WR Room', val:(() => { const s=[...ANALYTICS].sort((a,b)=>b.posVals.WR-a.posVals.WR); return s[0]?`${s[0].teamName} · ${fmt(s[0].posVals.WR)}`:'—'; })(), sub:'' },
-    { label:'Best RB Stable', val:(() => { const s=[...ANALYTICS].sort((a,b)=>b.posVals.RB-a.posVals.RB); return s[0]?`${s[0].teamName} · ${fmt(s[0].posVals.RB)}`:'—'; })(), sub:'' },
-    { label:'Best QB Situation', val:(() => { const s=[...ANALYTICS].sort((a,b)=>b.posVals.QB-a.posVals.QB); return s[0]?`${s[0].teamName} · ${fmt(s[0].posVals.QB)}`:'—'; })(), sub:'' },
-    { label:'Best TE Situation', val:(() => { const s=[...ANALYTICS].sort((a,b)=>b.posVals.TE-a.posVals.TE); return s[0]?`${s[0].teamName} · ${fmt(s[0].posVals.TE)}`:'—'; })(), sub:'' },
+    ...(hasGames ? [
+      { label:'Most Wins', val: byWins[0]?.teamName||'—', sub:`${byWins[0]?.settings?.wins||0}–${byWins[0]?.settings?.losses||0}` },
+      { label:'Most Points Scored', val: byPF[0]?.teamName||'—', sub:`${Math.round(parseFloat(byPF[0]?.settings?.fpts||0)).toLocaleString()} pts` },
+      { label:'Highest Single-Week Score', val: byHigh[0]?.teamName||'—', sub: byHigh[0]?.settings?.highScore ? `${byHigh[0].settings.highScore.toFixed(2)} pts` : '' },
+      ...(lr.leagueHighScore > 0 ? [{ label:'All-Time High Score', val: findTeam(lr.leagueHighScoreOwner)?.teamName||'—', sub:`${lr.leagueHighScore.toFixed(2)} pts` }] : []),
+      ...(lr.leagueLowestScore < Infinity ? [{ label:'All-Time Low Score', val: findTeam(lr.leagueLowestOwner)?.teamName||'—', sub:`${lr.leagueLowestScore.toFixed(2)} pts` }] : []),
+      ...(lr.biggestBlowout > 0 ? [{ label:'Biggest Blowout (margin)', val: findTeam(lr.biggestBlowoutOwner)?.teamName||'—', sub:`+${lr.biggestBlowout.toFixed(2)} pts` }] : []),
+    ] : [
+      { label:'Season Record', val:'Season not started yet', sub:'Records will appear once games are played' },
+    ]),
+    { label:'Highest Roster Value', val: byVal[0]?.teamName||'—', sub: byVal[0] ? fmt(byVal[0].totalVal) : '' },
+    { label:'Youngest Roster', val: byAge[0]?.teamName||'—', sub: byAge[0] ? `${byAge[0].avgAge}y avg age` : '' },
+    { label:'Oldest Roster', val: byOldAge[0]?.teamName||'—', sub: byOldAge[0] ? `${byOldAge[0].avgAge}y avg age` : '' },
+    { label:'Best WR Room', val: byWR[0]?.teamName||'—', sub: byWR[0] ? fmt(byWR[0].posVals.WR) + ' WR value' : '' },
+    { label:'Best RB Stable', val: byRB[0]?.teamName||'—', sub: byRB[0] ? fmt(byRB[0].posVals.RB) + ' RB value' : '' },
+    { label:'Best QB Situation', val: byQB[0]?.teamName||'—', sub: byQB[0] ? fmt(byQB[0].posVals.QB) + ' QB value' : '' },
+    { label:'Best TE Situation', val: byTE[0]?.teamName||'—', sub: byTE[0] ? fmt(byTE[0].posVals.TE) + ' TE value' : '' },
   ];
-
+ 
   $('recordsGrid').innerHTML = records.map(r => `
     <div class="record-row">
       <div class="record-label">${r.label}</div>
-      <div class="record-holder">${r.val.split(' · ')[0]}</div>
-      <div class="record-value">${r.val.split(' · ').slice(1).join(' · ')}</div>
+      <div class="record-holder">${r.val}</div>
+      <div class="record-value">${r.sub}</div>
     </div>
   `).join('');
 }
-
+ 
 function populateH2H() {
   const opts = ANALYTICS.map(t => `<option value="${t.rosterId}">${t.teamName}</option>`).join('');
   $('h2hTeamA').innerHTML = '<option>— Select Team —</option>' + opts;
   $('h2hTeamB').innerHTML = '<option>— Select Team —</option>' + opts;
 }
-
+ 
 function runH2H() {
   const idA = parseInt($('h2hTeamA').value);
   const idB = parseInt($('h2hTeamB').value);
   const tA = ANALYTICS.find(t => t.rosterId === idA);
   const tB = ANALYTICS.find(t => t.rosterId === idB);
   if (!tA || !tB || tA === tB) { $('h2hResult').innerHTML = '<p style="color:var(--txt3);padding:20px">Select two different teams</p>'; return; }
-
+ 
   const metrics = [
     { label:'Total Roster Value', a: fmt(tA.totalVal), b: fmt(tB.totalVal), aRaw: tA.totalVal, bRaw: tB.totalVal },
     { label:'Starter Value', a: fmt(tA.starterVal), b: fmt(tB.starterVal), aRaw: tA.starterVal, bRaw: tB.starterVal },
@@ -1423,7 +1760,7 @@ function runH2H() {
     { label:'WR Value', a: fmt(tA.posVals.WR), b: fmt(tB.posVals.WR), aRaw: tA.posVals.WR, bRaw: tB.posVals.WR },
     { label:'TE Value', a: fmt(tA.posVals.TE), b: fmt(tB.posVals.TE), aRaw: tA.posVals.TE, bRaw: tB.posVals.TE },
   ];
-
+ 
   const rowsA = metrics.map(m => {
     const aWins = m.lowerWins ? m.aRaw < m.bRaw : m.aRaw > m.bRaw;
     return `<div class="h2h-metric-row">
@@ -1438,10 +1775,10 @@ function runH2H() {
       <span class="h2h-metric-val ${bWins?'winner':''}">${m.b}</span>
     </div>`;
   }).join('');
-
+ 
   const aWins = metrics.filter(m => m.lowerWins ? m.aRaw < m.bRaw : m.aRaw > m.bRaw).length;
   const bWins = metrics.length - aWins;
-
+ 
   $('h2hResult').innerHTML = `
     <div class="h2h-compare-grid">
       <div class="h2h-card team-a">
@@ -1459,7 +1796,26 @@ function runH2H() {
     </div>
   `;
 }
-
+ 
+// ── SHARE ──
+function shareLeague() {
+  if (!LEAGUE) return;
+  const url = `${location.origin}${location.pathname}?league=${LEAGUE.league_id}`;
+  navigator.clipboard.writeText(url).then(() => {
+    showToast('LINK COPIED!');
+  }).catch(() => {
+    // Fallback for older browsers
+    prompt('Copy this link:', url);
+  });
+}
+ 
+function showToast(msg) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+ 
 // ── TAB SWITCHING ──
 function switchTab(name, btn) {
   ['analysis','alltime','h2h','records'].forEach(t => {
@@ -1468,11 +1824,13 @@ function switchTab(name, btn) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
 }
-
+ 
 // ── INIT ──
 const saved = localStorage.getItem(SAVED_KEY);
+const savedUser = localStorage.getItem(SAVED_USER_KEY);
 if (saved) { $('leagueInput').value = saved; }
-
+if (savedUser) { $('usernameInput').value = savedUser; }
+ 
 // Auto-load from URL param
 const urlLeague = new URLSearchParams(location.search).get('league');
 if (urlLeague) { $('leagueInput').value = urlLeague; init(); }
