@@ -172,38 +172,72 @@ async function getStartupADP(playerMap) {
   return adpData;
 }
 
-// ── ID BRIDGE: GSIS → SLEEPER ──
-// NFLverse uses GSIS IDs (00-0033077), Sleeper uses numeric IDs (4984)
-// NFLverse players.csv has both — we build a bridge map
-async function buildIDMap() {
-  console.log('Step 2b: Building GSIS → Sleeper ID bridge...');
+// ── ID BRIDGE: GSIS → SLEEPER via name matching ──
+// NFLverse v2 players.csv doesn't have sleeper_id column
+// We match on player name between NFLverse and Sleeper player map
+async function buildIDMap(playerMap) {
+  console.log('Step 2b: Building GSIS → Sleeper ID bridge via name matching...');
   try {
     const url = 'https://github.com/nflverse/nflverse-data/releases/download/players/players.csv';
     const res = await fetch(url, { headers:{'User-Agent':'GWTTKB/1.0'}, redirect:'follow' });
-    if (!res.ok) { console.log('  players.csv not available'); return {}; }
+    if (!res.ok) { console.log('  players.csv not available — using name fallback'); return buildNameBridge(playerMap); }
+
     const text = await res.text();
     const lines = text.trim().split(/\r?\n/);
     const hdrs = lines[0].split(',').map(h=>h.replace(/"/g,'').trim());
     const I = n => hdrs.indexOf(n);
+
     const gsisIdx = I('gsis_id');
-    const sleeperIdx = I('sleeper_id');
-    if (gsisIdx < 0 || sleeperIdx < 0) {
-      console.log(`  Column not found. Headers: ${hdrs.slice(0,15).join(', ')}`);
-      return {};
-    }
-    const bridge = {}; // gsis_id -> sleeper_id
+    // Try multiple possible name columns
+    const nameIdx = ['display_name','football_name','common_first_name'].map(I).find(i=>i>=0) ?? -1;
+
+    if (gsisIdx < 0) { console.log('  No gsis_id column — using name bridge'); return buildNameBridge(playerMap); }
+
+    // Build name → gsis_id lookup from NFLverse
+    const nflverseNames = {}; // normalized name → gsis_id
     for (const line of lines.slice(1)) {
       const v = parseCSVLine(line);
       const gsis = v[gsisIdx]?.trim();
-      const sleeper = v[sleeperIdx]?.trim();
-      if (gsis && sleeper && sleeper !== 'NA') bridge[gsis] = sleeper;
+      if (!gsis) continue;
+      // Try to get full name from available columns
+      const firstName = v[I('first_name')]?.trim() || '';
+      const lastName  = v[I('last_name')]?.trim()  || '';
+      const dispName  = nameIdx >= 0 ? v[nameIdx]?.trim() : '';
+      const fullName  = dispName || `${firstName} ${lastName}`.trim();
+      if (fullName) nflverseNames[normName(fullName)] = gsis;
     }
-    console.log(`  Bridge built: ${Object.keys(bridge).length} GSIS→Sleeper mappings`);
+
+    // Now match against Sleeper player map
+    const bridge = {}; // gsis_id → sleeper_id
+    let matched = 0;
+    for (const [sleeperId, p] of Object.entries(playerMap)) {
+      const key = normName(p.name);
+      const gsis = nflverseNames[key];
+      if (gsis) { bridge[gsis] = sleeperId; matched++; }
+    }
+    console.log(`  Bridge built: ${matched} matches via name`);
     return bridge;
   } catch(e) {
-    console.log('  Bridge error:', e.message);
-    return {};
+    console.log('  Bridge error:', e.message, '— using name bridge');
+    return buildNameBridge(playerMap);
   }
+}
+
+// Fallback: build bridge purely from Sleeper player map names
+// Maps normalized name → sleeper_id, then NFLverse matches by name
+function buildNameBridge(playerMap) {
+  const bridge = {}; // normalized name → sleeper_id (used differently in getFPAR)
+  for (const [id, p] of Object.entries(playerMap)) {
+    bridge[normName(p.name)] = id;
+  }
+  console.log(`  Name bridge built: ${Object.keys(bridge).length} players`);
+  return bridge;
+}
+
+function normName(name) {
+  return (name||'').toLowerCase()
+    .replace(/\s+(jr|sr|ii|iii|iv|v)\.?$/i,'')
+    .replace(/[^a-z]/g,'');
 }
 async function getFPAR(seasons=[2023,2024,2025], idBridge={}) {
   console.log('Step 3: Computing FPAR from NFLverse...');
@@ -230,12 +264,13 @@ async function getFPAR(seasons=[2023,2024,2025], idBridge={}) {
       const byPlayer = {};
       for (const line of lines.slice(1)) {
         const v = parseCSVLine(line);
-        const gsisId = v[idx.id];
-        if (!gsisId) continue;
+        if (!v[idx.id]) continue;
 
-        // Bridge GSIS ID → Sleeper ID
-        const sleeperId = idBridge[gsisId];
-        if (!sleeperId) continue; // skip players not in bridge
+        // Bridge GSIS ID → Sleeper ID via name matching
+        // Build a normalized name from the stat row and look up Sleeper ID
+        const playerName = v[idx.name] || '';
+        const sleeperId = idBridge[normName(playerName)];
+        if (!sleeperId) continue; // skip players not matched
 
         const pos = (v[idx.pos]||'').toUpperCase();
         if (!['QB','RB','WR','TE'].includes(pos)) continue;
@@ -339,9 +374,10 @@ function blend(adpData, fparData, playerMap) {
     // Applying age curve on top double-counts and distorts prime veterans
 
     finalValue=Math.max(0,Math.min(9999,finalValue));
+    const age = adp.age || pmap?.age || null;
     players.push({
       id, name:adp.name, pos:adp.pos, team:adp.team||pmap?.team||'FA',
-      age:age||null, value:finalValue, avg_pick:adp.avg_pick, draft_count:adp.draft_count,
+      age, value:finalValue, avg_pick:adp.avg_pick, draft_count:adp.draft_count,
       headshot_url: fpar?.hs || `https://sleepercdn.com/content/nfl/players/${id}.jpg`,
       components:{
         adp_value:adpVal, fpar_value:fparVal, trade_value:tradeVal,
@@ -369,7 +405,7 @@ async function main() {
   console.log(`Date: ${date}\n`);
 
   const playerMap = await getPlayerMap();
-  const idBridge  = await buildIDMap();
+  const idBridge  = await buildIDMap(playerMap);
   const adpData   = await getStartupADP(playerMap);
   const fparData  = await getFPAR([2023,2024,2025], idBridge);
   const players   = blend(adpData, fparData, playerMap);
