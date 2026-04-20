@@ -139,19 +139,25 @@ async function getStartupADP(playerMap) {
 
   console.log(`  Processed ${processed} drafts, ${Object.keys(picks).length} players found`);
 
-  // Qualify players with 3+ draft appearances and compute ADP
+  // Qualify players — veterans need 3+ drafts, rookies need 10+
+  // Rookies (years_exp === 0) need more evidence before we trust their ADP
   const qualified = Object.entries(picks)
-    .filter(([,d]) => d.count >= 3)
+    .filter(([id, d]) => {
+      const isRookie = (playerMap[id]?.years_exp || 0) === 0;
+      return isRookie ? d.count >= 10 : d.count >= 3;
+    })
     .map(([id,d]) => ({
       id, avg_pick: d.total/d.count, draft_count: d.count,
       name: playerMap[id]?.name||id,
       pos: playerMap[id]?.pos||'?',
       team: playerMap[id]?.team||'FA',
-      age: playerMap[id]?.age||null
+      age: playerMap[id]?.age||null,
+      years_exp: playerMap[id]?.years_exp||0
     }))
     .sort((a,b) => a.avg_pick - b.avg_pick);
 
-  console.log(`  ${qualified.length} players with 3+ draft appearances`);
+  const rookiesIn = qualified.filter(p => p.years_exp === 0).length;
+  console.log(`  ${qualified.length} players qualified (${rookiesIn} rookies with 10+ drafts)`);
 
   // Normalize to 0-9999
   const adpData = {};
@@ -166,10 +172,42 @@ async function getStartupADP(playerMap) {
   return adpData;
 }
 
-// ── STEP 3: FPAR FROM NFLVERSE ──
-async function getFPAR(seasons=[2023,2024,2025]) {
+// ── ID BRIDGE: GSIS → SLEEPER ──
+// NFLverse uses GSIS IDs (00-0033077), Sleeper uses numeric IDs (4984)
+// NFLverse players.csv has both — we build a bridge map
+async function buildIDMap() {
+  console.log('Step 2b: Building GSIS → Sleeper ID bridge...');
+  try {
+    const url = 'https://github.com/nflverse/nflverse-data/releases/download/players/players.csv';
+    const res = await fetch(url, { headers:{'User-Agent':'GWTTKB/1.0'}, redirect:'follow' });
+    if (!res.ok) { console.log('  players.csv not available'); return {}; }
+    const text = await res.text();
+    const lines = text.trim().split(/\r?\n/);
+    const hdrs = lines[0].split(',').map(h=>h.replace(/"/g,'').trim());
+    const I = n => hdrs.indexOf(n);
+    const gsisIdx = I('gsis_id');
+    const sleeperIdx = I('sleeper_id');
+    if (gsisIdx < 0 || sleeperIdx < 0) {
+      console.log(`  Column not found. Headers: ${hdrs.slice(0,15).join(', ')}`);
+      return {};
+    }
+    const bridge = {}; // gsis_id -> sleeper_id
+    for (const line of lines.slice(1)) {
+      const v = parseCSVLine(line);
+      const gsis = v[gsisIdx]?.trim();
+      const sleeper = v[sleeperIdx]?.trim();
+      if (gsis && sleeper && sleeper !== 'NA') bridge[gsis] = sleeper;
+    }
+    console.log(`  Bridge built: ${Object.keys(bridge).length} GSIS→Sleeper mappings`);
+    return bridge;
+  } catch(e) {
+    console.log('  Bridge error:', e.message);
+    return {};
+  }
+}
+async function getFPAR(seasons=[2023,2024,2025], idBridge={}) {
   console.log('Step 3: Computing FPAR from NFLverse...');
-  const allStats = {};
+  const allStats = {}; // keyed by SLEEPER ID after bridge
 
   for (const season of seasons) {
     try {
@@ -192,26 +230,34 @@ async function getFPAR(seasons=[2023,2024,2025]) {
       const byPlayer = {};
       for (const line of lines.slice(1)) {
         const v = parseCSVLine(line);
-        if (!v[idx.id]) continue;
+        const gsisId = v[idx.id];
+        if (!gsisId) continue;
+
+        // Bridge GSIS ID → Sleeper ID
+        const sleeperId = idBridge[gsisId];
+        if (!sleeperId) continue; // skip players not in bridge
+
         const pos = (v[idx.pos]||'').toUpperCase();
         if (!['QB','RB','WR','TE'].includes(pos)) continue;
         const pts = parseFloat(v[idx.pts])||0;
         const usage = (parseFloat(v[idx.carries])||0)+(parseFloat(v[idx.targets])||0)+(parseFloat(v[idx.attempts])||0);
         if (pts===0 && usage===0) continue;
-        const id = v[idx.id];
-        if (!byPlayer[id]) byPlayer[id]={pos,team:v[idx.team]||'FA',hs:v[idx.hs]||'',name:v[idx.name]||'',weeks:[]};
-        byPlayer[id].weeks.push(pts);
-        byPlayer[id].team=v[idx.team]||byPlayer[id].team;
+
+        if (!byPlayer[sleeperId]) byPlayer[sleeperId]={pos,team:v[idx.team]||'FA',hs:v[idx.hs]||'',name:v[idx.name]||'',weeks:[]};
+        byPlayer[sleeperId].weeks.push(pts);
+        byPlayer[sleeperId].team=v[idx.team]||byPlayer[sleeperId].team;
       }
 
+      let bridged = 0;
       for (const [id,pd] of Object.entries(byPlayer)) {
         if (pd.weeks.length<5) continue;
         const totalPts=pd.weeks.reduce((s,v)=>s+v,0);
         if (!allStats[id]) allStats[id]={pos:pd.pos,team:pd.team,hs:pd.hs,name:pd.name,seasons:{}};
         allStats[id].seasons[season]={ppg:totalPts/pd.weeks.length,games:pd.weeks.length,totalPts};
         allStats[id].team=pd.team;
+        bridged++;
       }
-      console.log(`  ${season}: ${Object.keys(byPlayer).length} players`);
+      console.log(`  ${season}: ${bridged} players with Sleeper ID match`);
     } catch(e) { console.error(`  ${season} error:`, e.message); }
   }
 
@@ -288,12 +334,9 @@ function blend(adpData, fparData, playerMap) {
       finalValue = Math.round(adpVal*0.92); // rookies/no stats — slight discount
     }
 
-    // Age curve adjustment
-    const age = adp.age || pmap?.age;
-    if (age && ['QB','RB','WR','TE'].includes(adp.pos)) {
-      const cur=ageMult(adp.pos,age), fwd=ageMult(adp.pos,age+1);
-      if (cur>0) finalValue=Math.round(finalValue*(1+(fwd/cur-1)*0.4));
-    }
+    // NO age curve adjustment here — ADP already prices in age implicitly
+    // Dynasty managers naturally draft young players higher in startups
+    // Applying age curve on top double-counts and distorts prime veterans
 
     finalValue=Math.max(0,Math.min(9999,finalValue));
     players.push({
@@ -326,14 +369,15 @@ async function main() {
   console.log(`Date: ${date}\n`);
 
   const playerMap = await getPlayerMap();
+  const idBridge  = await buildIDMap();
   const adpData   = await getStartupADP(playerMap);
-  const fparData  = await getFPAR([2023,2024,2025]);
+  const fparData  = await getFPAR([2023,2024,2025], idBridge);
   const players   = blend(adpData, fparData, playerMap);
 
   const output = {
     generated: new Date().toISOString(),
-    version: '5.0',
-    engine: 'Real Startup ADP + FPAR Reality Check + Trade Signal',
+    version: '5.1',
+    engine: 'Real Startup ADP + FPAR (ID-bridged) + Trade Signal — No Age Double-Count',
     date,
     summary: {
       total_players: players.length,
