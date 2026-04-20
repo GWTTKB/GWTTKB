@@ -67,19 +67,19 @@ async function getPlayerMap() {
 
 // ── STEP 2: REAL STARTUP ADP FROM ACTUAL DRAFTS ──
 async function getStartupADP(playerMap) {
-  console.log('Step 2: Computing startup ADP from real Sleeper drafts...');
+  console.log('Step 2: Computing startup ADP from real Sleeper drafts (SF + 1QB)...');
 
   const SEED_USER = '605943364277321728'; // trout9
   const TARGET_DRAFTS = 150;
   const FANTASY_POS = ['QB','RB','WR','TE'];
 
-  const draftIds = new Set();
+  const draftMeta = new Map(); // draftId → { isSF: bool }
   const leaguesSeen = new Set();
   const usersSeen = new Set();
   const usersToVisit = [SEED_USER];
 
   // Snowball to find completed dynasty startup drafts
-  while (usersToVisit.length > 0 && draftIds.size < TARGET_DRAFTS * 2) {
+  while (usersToVisit.length > 0 && draftMeta.size < TARGET_DRAFTS * 2) {
     const userId = usersToVisit.shift();
     if (usersSeen.has(userId)) continue;
     usersSeen.add(userId);
@@ -92,16 +92,20 @@ async function getStartupADP(playerMap) {
       if (league.settings?.type !== 2) continue; // dynasty only
       leaguesSeen.add(league.league_id);
 
+      // Detect SF vs 1QB from roster positions
+      const positions = league.roster_positions || [];
+      const isSF = positions.includes('SUPER_FLEX');
+
       const drafts = await get(`${SLEEPER}/league/${league.league_id}/drafts`);
       if (!Array.isArray(drafts)) continue;
       for (const d of drafts) {
         if (d.status==='complete' && (d.type==='snake'||d.type==='linear') && (d.settings?.rounds||0)>=20) {
-          draftIds.add(d.draft_id);
+          draftMeta.set(d.draft_id, { isSF });
         }
       }
 
       // Fan out through users
-      if (draftIds.size < TARGET_DRAFTS) {
+      if (draftMeta.size < TARGET_DRAFTS) {
         const users = await get(`${SLEEPER}/league/${league.league_id}/users`);
         if (Array.isArray(users)) {
           for (const u of users) {
@@ -113,63 +117,60 @@ async function getStartupADP(playerMap) {
     }
   }
 
-  console.log(`  Found ${draftIds.size} startup drafts`);
+  const sfDraftIds  = [...draftMeta.entries()].filter(([,m]) =>  m.isSF).map(([id]) => id);
+  const qbDraftIds  = [...draftMeta.entries()].filter(([,m]) => !m.isSF).map(([id]) => id);
+  console.log(`  Found ${sfDraftIds.length} SF drafts, ${qbDraftIds.length} 1QB drafts`);
 
-  // Pull picks and compute ADP
-  const picks = {}; // playerId -> {total, count}
-  let processed = 0;
-
-  for (const draftId of [...draftIds].slice(0, TARGET_DRAFTS)) {
-    const draftPicks = await get(`${SLEEPER}/draft/${draftId}/picks`);
-    if (!Array.isArray(draftPicks) || draftPicks.length < 20) continue;
-
-    for (const pick of draftPicks) {
-      const pid = pick.player_id;
-      if (!pid || pid.length > 8) continue;
-      const pos = playerMap[pid]?.pos || pick.metadata?.position || '?';
-      if (!FANTASY_POS.includes(pos)) continue;
-      if (!picks[pid]) picks[pid] = { total:0, count:0 };
-      picks[pid].total += pick.pick_no;
-      picks[pid].count++;
+  // Pull picks and compute ADP for each format
+  async function computeADP(draftIds, label) {
+    const picks = {};
+    let processed = 0;
+    for (const draftId of draftIds.slice(0, TARGET_DRAFTS)) {
+      const draftPicks = await get(`${SLEEPER}/draft/${draftId}/picks`);
+      if (!Array.isArray(draftPicks) || draftPicks.length < 20) continue;
+      for (const pick of draftPicks) {
+        const pid = pick.player_id;
+        if (!pid || pid.length > 8) continue;
+        const pos = playerMap[pid]?.pos || pick.metadata?.position || '?';
+        if (!FANTASY_POS.includes(pos)) continue;
+        if (!picks[pid]) picks[pid] = { total:0, count:0 };
+        picks[pid].total += pick.pick_no;
+        picks[pid].count++;
+      }
+      processed++;
+      if (processed % 20 === 0) console.log(`  [${label}] Processed ${processed} drafts...`);
+      await sleep(60);
     }
-    processed++;
-    if (processed % 20 === 0) console.log(`  Processed ${processed} drafts...`);
-    await sleep(60);
+
+    const qualified = Object.entries(picks)
+      .filter(([id, d]) => {
+        const isRookie = (playerMap[id]?.years_exp || 0) === 0;
+        return isRookie ? d.count >= 10 : d.count >= 3;
+      })
+      .map(([id,d]) => ({
+        id, avg_pick: d.total/d.count, draft_count: d.count,
+        name: playerMap[id]?.name||id,
+        pos: playerMap[id]?.pos||'?',
+        team: playerMap[id]?.team||'FA',
+        age: playerMap[id]?.age||null,
+        years_exp: playerMap[id]?.years_exp||0
+      }))
+      .sort((a,b) => a.avg_pick - b.avg_pick);
+
+    const rookiesIn = qualified.filter(p => p.years_exp === 0).length;
+    console.log(`  [${label}] ${qualified.length} players qualified (${rookiesIn} rookies)`);
+
+    const adpData = {};
+    qualified.forEach((p,i) => {
+      const pct = 1 - (i / qualified.length);
+      adpData[p.id] = { ...p, adp_value: Math.max(100, Math.round(Math.pow(pct, 0.65) * 9999)) };
+    });
+    return adpData;
   }
 
-  console.log(`  Processed ${processed} drafts, ${Object.keys(picks).length} players found`);
-
-  // Qualify players — veterans need 3+ drafts, rookies need 10+
-  // Rookies (years_exp === 0) need more evidence before we trust their ADP
-  const qualified = Object.entries(picks)
-    .filter(([id, d]) => {
-      const isRookie = (playerMap[id]?.years_exp || 0) === 0;
-      return isRookie ? d.count >= 10 : d.count >= 3;
-    })
-    .map(([id,d]) => ({
-      id, avg_pick: d.total/d.count, draft_count: d.count,
-      name: playerMap[id]?.name||id,
-      pos: playerMap[id]?.pos||'?',
-      team: playerMap[id]?.team||'FA',
-      age: playerMap[id]?.age||null,
-      years_exp: playerMap[id]?.years_exp||0
-    }))
-    .sort((a,b) => a.avg_pick - b.avg_pick);
-
-  const rookiesIn = qualified.filter(p => p.years_exp === 0).length;
-  console.log(`  ${qualified.length} players qualified (${rookiesIn} rookies with 10+ drafts)`);
-
-  // Normalize to 0-9999
-  const adpData = {};
-  qualified.forEach((p,i) => {
-    const pct = 1 - (i / qualified.length);
-    adpData[p.id] = {
-      ...p,
-      adp_value: Math.max(100, Math.round(Math.pow(pct, 0.65) * 9999))
-    };
-  });
-
-  return adpData;
+  const adpSF  = await computeADP(sfDraftIds,  'SF');
+  const adp1QB = await computeADP(qbDraftIds, '1QB');
+  return { adpSF, adp1QB };
 }
 
 // ── ID BRIDGE: GSIS → SLEEPER via name matching ──
@@ -338,17 +339,18 @@ async function getFPAR(seasons=[2023,2024,2025], idBridge={}) {
 }
 
 // ── STEP 4: BLEND ──
-function blend(adpData, fparData, playerMap) {
-  console.log('Step 4: Blending layers...');
+function blend(adpData, fparData, playerMap, format='SF') {
+  console.log(`Step 4: Blending ${format} layers...`);
   const W = { adp:0.50, fpar:0.30, trade:0.20 };
 
-  // Load existing trade values if available
+  // Load existing trade values — use format-specific if available
   let tradeData = {};
   try {
     const existing = JSON.parse(fs.readFileSync('public/data/consensus.json','utf8'));
-    const src = existing.formats?.sf_ppr_12?.players || existing.players || [];
+    const formatKey = format === 'SF' ? 'sf_ppr' : 'qb1_ppr';
+    const src = existing.formats?.[formatKey]?.players || existing.formats?.sf_ppr_12?.players || existing.players || [];
     for (const p of src) if (p.id) tradeData[p.id]={value:p.value};
-    console.log(`  Loaded ${Object.keys(tradeData).length} existing trade values`);
+    console.log(`  Loaded ${Object.keys(tradeData).length} existing ${format} trade values`);
   } catch { console.log('  No existing consensus — fresh build'); }
 
   const players = [];
@@ -404,44 +406,49 @@ async function main() {
   const date = new Date().toISOString().split('T')[0];
   console.log(`Date: ${date}\n`);
 
-  const playerMap = await getPlayerMap();
-  const idBridge  = await buildIDMap(playerMap);
-  const adpData   = await getStartupADP(playerMap);
-  const fparData  = await getFPAR([2023,2024,2025], idBridge);
-  const players   = blend(adpData, fparData, playerMap);
+  const playerMap       = await getPlayerMap();
+  const idBridge        = await buildIDMap(playerMap);
+  const { adpSF, adp1QB } = await getStartupADP(playerMap);
+  const fparData        = await getFPAR([2023,2024,2025], idBridge);
+
+  console.log('\nBlending SF rankings...');
+  const playersSF  = blend(adpSF,  fparData, playerMap, 'SF');
+  console.log('Blending 1QB rankings...');
+  const players1QB = blend(adp1QB, fparData, playerMap, '1QB');
+
+  const summarize = (players) => ({
+    total_players: players.length,
+    full_blend: players.filter(p=>p.components.source==='full_blend').length,
+    adp_fpar:   players.filter(p=>p.components.source==='adp_fpar').length,
+    adp_only:   players.filter(p=>p.components.source==='adp_only').length,
+    by_position: {
+      QB: players.filter(p=>p.pos==='QB').length,
+      RB: players.filter(p=>p.pos==='RB').length,
+      WR: players.filter(p=>p.pos==='WR').length,
+      TE: players.filter(p=>p.pos==='TE').length
+    }
+  });
+
+  const slim = players => players.map(p=>({
+    id:p.id, name:p.name, pos:p.pos, team:p.team, age:p.age,
+    value:p.value, rank:p.rank, pos_rank:p.pos_rank,
+    avg_pick:p.avg_pick, draft_count:p.draft_count,
+    headshot_url:p.headshot_url, components:p.components
+  }));
 
   const output = {
     generated: new Date().toISOString(),
-    version: '5.1',
-    engine: 'Real Startup ADP + FPAR (ID-bridged) + Trade Signal — No Age Double-Count',
+    version: '5.2',
+    engine: 'Real Startup ADP (SF + 1QB split) + FPAR + Trade Signal',
     date,
-    summary: {
-      total_players: players.length,
-      full_blend: players.filter(p=>p.components.source==='full_blend').length,
-      adp_fpar: players.filter(p=>p.components.source==='adp_fpar').length,
-      adp_only: players.filter(p=>p.components.source==='adp_only').length,
-      by_position: {
-        QB: players.filter(p=>p.pos==='QB').length,
-        RB: players.filter(p=>p.pos==='RB').length,
-        WR: players.filter(p=>p.pos==='WR').length,
-        TE: players.filter(p=>p.pos==='TE').length
-      }
-    },
-    players: players.map(p=>({
-      id:p.id, name:p.name, pos:p.pos, team:p.team, age:p.age,
-      value:p.value, rank:p.rank, pos_rank:p.pos_rank,
-      avg_pick:p.avg_pick, draft_count:p.draft_count,
-      headshot_url:p.headshot_url,
-      components:p.components
-    })),
     formats: {
-      sf_ppr_12: {
-        players: players.map(p=>({
-          id:p.id, name:p.name, pos:p.pos, team:p.team, age:p.age,
-          value:p.value, rank:p.rank, pos_rank:p.pos_rank,
-          avg_pick:p.avg_pick, draft_count:p.draft_count,
-          headshot_url:p.headshot_url
-        }))
+      sf_ppr: {
+        summary: summarize(playersSF),
+        players: slim(playersSF)
+      },
+      qb1_ppr: {
+        summary: summarize(players1QB),
+        players: slim(players1QB)
       }
     }
   };
@@ -450,14 +457,16 @@ async function main() {
   fs.mkdirSync('public/data/adp-history', { recursive: true });
   fs.writeFileSync('public/data/consensus.json', JSON.stringify(output, null, 2));
 
-  // Write dated snapshot
+  // Write dated snapshots for both formats
   fs.writeFileSync(`public/data/adp-history/${date}.json`, JSON.stringify({
     date,
-    players: players.map(p=>({id:p.id,name:p.name,pos:p.pos,value:p.value,avg_pick:p.avg_pick,rank:p.rank}))
+    sf:  playersSF.map(p=>({id:p.id,name:p.name,pos:p.pos,value:p.value,avg_pick:p.avg_pick,rank:p.rank})),
+    qb1: players1QB.map(p=>({id:p.id,name:p.name,pos:p.pos,value:p.value,avg_pick:p.avg_pick,rank:p.rank}))
   }, null, 2));
 
-  console.log(`\n✓ Done! ${players.length} players ranked`);
-  console.log(`Top 5: ${players.slice(0,5).map(p=>`${p.name} (${p.value})`).join(', ')}`);
+  console.log(`\n✓ Done!`);
+  console.log(`SF  Top 5: ${playersSF.slice(0,5).map(p=>`${p.name}(${p.value})`).join(', ')}`);
+  console.log(`1QB Top 5: ${players1QB.slice(0,5).map(p=>`${p.name}(${p.value})`).join(', ')}`);
 }
 
 main().catch(e => { console.error('FATAL:', e); process.exit(1); });
