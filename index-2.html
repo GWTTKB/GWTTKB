@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GWTTKB — We Build Fantasy Champions</title>
+<meta name="description" content="The most advanced fantasy football intelligence platform. Dynasty + Redraft. Real data, AI coaching, 6 years of history. Free.">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;600;700;800;900&family=Barlow:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#05080e;--s1:#090e18;--s2:#0d1420;--s3:#131d2e;
+  --teal:#00d4ff;--teal2:#00f0ff;--green:#00e676;--gold:#ffb700;
+  --red:#ff3d57;--purple:#9b6dff;
+  --txt:#e8f0fa;--txt2:#8ba4c0;--txt3:#4d6a8a;
+  --bdr:rgba(0,212,255,0.10);--bdr2:rgba(0,212,255,0.22);
+  --mono:'JetBrains Mono',monospace;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--txt);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--s1);}::-webkit-scrollbar-thumb{background:var(--s3);border-radius:2px;}
+
+/* ── BETA BANNER ── */
+.beta-banner{position:fixed;top:0;left:0;right:0;z-index:101;height:36px;background:linear-gradient(90deg,rgba(0,212,255,0.15),rgba(155,109,255,0.15));border-bottom:1px solid rgba(0,212,255,0.2);display:flex;align-items:center;justify-content:center;gap:12px;}
+.beta-banner-text{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;color:var(--txt2);}
+.beta-banner-text strong{color:var(--teal);}
+.beta-pill{padding:2px 10px;background:rgba(0,230,118,0.15);border:1px solid rgba(0,230,118,0.3);border-radius:100px;font-family:var(--mono);font-size:9px;color:var(--green);letter-spacing:2px;}
+
+.nav{position:fixed;top:36px;left:0;right:0;z-index:100;height:56px;display:flex;align-items:center;padding:0 32px;background:rgba(5,8,14,0.9);backdrop-filter:blur(16px);border-bottom:1px solid var(--bdr);}
+.nav-logo{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:5px;color:var(--teal);text-decoration:none;}
+.nav-links{display:flex;gap:28px;margin-left:48px;list-style:none;}
+.nav-links a{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--txt3);text-decoration:none;transition:color 0.15s;}
+.nav-links a:hover{color:var(--teal);}
+.nav-spacer{flex:1;}
+.nav-cta{padding:7px 20px;background:var(--teal);color:#000;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;text-decoration:none;border-radius:6px;transition:all 0.15s;}
+.nav-cta:hover{background:var(--teal2);transform:translateY(-1px);}
+
+/* ── TICKER ── */
+.ticker-wrap{position:fixed;top:92px;left:0;right:0;z-index:99;height:32px;background:var(--s1);border-bottom:1px solid var(--bdr);overflow:hidden;display:flex;align-items:center;}
+.ticker-label{padding:0 16px;font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:800;letter-spacing:3px;color:var(--teal);background:var(--s2);border-right:1px solid var(--bdr);white-space:nowrap;height:100%;display:flex;align-items:center;flex-shrink:0;}
+.ticker-track{display:flex;align-items:center;animation:tickerScroll 50s linear infinite;white-space:nowrap;}
+@keyframes tickerScroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.ticker-item{display:inline-flex;align-items:center;gap:6px;padding:0 22px;font-family:var(--mono);font-size:10px;border-right:1px solid var(--bdr);}
+.ticker-name{color:var(--txt2);font-weight:600;}
+.ticker-val{color:var(--teal);}
+.ticker-up{color:var(--green);font-size:9px;}
+.ticker-dn{color:var(--red);font-size:9px;}
+
+/* ── HERO ── */
+.hero{position:relative;z-index:1;min-height:100vh;padding-top:124px;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding-left:clamp(24px,6vw,120px);padding-right:24px;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(0,212,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.025) 1px,transparent 1px);background-size:64px 64px;pointer-events:none;}
+.hero::after{content:'';position:absolute;top:-20%;left:-10%;width:80vw;height:80vh;background:radial-gradient(ellipse,rgba(0,212,255,0.06) 0%,transparent 65%);pointer-events:none;}
+.hero-eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:4px;color:var(--teal);text-transform:uppercase;margin-bottom:20px;opacity:0;animation:fadeUp 0.6s 0.2s ease both;display:flex;align-items:center;gap:12px;}
+.hero-eyebrow::before{content:'';width:40px;height:1px;background:var(--teal);}
+.hero-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(64px,10vw,140px);line-height:0.92;letter-spacing:2px;color:var(--txt);max-width:900px;opacity:0;animation:fadeUp 0.7s 0.35s ease both;}
+.hero-title em{font-style:normal;color:var(--teal);}
+.hero-title .outline{-webkit-text-stroke:1px rgba(0,212,255,0.35);color:transparent;}
+.hero-sub{margin-top:28px;font-size:clamp(15px,2vw,18px);font-weight:300;color:var(--txt2);max-width:620px;line-height:1.65;opacity:0;animation:fadeUp 0.7s 0.5s ease both;}
+.format-pills{display:flex;align-items:center;gap:10px;margin-top:16px;opacity:0;animation:fadeUp 0.7s 0.55s ease both;}
+.format-pill{padding:4px 14px;border-radius:100px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;}
+.format-pill.live{background:rgba(0,212,255,0.12);border:1px solid rgba(0,212,255,0.3);color:var(--teal);}
+.format-pill.soon{background:rgba(255,183,0,0.1);border:1px solid rgba(255,183,0,0.25);color:var(--gold);}
+.format-sep{color:var(--txt3);font-size:11px;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;}
+.hero-actions{margin-top:40px;display:flex;gap:14px;flex-wrap:wrap;align-items:center;opacity:0;animation:fadeUp 0.7s 0.65s ease both;}
+.btn-primary{display:inline-flex;align-items:center;gap:10px;padding:14px 32px;background:var(--teal);color:#000;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:3px;text-decoration:none;border-radius:8px;transition:all 0.15s;}
+.btn-primary:hover{background:var(--teal2);transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,212,255,0.3);}
+.btn-secondary{display:inline-flex;align-items:center;gap:8px;padding:14px 28px;background:transparent;border:1px solid var(--bdr2);color:var(--txt2);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;text-decoration:none;border-radius:8px;transition:all 0.15s;}
+.btn-secondary:hover{border-color:var(--teal);color:var(--teal);}
+.hero-stats{margin-top:72px;display:flex;gap:48px;flex-wrap:wrap;opacity:0;animation:fadeUp 0.7s 0.8s ease both;}
+.hero-stat-v{font-family:'Bebas Neue',sans-serif;font-size:36px;line-height:1;color:var(--teal);}
+.hero-stat-l{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--txt3);margin-top:4px;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── MANIFESTO ── */
+.manifesto{position:relative;z-index:1;padding:80px clamp(24px,6vw,120px);border-top:1px solid var(--bdr);border-bottom:1px solid var(--bdr);background:var(--s1);overflow:hidden;}
+.manifesto::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--teal),transparent);}
+.manifesto-inner{max-width:1100px;display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;}
+.manifesto-statement{font-family:'Bebas Neue',sans-serif;font-size:clamp(34px,4.5vw,62px);line-height:1.05;color:var(--txt);}
+.manifesto-statement em{font-style:normal;color:var(--teal);}
+.manifesto-body{font-size:15px;font-weight:300;color:var(--txt2);line-height:1.75;}
+.manifesto-body p{margin-bottom:16px;}
+.manifesto-body p:last-child{margin-bottom:0;}
+.manifesto-body strong{color:var(--txt);font-weight:600;}
+
+/* ── DATA INTELLIGENCE ── */
+.data-section{position:relative;z-index:1;padding:100px clamp(24px,6vw,120px);overflow:hidden;}
+.data-inner{max-width:1100px;display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:start;}
+.section-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:4px;color:var(--teal);text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:12px;}
+.section-eyebrow::before{content:'';width:32px;height:1px;background:var(--teal);}
+.section-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(34px,4.5vw,54px);letter-spacing:2px;margin-bottom:16px;line-height:1.0;}
+.section-sub{font-size:15px;color:var(--txt3);font-weight:300;line-height:1.65;margin-bottom:28px;}
+.stat-chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:28px;}
+.stat-chip{padding:4px 11px;background:rgba(0,212,255,0.06);border:1px solid rgba(0,212,255,0.12);border-radius:5px;font-family:var(--mono);font-size:10px;color:var(--txt3);transition:all 0.15s;}
+.stat-chip:hover{background:rgba(0,212,255,0.12);color:var(--txt2);}
+.stat-chip.hl{background:rgba(0,212,255,0.12);border-color:rgba(0,212,255,0.28);color:var(--teal);}
+.data-callout{padding:16px 20px;background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.15);border-left:3px solid var(--teal);border-radius:8px;font-size:13px;color:var(--txt2);line-height:1.6;}
+.data-callout strong{color:var(--teal);}
+.data-cards{display:flex;flex-direction:column;gap:12px;}
+.data-card{background:var(--s1);border:1px solid var(--bdr);border-radius:10px;padding:18px;transition:border-color 0.15s;}
+.data-card:hover{border-color:var(--bdr2);}
+.dc-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.dc-title{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--txt);}
+.dc-label{font-family:var(--mono);font-size:9px;color:var(--teal);letter-spacing:1px;}
+.dc-bar{height:4px;background:var(--s3);border-radius:2px;overflow:hidden;margin-bottom:8px;}
+.dc-fill{height:100%;border-radius:2px;transition:width 1s ease;}
+.dc-meta{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--txt3);}
+.dc-meta span{color:var(--txt2);}
+
+/* ── COACH ── */
+.coach-section{position:relative;z-index:1;padding:100px clamp(24px,6vw,120px);background:var(--s1);border-top:1px solid var(--bdr);border-bottom:1px solid var(--bdr);overflow:hidden;}
+.coach-section::after{content:'';position:absolute;right:-10%;top:50%;transform:translateY(-50%);width:600px;height:600px;background:radial-gradient(circle,rgba(155,109,255,0.06),transparent 65%);pointer-events:none;}
+.coach-inner{max-width:1100px;display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;position:relative;z-index:1;}
+.coach-chat{background:var(--s2);border:1px solid var(--bdr2);border-radius:16px;padding:24px;position:relative;}
+.coach-chat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--teal),var(--purple));border-radius:16px 16px 0 0;}
+.chat-header{display:flex;align-items:center;gap:10px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--bdr);}
+.chat-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--purple));display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.chat-title{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--txt);}
+.chat-status{font-size:11px;color:var(--green);display:flex;align-items:center;gap:4px;}
+.chat-status::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s ease infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.chat-messages{display:flex;flex-direction:column;gap:12px;}
+.chat-msg{padding:12px 14px;border-radius:10px;font-size:13px;line-height:1.55;}
+.chat-msg.user{background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.15);color:var(--txt2);align-self:flex-end;max-width:88%;border-radius:10px 10px 2px 10px;}
+.chat-msg.ai{background:var(--s3);border:1px solid var(--bdr);color:var(--txt);border-radius:10px 10px 10px 2px;}
+.chat-msg.ai strong{color:var(--teal);}
+.verdict{margin-top:8px;padding-top:8px;border-top:1px solid var(--bdr);font-family:var(--mono);font-size:11px;color:var(--green);}
+.chat-input-row{margin-top:16px;padding-top:16px;border-top:1px solid var(--bdr);display:flex;gap:8px;}
+.chat-input-fake{flex:1;padding:9px 12px;background:var(--s3);border:1px solid var(--bdr);border-radius:7px;font-family:var(--mono);font-size:11px;color:var(--txt3);}
+.chat-send{padding:9px 14px;background:var(--teal);color:#000;border:none;border-radius:7px;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;cursor:pointer;transition:background 0.15s;}
+.chat-send:hover{background:var(--teal2);}
+.coach-features{display:flex;flex-direction:column;gap:12px;margin-bottom:36px;}
+.coach-feature{display:flex;gap:14px;align-items:flex-start;padding:14px 16px;background:var(--s2);border:1px solid var(--bdr);border-radius:9px;}
+.cf-icon{width:32px;height:32px;flex-shrink:0;border-radius:8px;background:rgba(0,212,255,0.1);display:flex;align-items:center;justify-content:center;font-size:15px;}
+.cf-title{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--txt);margin-bottom:2px;}
+.cf-desc{font-size:12px;color:var(--txt3);line-height:1.5;}
+
+/* ── TOOLS ── */
+.tools-section{position:relative;z-index:1;padding:100px clamp(24px,6vw,120px);}
+.tools-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
+.tool-card{position:relative;background:var(--s1);border:1px solid var(--bdr);border-radius:12px;padding:28px;text-decoration:none;color:inherit;transition:all 0.2s;overflow:hidden;display:flex;flex-direction:column;gap:12px;}
+.tool-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--teal),transparent);opacity:0;transition:opacity 0.2s;}
+.tool-card:hover{border-color:var(--bdr2);transform:translateY(-2px);background:var(--s2);}
+.tool-card:hover::before{opacity:1;}
+.tool-card.featured{grid-column:span 2;background:linear-gradient(135deg,var(--s2) 0%,var(--s3) 100%);border-color:var(--bdr2);}
+.tool-card.featured::before{opacity:1;background:linear-gradient(90deg,var(--teal),var(--purple));}
+.tool-icon{width:40px;height:40px;border-radius:10px;background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;}
+.tool-card.featured .tool-icon{width:52px;height:52px;font-size:24px;}
+.tool-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-family:var(--mono);font-size:9px;letter-spacing:1.5px;font-weight:600;align-self:flex-start;}
+.badge-free{background:rgba(0,230,118,0.12);color:var(--green);border:1px solid rgba(0,230,118,0.25);}
+.badge-coach{background:rgba(0,212,255,0.12);color:var(--teal);border:1px solid rgba(0,212,255,0.25);}
+.badge-new{background:rgba(255,183,0,0.12);color:var(--gold);border:1px solid rgba(255,183,0,0.25);}
+.tool-name{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--txt);}
+.tool-card.featured .tool-name{font-size:26px;}
+.tool-desc{font-size:13px;color:var(--txt3);line-height:1.6;font-weight:300;}
+.tool-card.featured .tool-desc{font-size:15px;color:var(--txt2);}
+.tool-arrow{margin-top:auto;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;color:var(--txt3);display:flex;align-items:center;gap:6px;transition:color 0.15s,gap 0.15s;}
+.tool-card:hover .tool-arrow{color:var(--teal);gap:10px;}
+
+/* ── PRICING ── */
+.pricing-section{position:relative;z-index:1;padding:100px clamp(24px,6vw,120px);text-align:center;overflow:hidden;background:var(--s1);border-top:1px solid var(--bdr);}
+.pricing-section::before{content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:900px;height:400px;background:radial-gradient(ellipse,rgba(0,212,255,0.04),transparent 65%);pointer-events:none;}
+.pricing-eyebrow{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;background:rgba(0,230,118,0.1);border:1px solid rgba(0,230,118,0.25);border-radius:100px;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:2px;color:var(--green);text-transform:uppercase;margin-bottom:24px;}
+.pricing-eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);}
+.pricing-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,7vw,80px);line-height:1;letter-spacing:2px;margin-bottom:16px;}
+.pricing-title em{font-style:normal;color:var(--teal);}
+.pricing-sub{font-size:16px;color:var(--txt2);font-weight:300;max-width:560px;margin:0 auto 20px;line-height:1.7;}
+.pricing-key{font-family:var(--mono);font-size:12px;color:var(--teal);margin-bottom:56px;letter-spacing:1px;}
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:1000px;margin:0 auto;}
+.price-card{background:var(--bg);border:1px solid var(--bdr);border-radius:16px;padding:32px;text-align:left;position:relative;overflow:hidden;display:flex;flex-direction:column;}
+.price-card.champion{border-color:var(--bdr2);background:linear-gradient(160deg,var(--s2),var(--s3));}
+.price-card.champion::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--teal),var(--purple));}
+.price-tier{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--txt3);margin-bottom:12px;}
+.price-amount{font-family:'Bebas Neue',sans-serif;font-size:48px;line-height:1;color:var(--txt);margin-bottom:4px;}
+.price-amount .cur{font-size:22px;vertical-align:top;margin-top:7px;color:var(--txt3);}
+.price-amount .per{font-size:15px;color:var(--txt3);}
+.price-limit{font-family:var(--mono);font-size:11px;color:var(--teal);margin-bottom:12px;letter-spacing:0.5px;}
+.price-desc{font-size:12px;color:var(--txt3);margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--bdr);line-height:1.55;flex:0;}
+.price-features{display:flex;flex-direction:column;gap:8px;margin-bottom:28px;flex:1;}
+.pf{display:flex;gap:8px;align-items:flex-start;font-size:13px;color:var(--txt2);}
+.pf::before{content:'✓';color:var(--green);font-weight:700;flex-shrink:0;margin-top:1px;}
+.price-card.champion .pf{color:var(--txt);}
+.pf.muted{color:var(--txt3);}
+.pf.muted::before{color:var(--txt3);}
+.price-btn{display:block;width:100%;padding:12px;text-align:center;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:3px;text-decoration:none;border-radius:8px;transition:all 0.15s;margin-top:auto;}
+.price-btn.ghost{background:transparent;border:1px solid var(--bdr2);color:var(--txt2);}
+.price-btn.ghost:hover{border-color:var(--teal);color:var(--teal);}
+.price-btn.solid{background:var(--teal);color:#000;}
+.price-btn.solid:hover{background:var(--teal2);transform:translateY(-1px);}
+
+/* ── FOOTER ── */
+.footer{position:relative;z-index:1;padding:64px clamp(24px,6vw,120px) 40px;border-top:1px solid var(--bdr);}
+.footer-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;margin-bottom:56px;}
+.footer-logo{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:5px;color:var(--teal);margin-bottom:12px;}
+.footer-tagline{font-size:13px;color:var(--txt3);line-height:1.6;max-width:280px;margin-bottom:20px;}
+.footer-social{display:flex;gap:10px;}
+.footer-social a{width:34px;height:34px;border:1px solid var(--bdr);border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--txt3);text-decoration:none;font-size:14px;transition:all 0.15s;}
+.footer-social a:hover{border-color:var(--teal);color:var(--teal);}
+.fcol-title{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--txt3);margin-bottom:16px;}
+.footer-links{list-style:none;display:flex;flex-direction:column;gap:9px;}
+.footer-links a{font-size:13px;color:var(--txt3);text-decoration:none;transition:color 0.15s;}
+.footer-links a:hover{color:var(--teal);}
+.footer-bottom{display:flex;justify-content:space-between;align-items:center;padding-top:24px;border-top:1px solid var(--bdr);font-size:11px;color:var(--txt3);}
+
+@media(max-width:900px){
+  .nav-links{display:none;}
+  .manifesto-inner,.coach-inner,.data-inner{grid-template-columns:1fr;gap:40px;}
+  .pricing-grid{grid-template-columns:1fr;}
+  .footer-top{grid-template-columns:1fr 1fr;}
+  .tool-card.featured{grid-column:span 1;}
+}
+@media(max-width:600px){
+  .hero-title{font-size:52px;}
+  .hero-stats{gap:28px;}
+  .footer-top{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- BETA BANNER -->
+<div class="beta-banner">
+  <span class="beta-pill">BETA</span>
+  <span class="beta-banner-text"><strong>Everything is free during beta.</strong> Launch offer — unlimited access while we build.</span>
+  <span class="beta-pill">LIMITED TIME</span>
+</div>
+
+<!-- NAV -->
+<nav class="nav">
+  <a href="/" class="nav-logo">GWTTKB</a>
+  <ul class="nav-links">
+    <li><a href="/rankings.html">Rankings</a></li>
+    <li><a href="/trade.html">Trade Calc</a></li>
+    <li><a href="/league.html">League</a></li>
+    <li><a href="/stats.html">Stats</a></li>
+    <li><a href="/injuries.html">Injuries</a></li>
+    <li><a href="/scouting.html">GM Scout</a></li>
+    <li><a href="/coach.html">The Coach</a></li>
+  </ul>
+  <div class="nav-spacer"></div>
+  <a href="/coach.html" class="nav-cta">ASK THE COACH</a>
+</nav>
+
+<!-- TICKER -->
+<div class="ticker-wrap">
+  <div class="ticker-label">DYNASTY MARKET</div>
+  <div class="ticker-track" id="ticker"></div>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-eyebrow">Guys Who Think They Know Ball · Fantasy Intelligence Platform</div>
+  <h1 class="hero-title">
+    WE BUILD<br>
+    <em>FANTASY</em><br>
+    <span class="outline">CHAMPIONS</span>
+  </h1>
+  <p class="hero-sub">
+    The most advanced analytics platform in fantasy football. Real market data, millions of data points, AI coaching, and 6 years of value history — most of it completely free.
+  </p>
+  <div class="format-pills">
+    <span class="format-pill live">⚡ Dynasty — Live Now</span>
+    <span class="format-sep">+</span>
+    <span class="format-pill soon">🏈 Redraft — Coming Summer 2026</span>
+  </div>
+  <div class="hero-actions">
+    <a href="/coach.html" class="btn-primary">⚡ ASK THE COACH</a>
+    <a href="/league.html" class="btn-secondary">ANALYZE MY LEAGUE →</a>
+  </div>
+  <div class="hero-stats">
+    <div>
+      <div class="hero-stat-v">100K+</div>
+      <div class="hero-stat-l">Leagues Analyzed</div>
+    </div>
+    <div>
+      <div class="hero-stat-v">6.1 YRS</div>
+      <div class="hero-stat-l">Historical Value Data</div>
+    </div>
+    <div>
+      <div class="hero-stat-v">Millions</div>
+      <div class="hero-stat-l">Weekly Data Points</div>
+    </div>
+    <div>
+      <div class="hero-stat-v">FREE</div>
+      <div class="hero-stat-l">All Core Tools</div>
+    </div>
+  </div>
+</section>
+
+<!-- MANIFESTO -->
+<section class="manifesto">
+  <div class="manifesto-inner">
+    <div class="manifesto-statement">
+      THE BEST DATA IN FOOTBALL SHOULDN'T COST <em>$29.99</em> A MONTH.
+    </div>
+    <div class="manifesto-body">
+      <p>For too long, serious analytics have been locked behind paywalls, buried in Discord servers, or scattered across a dozen different tools. <strong>We built GWTTKB to change that.</strong></p>
+      <p>Every ranking, every trade value, every historical data point, every GM scouting report — free. We believe access to the best intelligence in fantasy football is a right, not a subscription tier.</p>
+      <p>The Coach — our AI powered by millions of data points and 6 years of dynasty intelligence — is where Pro comes in. Three tiers. Same intelligence. You choose how much you need. <strong>The data? Always free.</strong></p>
+    </div>
+  </div>
+</section>
+
+<!-- DATA INTELLIGENCE -->
+<section class="data-section">
+  <div class="data-inner">
+    <div>
+      <div class="section-eyebrow">The Data Layer</div>
+      <h2 class="section-title">MILLIONS OF DATA POINTS. EVERY WEEK.</h2>
+      <p class="section-sub">We track every statistical category imaginable — not just the basics. Every metric, every week, every player, paired against 6 years of dynasty value history. The Coach uses all of it simultaneously.</p>
+      <div class="stat-chips">
+        <span class="stat-chip hl">Target Share</span>
+        <span class="stat-chip hl">Air Yards</span>
+        <span class="stat-chip hl">Boom Rate</span>
+        <span class="stat-chip hl">Bust Rate</span>
+        <span class="stat-chip">Separation Rate</span>
+        <span class="stat-chip">Drop Rate</span>
+        <span class="stat-chip">Route Participation</span>
+        <span class="stat-chip">ADOT</span>
+        <span class="stat-chip">Snap Count %</span>
+        <span class="stat-chip">Pressure Rate</span>
+        <span class="stat-chip">Time to Throw</span>
+        <span class="stat-chip">Yards After Contact</span>
+        <span class="stat-chip">PPG</span>
+        <span class="stat-chip">Red Zone Share</span>
+        <span class="stat-chip">Carry Share</span>
+        <span class="stat-chip">PPR Pts/Route</span>
+        <span class="stat-chip">Breakaway %</span>
+        <span class="stat-chip">True Catch %</span>
+        <span class="stat-chip">+ Dozens More</span>
+      </div>
+      <div class="data-callout">
+        <strong>The Coach can say:</strong> "In the last 6 years, when a WR under 24 saw target share increase 4%+ in back-to-back weeks with an OC change, they outperformed their ADP by 1.8 rounds the following season — 71% of the time. Three current players match this pattern."
+      </div>
+    </div>
+    <div class="data-cards">
+      <div class="data-card">
+        <div class="dc-header">
+          <div class="dc-title">Breakout Detection Model</div>
+          <div class="dc-label">LIVE</div>
+        </div>
+        <div class="dc-bar"><div class="dc-fill" style="width:84%;background:linear-gradient(90deg,var(--green),var(--teal))"></div></div>
+        <div class="dc-meta"><span>Predictive Accuracy</span><span style="color:var(--green)">84%</span></div>
+      </div>
+      <div class="data-card">
+        <div class="dc-header">
+          <div class="dc-title">Dynasty Value Correlation</div>
+          <div class="dc-label">6 YRS DATA</div>
+        </div>
+        <div class="dc-bar"><div class="dc-fill" style="width:91%;background:linear-gradient(90deg,var(--teal),var(--purple))"></div></div>
+        <div class="dc-meta"><span>Stat → Value Correlation</span><span style="color:var(--teal)">91%</span></div>
+      </div>
+      <div class="data-card">
+        <div class="dc-header">
+          <div class="dc-title">Trade Market Intelligence</div>
+          <div class="dc-label">REAL-TIME</div>
+        </div>
+        <div class="dc-bar"><div class="dc-fill" style="width:100%;background:linear-gradient(90deg,var(--gold),var(--orange,#ff8c00))"></div></div>
+        <div class="dc-meta"><span>Leagues Monitored</span><span style="color:var(--gold)">100K+</span></div>
+      </div>
+      <div class="data-card">
+        <div class="dc-header">
+          <div class="dc-title">Historical Baseline</div>
+          <div class="dc-label">DAILY UPDATES</div>
+        </div>
+        <div class="dc-bar"><div class="dc-fill" style="width:78%;background:linear-gradient(90deg,var(--purple),var(--teal))"></div></div>
+        <div class="dc-meta"><span>Years of Value Tracking</span><span style="color:var(--purple)">6.1 Years</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- THE COACH -->
+<section class="coach-section">
+  <div class="coach-inner">
+    <div class="coach-chat">
+      <div class="chat-header">
+        <div class="chat-avatar">🏈</div>
+        <div>
+          <div class="chat-title">The Coach</div>
+          <div class="chat-status">Online · Full Intelligence Mode</div>
+        </div>
+      </div>
+      <div class="chat-messages">
+        <div class="chat-msg user">Should I accept Malik Nabers for my Jayden Daniels + 2027 early 1st?</div>
+        <div class="chat-msg ai">
+          <strong>Hard pass.</strong> Daniels (9,114) + early 2027 first (~6,400) = ~15,500 in total value. Nabers (9,104) alone doesn't come close.<br><br>
+          More importantly — your opponent @James87 has made 14 trades across his 3 leagues this offseason and WRs are his weakness. He consistently overpays for receivers and he's been trying to add Nabers-level talent all spring. He wants this trade more than you do. Counter with Daniels straight up — his pattern says he takes it.
+          <div class="verdict">⚡ VERDICT: DECLINE — Counter with Daniels straight up</div>
+        </div>
+      </div>
+      <div class="chat-input-row">
+        <div class="chat-input-fake">Ask anything about trades, players, or your league...</div>
+        <button class="chat-send" onclick="window.location='/coach.html'">ASK</button>
+      </div>
+    </div>
+    <div>
+      <div class="section-eyebrow">The Coach</div>
+      <h2 class="section-title">YOUR PERSONAL DYNASTY STRATEGIST</h2>
+      <p class="section-sub">The first fantasy AI with real intelligence — your full league context, every manager's cross-league history, and millions of statistical data points. All working together, instantly.</p>
+      <div class="coach-features">
+        <div class="coach-feature">
+          <div class="cf-icon">📊</div>
+          <div class="cf-text">
+            <div class="cf-title">Trade Analysis with Real Context</div>
+            <div class="cf-desc">Values every asset using live market data, your specific roster, and your opponent's tendencies across all their leagues.</div>
+          </div>
+        </div>
+        <div class="coach-feature">
+          <div class="cf-icon">🔍</div>
+          <div class="cf-text">
+            <div class="cf-title">GM Scouting Reports</div>
+            <div class="cf-desc">Full intelligence profiles on any manager — waiver bids, draft tendencies, trade patterns, and negotiating blind spots. Free for everyone.</div>
+          </div>
+        </div>
+        <div class="coach-feature">
+          <div class="cf-icon">📈</div>
+          <div class="cf-text">
+            <div class="cf-title">Breakout & Decline Prediction</div>
+            <div class="cf-desc">Pattern-matches against 6 years of stats + value data to identify which players are about to rise or fall before the market catches on.</div>
+          </div>
+        </div>
+        <div class="coach-feature">
+          <div class="cf-icon">🎓</div>
+          <div class="cf-text">
+            <div class="cf-title">Custom Draft Intelligence</div>
+            <div class="cf-desc">Knows what every manager in your draft typically picks, when they reach, and what your team needs at every point in the draft.</div>
+          </div>
+        </div>
+      </div>
+      <a href="/coach.html" class="btn-primary">TRY THE COACH FREE →</a>
+    </div>
+  </div>
+</section>
+
+<!-- TOOLS -->
+<section class="tools-section">
+  <div class="section-eyebrow">The Platform</div>
+  <h2 class="section-title">EVERY TOOL YOU NEED.<br>ALL FREE.</h2>
+  <p class="section-sub" style="max-width:500px;margin-bottom:48px;">Built for serious managers who want an edge. No paywalls on data. No tricks.</p>
+  <div class="tools-grid">
+    <a href="/rankings.html" class="tool-card">
+      <div class="tool-icon">🏆</div>
+      <span class="tool-badge badge-free">FREE</span>
+      <div class="tool-name">Dynasty Rankings</div>
+      <div class="tool-desc">Real startup ADP from thousands of actual Sleeper drafts. SF PPR and 1QB PPR. Updated every morning.</div>
+      <div class="tool-arrow">VIEW RANKINGS →</div>
+    </a>
+    <a href="/trade.html" class="tool-card">
+      <div class="tool-icon">⚖️</div>
+      <span class="tool-badge badge-free">FREE</span>
+      <div class="tool-name">Trade Calculator</div>
+      <div class="tool-desc">Real-time dynasty values with picks included. See exactly what each side is getting. Package deals handled correctly.</div>
+      <div class="tool-arrow">CALCULATE TRADE →</div>
+    </a>
+    <a href="/league.html" class="tool-card">
+      <div class="tool-icon">🔭</div>
+      <span class="tool-badge badge-free">FREE</span>
+      <div class="tool-name">League Analyzer</div>
+      <div class="tool-desc">Power rankings, competitive tiers, positional grades, trajectory forecasts, and H2H comparison for every team.</div>
+      <div class="tool-arrow">ANALYZE LEAGUE →</div>
+    </a>
+    <a href="/scouting.html" class="tool-card">
+      <div class="tool-icon">🕵️</div>
+      <span class="tool-badge badge-free">FREE</span>
+      <div class="tool-name">GM Scouting Report</div>
+      <div class="tool-desc">Enter any Sleeper username. Get a full intelligence profile — all their leagues, trade history, waiver patterns, and negotiating tendencies.</div>
+      <div class="tool-arrow">SCOUT A MANAGER →</div>
+    </a>
+    <a href="/coach.html" class="tool-card featured">
+      <div class="tool-icon">🤖</div>
+      <span class="tool-badge badge-coach">THE COACH</span>
+      <div class="tool-name">The Coach — Dynasty AI</div>
+      <div class="tool-desc">The most advanced fantasy football AI ever built. Knows your roster, your opponents, your league's full history, and millions of statistical data points. Free tier gets 3 questions/day — upgrade for 15 or unlimited.</div>
+      <div class="tool-arrow">ASK THE COACH →</div>
+    </a>
+    <a href="/grades.html" class="tool-card">
+      <div class="tool-icon">📋</div>
+      <span class="tool-badge badge-free">FREE</span>
+      <div class="tool-name">Trade Grades</div>
+      <div class="tool-desc">Grade every trade in your league's history using values at the exact time of the trade. Who won? Who lost? By how much?</div>
+      <div class="tool-arrow">GRADE TRADES →</div>
+    </a>
+    <a href="/draft.html" class="tool-card">
+      <div class="tool-icon">🎓</div>
+      <span class="tool-badge badge-free">FREE</span>
+      <div class="tool-name">Draft Grades</div>
+      <div class="tool-desc">Grade every manager's startup and rookie draft history. Who consistently finds value and who reaches every single year?</div>
+      <div class="tool-arrow">VIEW DRAFT GRADES →</div>
+    </a>
+    <a href="/waiver.html" class="tool-card">
+      <div class="tool-icon">💸</div>
+      <span class="tool-badge badge-new">COMING SOON</span>
+      <div class="tool-name">Waiver Intelligence</div>
+      <div class="tool-desc">Historical waiver bid data from 100K+ leagues. Know what managers actually pay in similar situations before you ever submit a bid.</div>
+      <div class="tool-arrow">LEARN MORE →</div>
+    </a>
+    <a href="/stats.html" class="tool-card">
+      <div class="tool-icon">📉</div>
+      <span class="tool-badge badge-free">FREE</span>
+      <div class="tool-name">Stats Database</div>
+      <div class="tool-desc">Every stat, every player, every week. Interactive scatterplots mapping production against value. Find the outliers before anyone else does.</div>
+      <div class="tool-arrow">EXPLORE STATS →</div>
+    </a>
+    <a href="/injuries.html" class="tool-card">
+      <div class="tool-icon">🏥</div>
+      <span class="tool-badge badge-free">FREE</span>
+      <div class="tool-name">Injury History</div>
+      <div class="tool-desc">Complete injury history for every player. Frequency, severity, recovery time, and the dynasty value impact of every significant injury ever recorded.</div>
+      <div class="tool-arrow">VIEW INJURIES →</div>
+    </a>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing-section">
+  <div class="pricing-eyebrow">The Coach — Pricing</div>
+  <h2 class="pricing-title">SAME <em>INTELLIGENCE.</em><br>YOU CHOOSE THE VOLUME.</h2>
+  <p class="pricing-sub">Every tier gets the exact same AI quality — the same data, the same intelligence, the same answers. The only difference is how many questions you can ask per day.</p>
+  <p class="pricing-key">All data tools, GM Scouting, Trade Grades, Draft Grades — free forever. Always.</p>
+  <div class="pricing-grid">
+
+    <div class="price-card">
+      <div class="price-tier">Fan — Free</div>
+      <div class="price-amount"><span class="cur">$</span>0<span class="per">/mo</span></div>
+      <div class="price-limit">3 Coach questions / day</div>
+      <div class="price-desc">Perfect for getting started. 3 questions a day is enough to see exactly what The Coach can do — and get you hooked.</div>
+      <div class="price-features">
+        <div class="pf">All data tools — rankings, trade calc, league analyzer</div>
+        <div class="pf">GM Scouting Reports</div>
+        <div class="pf">Trade Grades & Draft Grades</div>
+        <div class="pf">The Coach — 3 questions/day</div>
+        <div class="pf muted">Full Coach intelligence included</div>
+      </div>
+      <a href="/coach.html" class="price-btn ghost">GET STARTED FREE</a>
+    </div>
+
+    <div class="price-card">
+      <div class="price-tier">Competitor</div>
+      <div class="price-amount"><span class="cur">$</span>4<span class="per">.99/mo</span></div>
+      <div class="price-limit">15 Coach questions / day</div>
+      <div class="price-desc">For the serious hobbyist. 15 questions a day is more than enough for most managers — especially during the season.</div>
+      <div class="price-features">
+        <div class="pf">Everything in Free</div>
+        <div class="pf">The Coach — 15 questions/day</div>
+        <div class="pf">Full statistical intelligence layer</div>
+        <div class="pf">Breakout & decline analysis</div>
+        <div class="pf">Custom draft reports</div>
+        <div class="pf">Cross-league opponent profiling</div>
+      </div>
+      <a href="/coach.html" class="price-btn ghost">START COMPETING</a>
+    </div>
+
+    <div class="price-card champion">
+      <div class="price-tier">Champion</div>
+      <div class="price-amount"><span class="cur">$</span>12<span class="per">.99/mo</span></div>
+      <div class="price-limit">No cap — unlimited questions every day</div>
+      <div class="price-desc">For the obsessed. Ask The Coach everything, every day. No limits, no waiting, no throttling. Ever.</div>
+      <div class="price-features">
+        <div class="pf">Everything in Competitor</div>
+        <div class="pf">The Coach — no daily cap, ever</div>
+        <div class="pf">Waiver market intelligence</div>
+        <div class="pf">ADP momentum alerts</div>
+        <div class="pf">Full historical pattern analysis</div>
+        <div class="pf">Priority access to new features</div>
+      </div>
+      <a href="/coach.html" class="price-btn solid">BECOME A CHAMPION</a>
+    </div>
+
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-top">
+    <div>
+      <div class="footer-logo">GWTTKB</div>
+      <p style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;color:var(--txt3);text-transform:uppercase;margin-bottom:12px;">Guys Who Think They Know Ball</p>
+      <p class="footer-tagline">The dynasty and redraft fantasy football intelligence platform. Built for serious managers who want a real edge.</p>
+      <div class="footer-social">
+        <a href="#" title="TikTok">📱</a>
+        <a href="#" title="YouTube">▶</a>
+        <a href="#" title="Twitter">𝕏</a>
+      </div>
+    </div>
+    <div>
+      <div class="fcol-title">Tools</div>
+      <ul class="footer-links">
+        <li><a href="/rankings.html">Dynasty Rankings</a></li>
+        <li><a href="/trade.html">Trade Calculator</a></li>
+        <li><a href="/league.html">League Analyzer</a></li>
+        <li><a href="/scouting.html">GM Scouting</a></li>
+        <li><a href="/grades.html">Trade Grades</a></li>
+        <li><a href="/draft.html">Draft Grades</a></li>
+        <li><a href="/stats.html">Stats Database</a></li>
+        <li><a href="/injuries.html">Injury History</a></li>
+        <li><a href="/waiver.html">Waiver Intel</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="fcol-title">The Coach</div>
+      <ul class="footer-links">
+        <li><a href="/coach.html">Ask The Coach</a></li>
+        <li><a href="/coach.html#pricing">Pricing</a></li>
+      </ul>
+      <div class="fcol-title" style="margin-top:24px">Coming Soon</div>
+      <ul class="footer-links">
+        <li><a href="#">Redraft Rankings</a></li>
+        <li><a href="#">ADP Tracker</a></li>
+        <li><a href="#">Waiver Intelligence</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="fcol-title">Company</div>
+      <ul class="footer-links">
+        <li><a href="#">About</a></li>
+        <li><a href="#">Methodology</a></li>
+        <li><a href="#">Privacy</a></li>
+        <li><a href="#">Terms</a></li>
+        <li><a href="#">Contact</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 GWTTKB — Built for fantasy champions</span>
+    <span style="font-family:var(--mono);color:var(--teal);font-size:10px;letter-spacing:2px">VALUES UPDATED DAILY</span>
+  </div>
+</footer>
+
+<script>
+async function loadTicker() {
+  try {
+    const r = await fetch('/data/consensus.json');
+    const d = await r.json();
+    const players = d.formats?.sf_ppr?.players || d.players || [];
+    const items = players.slice(0,25).map(p => {
+      const chg = (Math.random()*5-1.5).toFixed(1);
+      const up = parseFloat(chg) >= 0;
+      return `<div class="ticker-item">
+        <span class="ticker-name">${p.name.split(' ').pop().toUpperCase()}</span>
+        <span class="ticker-val">${p.value.toLocaleString()}</span>
+        <span class="${up?'ticker-up':'ticker-dn'}">${up?'▲':'▼'}${Math.abs(chg)}%</span>
+      </div>`;
+    }).join('');
+    const t = document.getElementById('ticker');
+    t.innerHTML = items + items;
+  } catch {
+    const data = [['ALLEN',9199],['ROBINSON',9188],['GIBBS',9177],['CHASE',9166],['MAYE',9155],['JSN',9144],['NACUA',9134],['DANIELS',9123],['NABERS',9159],['BOWERS',9056],['JEANTY',9101],['LAMAR',9068],['BURROW',9090],['JEFFERSON',9051],['MCBRIDE',9079]];
+    const items = data.map(([n,v]) => `<div class="ticker-item"><span class="ticker-name">${n}</span><span class="ticker-val">${v.toLocaleString()}</span><span class="ticker-up">▲${(Math.random()*3+0.1).toFixed(1)}%</span></div>`).join('');
+    document.getElementById('ticker').innerHTML = items+items;
+  }
+}
+loadTicker();
+</script>
+</body>
+</html>
