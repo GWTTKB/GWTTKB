@@ -1,4 +1,9 @@
 {
+  "outputDirectory": "public",
+  "routes": [
+    { "src": "/", "dest": "/index.html" },
+    { "src": "/(.*)", "dest": "/$1" }
+  ],
   "crons": [
     {
       "path": "/api/consensus",
