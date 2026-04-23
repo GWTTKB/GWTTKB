@@ -381,6 +381,13 @@ const API='https://api.sleeper.app/v1';
 const S=ms=>new Promise(r=>setTimeout(r,ms));
 let LD=null,PM={},CSF={},C1QB={};
 let ACTIVE_MGR=null,EXPANDED_TRADE_MGR=null;
+// Historical values
+let HIST=null;        // full historical JSON
+let HIST_DATES=[];    // sorted date strings
+let HIST_PLAYERS={};  // sleeper_id → {dates[], sf_vals[], qb_vals[]}
+let HIST_PICKS={};    // normalized label → {dates[], sf_vals[], qb_vals[]}
+let TRADED_PICKS={};  // leagueId+season+round+roster_id → pick_no
+let HIST_LOADED=false;
 let TRADE_SEASON='all',TRADE_SEARCH='',WR_FILTER='all';
 let DRAFT_VIEW='leaderboard',DRAFT_SEASON='all',DRAFT_MGR=null;
 let ALL_DRAFTS=[];
@@ -388,26 +395,66 @@ let ALL_DRAFTS=[];
 function n(s){return String(s).toLowerCase().replace(/[^a-z0-9]/g,'');}
 async function g(url){const r=await fetch(url);if(!r.ok)throw new Error(r.status);return r.json();}
 
-// ── PICK LABEL: "2026 2.02" format ──
-function PL(pk){
+// ── PICK LABEL: "2026 2.02" format — uses traded_picks for exact slot ──
+function PL(pk,leagueId){
   if(!pk)return'?';
   const yr=pk.season||pk.year||'?';
   const rd=parseInt(pk.round||1);
-  const slot=pk.pick_no;
-  if(slot!=null){
-    return`${yr} ${rd}.${String(slot).padStart(2,'0')}`;
+  // First try: direct pick_no on the pick object
+  let slot=pk.pick_no!=null?pk.pick_no:null;
+  // Second try: look up in our traded_picks map
+  if(slot==null&&leagueId){
+    const key=`${leagueId}_${yr}_${rd}_${pk.roster_id||pk.previous_owner_id||''}`;
+    if(TRADED_PICKS[key]!=null)slot=TRADED_PICKS[key];
   }
+  if(slot!=null)return`${yr} ${rd}.${String(slot).padStart(2,'0')}`;
+  // Unknown slot — show tier from roster position if available
+  if(pk.order){const t=pk.order<=4?'Early':pk.order<=8?'Mid':'Late';return`${yr} ${rd} (${t})`;}
   return`${yr} ${rd}.??`;
 }
 
-function PV(pk){
-  const rd=parseInt(pk.round||1);
+// Pick value: historical value on a specific date, or formula fallback
+function PV(pk, dateStr){
   const yr=parseInt(pk.season||pk.year||2025);
-  const slot=pk.pick_no||0;
+  const rd=parseInt(pk.round||1);
+  const slot=pk.pick_no;
+  // Try historical lookup
+  if(HIST_LOADED&&dateStr){
+    const label=pickHistLabel(yr,rd,slot);
+    const hv=getPickHistVal(label,dateStr);
+    if(hv>0)return hv;
+  }
+  // Formula fallback
   const base=rd===1?7000:rd===2?3800:rd===3?2200:1400;
   const sm=slot?(1+((16-slot)/16)*0.45):1;
   const ym=yr<=2025?1:yr===2026?0.84:0.70;
   return Math.round(base*sm*ym);
+}
+
+// Current pick value (today)
+function PVcurrent(pk){
+  if(HIST_LOADED){
+    const yr=parseInt(pk.season||pk.year||2025);
+    const rd=parseInt(pk.round||1);
+    const slot=pk.pick_no;
+    const label=pickHistLabel(yr,rd,slot);
+    const today=todayStr();
+    const hv=getPickHistVal(label,today);
+    if(hv>0)return hv;
+  }
+  return PV(pk,null);
+}
+
+function todayStr(){return new Date().toISOString().slice(0,10);}
+
+function pickHistLabel(yr,rd,slot){
+  // Match the CSV pick labels: "Early 1st 2026", "Mid 2nd 2025" etc
+  const rdStr=rd===1?'1st':rd===2?'2nd':rd===3?'3rd':`${rd}th`;
+  if(slot!=null){
+    const tier=slot<=4?'Early':slot<=8?'Mid':'Late';
+    return`${tier} ${rdStr} ${yr}`;
+  }
+  return`${rdStr} ${yr}`; // fallback without tier
 }
 
 function pv(id){
@@ -459,6 +506,114 @@ async function loadConsensus(){
     }
     for(const p of qp)C1QB[n(p.name)]=p.value;
   }catch(e){console.warn('Consensus:',e);}
+}
+
+// ── LOAD HISTORICAL VALUES ──
+async function loadHistoricalValues(){
+  if(HIST_LOADED)return;
+  try{
+    const[hRes,idxRes]=await Promise.all([
+      fetch('/data/historical-values.json'),
+      fetch('/data/historical-index.json')
+    ]);
+    if(!hRes.ok)throw new Error('Historical values not found');
+    HIST=await hRes.json();
+    const idx=idxRes.ok?await idxRes.json():null;
+    HIST_DATES=idx?.dates||[];
+    // Build fast player lookup: sleeper_id → sorted dates + values arrays
+    for(const[sid,p]of Object.entries(HIST.players||{})){
+      const entries=Object.entries(p.values||{}).sort((a,b)=>a[0].localeCompare(b[0]));
+      HIST_PLAYERS[sid]={
+        name:p.name,
+        dates:entries.map(e=>e[0]),
+        sf:entries.map(e=>e[1]?.vsf??null),
+        qb:entries.map(e=>e[1]?.v1qb??null)
+      };
+    }
+    // Build pick lookup: normalized label → dates + values
+    for(const[pid,pk]of Object.entries(HIST.picks||{})){
+      const label=(pk.label||pid).trim();
+      const entries=Object.entries(pk.values||{}).sort((a,b)=>a[0].localeCompare(b[0]));
+      HIST_PICKS[label]={
+        dates:entries.map(e=>e[0]),
+        sf:entries.map(e=>e[1]?.vsf??null),
+        qb:entries.map(e=>e[1]?.v1qb??null)
+      };
+    }
+    HIST_LOADED=true;
+    console.log(`Historical values loaded: ${Object.keys(HIST_PLAYERS).length} players, ${Object.keys(HIST_PICKS).length} picks`);
+  }catch(e){
+    console.warn('Historical values not available:',e.message);
+    HIST_LOADED=false;
+  }
+}
+
+// Get player value at a specific date (or nearest date)
+function getHistVal(sleeperID, dateStr, isSF){
+  const p=HIST_PLAYERS[sleeperID];
+  if(!p||!p.dates.length)return null;
+  const vals=isSF?p.sf:p.qb;
+  // Binary search for closest date
+  let lo=0,hi=p.dates.length-1,best=0;
+  while(lo<=hi){
+    const mid=Math.floor((lo+hi)/2);
+    if(p.dates[mid]<=dateStr){best=mid;lo=mid+1;}
+    else hi=mid-1;
+  }
+  return vals[best]??null;
+}
+
+// Get pick value at a specific date
+function getPickHistVal(label, dateStr){
+  // Try exact label first, then variations
+  const tryLabels=[label];
+  // If no tier in label, try all tiers
+  if(!label.includes('Early')&&!label.includes('Mid')&&!label.includes('Late')){
+    const parts=label.split(' ');
+    if(parts.length>=2){
+      tryLabels.push(`Early ${label}`,`Mid ${label}`,`Late ${label}`);
+    }
+  }
+  for(const lbl of tryLabels){
+    const pk=HIST_PICKS[lbl];
+    if(!pk||!pk.dates.length)continue;
+    const vals=LD?.isSF?pk.sf:pk.qb;
+    let lo=0,hi=pk.dates.length-1,best=0;
+    while(lo<=hi){
+      const mid=Math.floor((lo+hi)/2);
+      if(pk.dates[mid]<=dateStr){best=mid;lo=mid+1;}
+      else hi=mid-1;
+    }
+    const v=vals[best];
+    if(v!=null)return v;
+  }
+  return 0;
+}
+
+// Get current value for player using historical (today's date) or consensus fallback
+function getCurVal(sleeperId, playerName, isSF){
+  if(HIST_LOADED&&sleeperId&&HIST_PLAYERS[sleeperId]){
+    const hv=getHistVal(sleeperId,todayStr(),isSF);
+    if(hv!=null&&hv>0)return hv;
+  }
+  // Consensus fallback
+  return isSF?(CSF[n(playerName||'')]||0):(C1QB[n(playerName||'')]||0);
+}
+
+// Load traded picks for exact slot resolution
+async function loadTradedPicksForChain(chain){
+  for(const{id:lgId}of chain){
+    try{
+      const picks=await g(`${API}/league/${lgId}/traded_picks`);
+      for(const pk of picks||[]){
+        if(pk.pick_no==null)continue;
+        // Key by leagueId+season+round+original_roster (roster_id = original owner)
+        const key=`${lgId}_${pk.season}_${pk.round}_${pk.roster_id}`;
+        TRADED_PICKS[key]=pk.pick_no;
+      }
+    }catch(e){console.warn('traded_picks failed for',lgId);}
+  }
+  console.log('Traded picks loaded:',Object.keys(TRADED_PICKS).length,'entries');
 }
 
 async function loadPlayers(){
@@ -515,8 +670,8 @@ async function runScout(username,leagueId){
   showLoad('INITIALIZING WAR ROOM',0);
 
   try{
-    upLoad('LOADING CONSENSUS VALUES',12);
-    await Promise.all([loadConsensus(),loadPlayers()]);
+    upLoad('LOADING CONSENSUS + HISTORICAL VALUES',12);
+    await Promise.all([loadConsensus(),loadPlayers(),loadHistoricalValues()]);
 
     upLoad('FETCHING LEAGUE DATA',24);
     const[league,rosters,users]=await Promise.all([
@@ -590,17 +745,40 @@ async function runScout(username,leagueId){
 
     upLoad('GRADING TRADES',70);
     const gradedTrades=allTrades.map(t=>{
+      // Get date of trade for historical value lookup
+      const tradeDateStr=t.created?new Date(t.created).toISOString().slice(0,10):null;
+      const lgId=chain.find(c=>c.season===(t.season||2025))?.id||leagueId;
+
       const sides=(t.roster_ids||[]).map(rid=>{
         const team=teams.find(tm=>tm.roster_id===rid);
         const adds=Object.entries(t.adds||{}).filter(([,r])=>r===rid).map(([id])=>id);
         const drops=Object.entries(t.drops||{}).filter(([,r])=>r===rid).map(([id])=>id);
         const aPks=(t.draft_picks||[]).filter(pk=>pk.owner_id===rid&&pk.previous_owner_id!==rid);
         const dPks=(t.draft_picks||[]).filter(pk=>pk.previous_owner_id===rid&&pk.owner_id!==rid);
-        const aV=adds.reduce((s,id)=>s+pv(id),0)+aPks.reduce((s,pk)=>s+PV(pk),0);
-        const dV=drops.reduce((s,id)=>s+pv(id),0)+dPks.reduce((s,pk)=>s+PV(pk),0);
+
+        // Value at TIME OF TRADE (historical) vs TODAY (current)
+        function playerValAtDate(id, dateStr){
+          const p=PM[id];if(!p)return{then:0,now:0};
+          const isSF=LD?.isSF||false;
+          const thenVal=HIST_LOADED&&dateStr?
+            (getHistVal(id,dateStr,isSF)||pv(id)):pv(id);
+          const nowVal=getCurVal(id,p.name,isSF);
+          return{then:thenVal,now:nowVal};
+        }
+
+        const addVals=adds.map(id=>playerValAtDate(id,tradeDateStr));
+        const dropVals=drops.map(id=>playerValAtDate(id,tradeDateStr));
+        const aVthen=addVals.reduce((s,v)=>s+v.then,0)+aPks.reduce((s,pk)=>s+PV(pk,tradeDateStr),0);
+        const aVnow=addVals.reduce((s,v)=>s+v.now,0)+aPks.reduce((s,pk)=>s+PVcurrent(pk),0);
+        const dVthen=dropVals.reduce((s,v)=>s+v.then,0)+dPks.reduce((s,pk)=>s+PV(pk,tradeDateStr),0);
+        const dVnow=dropVals.reduce((s,v)=>s+v.now,0)+dPks.reduce((s,pk)=>s+PVcurrent(pk),0);
+
         return{team,rid,
           aP:adds.map(id=>PM[id]?.name||id),dP:drops.map(id=>PM[id]?.name||id),
-          aPks:aPks.map(PL),dPks:dPks.map(PL),aV,dV,net:aV-dV};
+          aPks:aPks.map(pk=>PL(pk,lgId)),dPks:dPks.map(pk=>PL(pk,lgId)),
+          aV:aVthen,dV:dVthen,   // values AT TIME OF TRADE (for grading)
+          aVnow,dVnow,            // current values (for display)
+          net:aVthen-dVthen};
       });
       const sorted=[...sides].sort((a,b)=>b.net-a.net);
       const winner=sorted[0],loser=sorted[1];
@@ -637,7 +815,8 @@ async function runScout(username,leagueId){
       .map(([un,r])=>({un,...r,score:r.lost*2-r.won+(r.vg<0?Math.abs(r.vg/400):0)}))
       .sort((a,b)=>b.score-a.score);
 
-    upLoad('LOADING DRAFT DATA',84);
+    upLoad('LOADING DRAFT DATA + PICK SLOTS',82);
+    await loadTradedPicksForChain(chain);
     // Fetch drafts
     ALL_DRAFTS=[];
     for(const{id:lgId,season}of chain){
@@ -658,7 +837,7 @@ async function runScout(username,leagueId){
     // Keep only drafts with <= 5 rounds (rookie drafts)
     ALL_DRAFTS=ALL_DRAFTS.filter(d=>parseInt(d.settings?.rounds||99)<=5);
 
-    upLoad('READY',100);await S(400);
+    upLoad('WAR ROOM READY',100);await S(400);
 
     LD={league,isSF,teams,users,um,myUID,chain,
         gradedTrades,tRec,softT,waiverAct};
@@ -1451,7 +1630,7 @@ function buildDGResults(){
         </div>
       </td>
       <td style="font-family:'Barlow Condensed',sans-serif;font-size:13px">${team?.username||'?'}</td>
-      <td style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--txt3);text-align:right">${sv.toLocaleString()}</td>
+      <td style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--txt3);text-align:right">${draftVal.toLocaleString()}</td>
       <td style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--teal);text-align:right">${curVal.toLocaleString()}</td>
       <td class="${surplus>=0?'net-pos':'net-neg'}" style="font-family:'Bebas Neue',sans-serif;font-size:16px;text-align:right">${fmtK(surplus)}</td>
       <td style="text-align:right"><span class="grade-badge ${dg.c}">${dg.g}</span></td>
@@ -1460,12 +1639,12 @@ function buildDGResults(){
 
   return`<div id="dg-results" class="sec-anchor">
     <div class="sec-hd">DRAFT RESULTS</div>
-    <div class="sec-sub">SLOT VAL = PICK SLOT VALUE AT DRAFT TIME · CUR VAL = TODAY'S CONSENSUS VALUE · SURPLUS = CUR - SLOT</div>
+    <div class="sec-sub">DRAFT VAL = PLAYER VALUE ON DRAFT DAY · CUR VAL = TODAY'S VALUE · SURPLUS = GAIN/LOSS SINCE DRAFTED</div>
     <div class="trades-filters">${seasonBtns}</div>
     <div style="overflow-x:auto;background:var(--s1);border:1px solid var(--bdr);border-radius:10px;margin-bottom:32px">
     <table class="dr-table draft-results-table">
       <thead><tr>
-        <th>SLOT</th><th>PLAYER</th><th>PICKED BY</th><th class="r">SLOT VAL</th><th class="r">CUR VAL</th><th class="r">SURPLUS</th><th class="r">GRADE</th>
+        <th>SLOT</th><th>PLAYER</th><th>PICKED BY</th><th class="r">DRAFT VAL</th><th class="r">CUR VAL</th><th class="r">SURPLUS</th><th class="r">GRADE</th>
       </tr></thead>
       <tbody>${rows||'<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--txt3);font-family:var(--mono)">No picks found</td></tr>'}</tbody>
     </table></div>
@@ -1482,15 +1661,18 @@ function buildDraftMgrProfile(){
   const me=teams.find(t=>t.username===DRAFT_MGR);
   const mgrPicks=[];
   for(const draft of ALL_DRAFTS){
+    const mgrDraftDate=draft.start_time?new Date(draft.start_time).toISOString().slice(0,10):null;
     for(const pick of draft.picks||[]){
       const team=teams.find(t=>t.roster_id===pick.roster_id||t.owner_id===pick.picked_by);
       if(!team||team.username!==DRAFT_MGR)continue;
-      const p=PM[pick.player_id]||{};
-      const curVal=LD.isSF?(CSF[n(p.name||'')]||p.value||0):(C1QB[n(p.name||'')]||p.value||0);
-      const sv=slotVal(pick.round,pick.pick_no||pick.draft_slot||1);
-      const surplus=curVal-sv;
-      mgrPicks.push({...pick,name:p.name||pick.player_id,pos:p.pos||'?',team:p.team||'',
-        hs:p.hs||'',sv,curVal,surplus,season:draft.season,
+      const playerId=pick.player_id;
+      const p=PM[playerId]||{};
+      const curVal=getCurVal(playerId,p.name,LD.isSF);
+      const draftVal=HIST_LOADED&&mgrDraftDate?
+        (getHistVal(playerId,mgrDraftDate,LD.isSF)||curVal):curVal;
+      const surplus=curVal-draftVal;
+      mgrPicks.push({...pick,name:p.name||playerId,pos:p.pos||'?',team:p.team||'',
+        hs:p.hs||'',sv:draftVal,curVal,surplus,season:draft.season,draftDate:mgrDraftDate,
         slotLabel:`${draft.season} ${pick.round}.${String(pick.pick_no||pick.draft_slot||1).padStart(2,'0')}`});
     }
   }
@@ -1520,7 +1702,7 @@ function buildDraftMgrProfile(){
           </div>
         </div>
       </td>
-      <td style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--txt3);text-align:right">${pick.sv.toLocaleString()}</td>
+      <td style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--txt3);text-align:right" title="${pick.draftDate||'date unknown'}">${pick.sv.toLocaleString()}</td>
       <td style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--teal);text-align:right">${pick.curVal.toLocaleString()}</td>
       <td class="${pick.surplus>=0?'net-pos':'net-neg'}" style="font-family:'Bebas Neue',sans-serif;font-size:16px;text-align:right">${fmtK(pick.surplus)}</td>
       <td style="text-align:right"><span class="grade-badge ${sg.c}">${sg.g}</span></td>
@@ -1545,7 +1727,7 @@ function buildDraftMgrProfile(){
       </div>
       <div style="overflow-x:auto;background:var(--s1);border:1px solid var(--bdr);border-radius:10px;margin-bottom:24px">
       <table class="dr-table draft-results-table">
-        <thead><tr><th>SLOT</th><th>PLAYER</th><th class="r">SLOT VAL</th><th class="r">CUR VAL</th><th class="r">SURPLUS</th><th class="r">GRADE</th></tr></thead>
+        <thead><tr><th>SLOT</th><th>PLAYER</th><th class="r">DRAFT VAL</th><th class="r">CUR VAL</th><th class="r">SURPLUS</th><th class="r">GRADE</th></tr></thead>
         <tbody>${rows}</tbody>
       </table></div>
       ${ctaBar(`Ask The Coach to analyze ${DRAFT_MGR}'s drafting patterns across all their leagues and predict their next moves.`)}
