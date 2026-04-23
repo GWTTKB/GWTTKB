@@ -398,17 +398,32 @@ async function g(url){const r=await fetch(url);if(!r.ok)throw new Error(r.status
 // ── PICK LABEL: "2026 2.02" format — uses traded_picks for exact slot ──
 function PL(pk,leagueId){
   if(!pk)return'?';
-  const yr=pk.season||pk.year||'?';
+  const yr=String(pk.season||pk.year||'?');
   const rd=parseInt(pk.round||1);
+  const rid=String(pk.roster_id||'');
+  const prevId=String(pk.previous_owner_id||'');
+  const ownId=String(pk.owner_id||'');
+
   // First try: direct pick_no on the pick object
   let slot=pk.pick_no!=null?pk.pick_no:null;
-  // Second try: look up in our traded_picks map
-  if(slot==null&&leagueId){
-    const key=`${leagueId}_${yr}_${rd}_${pk.roster_id||pk.previous_owner_id||''}`;
-    if(TRADED_PICKS[key]!=null)slot=TRADED_PICKS[key];
+
+  // Second try: check all key formats in TRADED_PICKS
+  if(slot==null){
+    const keysToTry=[
+      leagueId?`${leagueId}_${yr}_${rd}_${rid}`:null,
+      leagueId?`${leagueId}_${yr}_${rd}_${prevId}`:null,
+      leagueId?`${leagueId}_${yr}_${rd}_own_${ownId}`:null,
+      leagueId?`${leagueId}_${yr}_${rd}_prev_${prevId}`:null,
+      `${yr}_${rd}_${rid}`,
+      `${yr}_${rd}_${prevId}`,
+    ].filter(Boolean);
+    for(const k of keysToTry){
+      if(TRADED_PICKS[k]!=null){slot=TRADED_PICKS[k];break;}
+    }
   }
+
   if(slot!=null)return`${yr} ${rd}.${String(slot).padStart(2,'0')}`;
-  // Unknown slot — show tier from roster position if available
+  // Still unknown — show tier hint if we can estimate
   if(pk.order){const t=pk.order<=4?'Early':pk.order<=8?'Mid':'Late';return`${yr} ${rd} (${t})`;}
   return`${yr} ${rd}.??`;
 }
@@ -606,10 +621,20 @@ async function loadTradedPicksForChain(chain){
     try{
       const picks=await g(`${API}/league/${lgId}/traded_picks`);
       for(const pk of picks||[]){
-        if(pk.pick_no==null)continue;
-        // Key by leagueId+season+round+original_roster (roster_id = original owner)
-        const key=`${lgId}_${pk.season}_${pk.round}_${pk.roster_id}`;
-        TRADED_PICKS[key]=pk.pick_no;
+        if(pk.pick_no==null&&pk.pick_no!==0)continue;
+        const yr=String(pk.season||'');
+        const rd=String(pk.round||'');
+        const rid=String(pk.roster_id||'');
+        const slot=pk.pick_no;
+        // Store multiple key formats to handle type mismatches
+        // Format 1: lgId_season_round_rosterid (primary)
+        TRADED_PICKS[`${lgId}_${yr}_${rd}_${rid}`]=slot;
+        // Format 2: season_round_rosterid (no lgId, for cross-league)
+        TRADED_PICKS[`${yr}_${rd}_${rid}`]=slot;
+        // Format 3: season_round_ownerid (current owner)
+        if(pk.owner_id)TRADED_PICKS[`${lgId}_${yr}_${rd}_own_${pk.owner_id}`]=slot;
+        // Format 4: previous_owner_id (the one who sent it)
+        if(pk.previous_owner_id)TRADED_PICKS[`${lgId}_${yr}_${rd}_prev_${pk.previous_owner_id}`]=slot;
       }
     }catch(e){console.warn('traded_picks failed for',lgId);}
   }
@@ -670,8 +695,10 @@ async function runScout(username,leagueId){
   showLoad('INITIALIZING WAR ROOM',0);
 
   try{
-    upLoad('LOADING CONSENSUS + HISTORICAL VALUES',12);
-    await Promise.all([loadConsensus(),loadPlayers(),loadHistoricalValues()]);
+    upLoad('LOADING PLAYER DATA',12);
+    await Promise.all([loadConsensus(),loadPlayers()]);
+    // Load historical values in background — don't block UI
+    loadHistoricalValues().then(()=>console.log('Historical values ready')).catch(()=>{});
 
     upLoad('FETCHING LEAGUE DATA',24);
     const[league,rosters,users]=await Promise.all([
@@ -717,7 +744,7 @@ async function runScout(username,leagueId){
     upLoad('PULLING TRADE HISTORY',50);
     // Follow league chain
     const chain=[];let scanId=leagueId,yr=2025;
-    for(let i=0;i<6;i++){
+    for(let i=0;i<4;i++){  // max 4 seasons
       try{
         const lg=await g(`${API}/league/${scanId}`);
         chain.push({id:scanId,season:yr});
@@ -726,22 +753,42 @@ async function runScout(username,leagueId){
       }catch(e){break;}
     }
     console.log('Chain:',chain.map(c=>`${c.season}:${c.id}`).join(', '));
+    console.log('Active league ID:',leagueId);
 
     const allTrades=[],waiverAct={};
-    for(const{id:lgId,season}of chain){
-      for(let wk=1;wk<=22;wk++){
-        let txns;try{txns=await g(`${API}/league/${lgId}/transactions/${wk}`);}catch(e){break;}
-        if(!txns?.length)break;
-        for(const t of txns){
-          if(t.type==='trade'&&t.status==='complete')allTrades.push({...t,week:wk,season});
-          if(t.type==='waiver'&&t.status==='complete'&&season===2025){
-            const rid=t.roster_ids?.[0];
-            if(rid)waiverAct[rid]=(waiverAct[rid]||0)+1;
+
+    // Fetch transactions in parallel batches — much faster than sequential
+    async function fetchLeagueTxns(lgId, season){
+      const BATCH=5; // fetch 5 weeks at once
+      for(let wk=1;wk<=22;wk+=BATCH){
+        const batch=[];
+        for(let i=0;i<BATCH&&wk+i<=22;i++){
+          batch.push(
+            g(`${API}/league/${lgId}/transactions/${wk+i}`)
+              .then(r=>({wk:wk+i,data:r||[]}))
+              .catch(()=>({wk:wk+i,data:[]}))
+          );
+        }
+        const results=await Promise.all(batch);
+        let anyData=false;
+        for(const{wk:w,data}of results){
+          if(data.length)anyData=true;
+          for(const t of data){
+            if(t.type==='trade'&&t.status==='complete')allTrades.push({...t,week:w,season});
+            if(t.type==='waiver'&&t.status==='complete'&&season===2025){
+              const rid=t.roster_ids?.[0];
+              if(rid)waiverAct[rid]=(waiverAct[rid]||0)+1;
+            }
           }
         }
-        await S(30);
+        // Stop if entire batch was empty (no more activity)
+        if(!anyData)break;
       }
     }
+
+    // Fetch all seasons in parallel (cap at 3 seasons for speed)
+    const chainToFetch=chain.slice(0,3);
+    await Promise.all(chainToFetch.map(({id:lgId,season})=>fetchLeagueTxns(lgId,season)));
 
     upLoad('GRADING TRADES',70);
     const gradedTrades=allTrades.map(t=>{
@@ -819,6 +866,7 @@ async function runScout(username,leagueId){
     await loadTradedPicksForChain(chain);
     // Fetch drafts
     ALL_DRAFTS=[];
+    const rawDrafts=[];
     for(const{id:lgId,season}of chain){
       try{
         const drafts=await g(`${API}/league/${lgId}/drafts`);
@@ -826,16 +874,29 @@ async function runScout(username,leagueId){
           if(draft.type==='snake'||draft.type==='linear'){
             try{
               const picks=await g(`${API}/draft/${draft.draft_id}/picks`);
-              ALL_DRAFTS.push({...draft,season,picks:picks||[]});
+              const draftObj={...draft,season,picks:picks||[]};
+              ALL_DRAFTS.push(draftObj);
+              rawDrafts.push(draftObj);
             }catch(e){}
             await S(60);
           }
         }
       }catch(e){}
     }
-    // Exclude startup drafts (type='snake' with many rounds is startup, 'linear' is startup too)
-    // Keep only drafts with <= 5 rounds (rookie drafts)
-    ALL_DRAFTS=ALL_DRAFTS.filter(d=>parseInt(d.settings?.rounds||99)<=5);
+    // Keep rookie drafts (type=linear/snake with <=6 rounds) 
+    // Startup drafts have many more rounds (15+) so filter those
+    ALL_DRAFTS=ALL_DRAFTS.filter(d=>{
+      const rounds=parseInt(d.settings?.rounds||99);
+      const status=d.status||'';
+      // Keep: completed or in-progress drafts with <= 6 rounds (rookie)
+      return rounds<=6&&status!=='pre_draft'||
+             (rounds<=6&&ALL_DRAFTS.length<=2); // if few drafts found, keep all
+    });
+    // If nothing passes filter, keep all non-startup drafts
+    if(!ALL_DRAFTS.length){
+      ALL_DRAFTS=rawDrafts.filter(d=>parseInt(d.settings?.rounds||99)<=8);
+    }
+    console.log('Drafts loaded:',ALL_DRAFTS.length,'rookie drafts across',chain.length,'seasons');
 
     upLoad('WAR ROOM READY',100);await S(400);
 
@@ -1507,7 +1568,13 @@ function buildTGRecords(){
 // DRAFT GRADES
 // ═══════════════════════════════════════════════════
 function buildDraftGrades(){
-  if(!ALL_DRAFTS.length)return`<div style="padding:20px 24px"><div class="empty">No rookie draft history found for this league chain</div></div>`;
+  if(!ALL_DRAFTS.length)return`<div style="padding:20px 24px">
+    <div class="empty" style="padding:40px">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;color:var(--txt2);margin-bottom:8px">NO DRAFT DATA FOUND</div>
+      <div>No rookie drafts found for this league. This may be a new league or drafts may still be pending.</div>
+      <div style="margin-top:8px;font-family:var(--mono);font-size:10px;color:var(--txt3)">Checked ${chain?.length||0} seasons back · ${rawDrafts?.length||0} total drafts found before filter</div>
+    </div>
+  </div>`;
   return`
   <div style="position:sticky;top:52px;z-index:180;background:rgba(5,8,14,0.97);border-bottom:1px solid var(--bdr);padding:0 20px;display:flex;overflow-x:auto" id="dgSubNav">
     <button class="sn-btn active" onclick="scrollToDG('dg-lb',this)">LEADERBOARD</button>
@@ -1654,7 +1721,15 @@ function buildDGResults(){
 
 function setDraftSeason(s){DRAFT_SEASON=String(s);document.getElementById('content').innerHTML=buildDraftGrades();}
 
-function viewDraftMgr(username){DRAFT_MGR=username;document.getElementById('content').innerHTML=buildDraftGrades();}
+function viewDraftMgr(username){
+  DRAFT_MGR=username;
+  const dg=document.getElementById('dg-content');
+  if(dg){
+    dg.innerHTML=buildDraftMgrProfile();
+  }else{
+    document.getElementById('content').innerHTML=buildDraftGrades();
+  }
+}
 
 function buildDraftMgrProfile(){
   const{teams}=LD;
@@ -1711,7 +1786,7 @@ function buildDraftMgrProfile(){
 
   return`<div style="padding:0 0 40px">
     <div class="dmp-header">
-      <button class="dmp-back" onclick="DRAFT_MGR=null;document.getElementById('content').innerHTML=buildDraftGrades()">← BACK</button>
+      <button class="dmp-back" onclick="DRAFT_MGR=null;const dg=document.getElementById('dg-content');if(dg){dg.innerHTML=buildDGLeaderboard()+buildDGResults();}else{document.getElementById('content').innerHTML=buildDraftGrades();}">← BACK</button>
       <div class="dmp-grade ${dg.c}" style="color:inherit">${dg.g}</div>
       <div>
         <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px">${DRAFT_MGR}</div>
