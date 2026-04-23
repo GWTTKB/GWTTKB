@@ -798,7 +798,9 @@ async function runScout(username,leagueId){
 
     upLoad('PULLING TRADE HISTORY',50);
     // Follow league chain
-    const chain=[];let scanId=leagueId,yr=2025;
+    // Use actual league season year (not hardcoded 2025)
+    const currentSeason=parseInt(league.season||new Date().getFullYear());
+    const chain=[];let scanId=leagueId,yr=currentSeason;
     for(let i=0;i<4;i++){  // max 4 seasons
       try{
         const lg=await g(`${API}/league/${scanId}`);
@@ -1028,6 +1030,7 @@ function setMain(tab,btn){
   }
   else if(tab==='targets')el.innerHTML=buildTargets();
   if(tab==='warroom'&&ACTIVE_MGR)setTimeout(()=>selectMgr(ACTIVE_MGR),60);
+  if(tab==='warroom'&&WR_FILTER!=='all')setTimeout(()=>applyWRFilter(WR_FILTER),80);
 }
 
 // ═══════════════════════════════════════════════════
@@ -1150,7 +1153,34 @@ function buildWarRoom(){
 
 function setWRF(f){
   WR_FILTER=f;
-  setMain('warroom',document.querySelector('.mt-btn.active'));
+  // Re-render war room with filter applied
+  const el=document.getElementById('content');
+  el.innerHTML=buildWarRoom();
+  if(ACTIVE_MGR)setTimeout(()=>selectMgr(ACTIVE_MGR),60);
+  // If a position filter is active, highlight matching managers
+  if(f!=='all'){
+    applyWRFilter(f);
+  }
+}
+
+function applyWRFilter(f){
+  if(f==='all')return;
+  const{teams}=LD;
+  document.querySelectorAll('.mgr-item').forEach(el=>{
+    const rid=el.id.replace('mi-','');
+    const team=teams.find(t=>String(t.roster_id)===String(rid));
+    if(!team){el.style.opacity='1';return;}
+    let show=true;
+    if(f==='TE')show=team.posGrades.TE==='weak';
+    else if(f==='RB')show=team.posGrades.RB==='weak';
+    else if(f==='WR')show=team.posGrades.WR==='weak';
+    else if(f==='QB')show=team.posGrades.QB==='weak';
+    else if(f==='picks')show=(LD.tRec[team.username]?.pR||0)-(LD.tRec[team.username]?.pG||0)>=2;
+    else if(f==='rebuild')show=team.win.w==='REBUILDING'||team.win.w==='DECLINING';
+    else if(f==='contend')show=team.win.w==='CONTENDING'||team.win.w==='PEAKING';
+    el.style.opacity=show?'1':'0.2';
+    el.style.pointerEvents=show?'auto':'none';
+  });
 }
 
 function selectMgr(rid){
@@ -1204,41 +1234,113 @@ function selectMgr(rid){
       desc:`Limited rebuild path. If contention window closes, few assets to pivot.`});
   }
 
-  // Build trade intel cards
+  // Build trade intel cards with signal strength
   const tradeCards=[];
-  const flowItems=Object.entries(tr.posFlow||{}).filter(([,v])=>Math.abs(v)>=2)
-    .map(([pos,v])=>v<0?{pos,v,label:`${pos} DISPOSER — net ${v} flow`}:{pos,v,label:`${pos} ACQUIRER — net +${v} flow`});
-  for(const fi of flowItems){
-    tradeCards.push({stripe:fi.v<0?'var(--red)':'var(--green)',tags:['trade-bias','this-league','strong'],
-      title:fi.label,
-      desc:`Used as trade currency. Lead with ${fi.v<0?'offers involving '+fi.pos:'requests for their '+fi.pos} to get engagement.`});
-  }
-  const topP=Object.entries(tr.partners||{}).sort((a,b)=>b[1]-a[1])[0];
-  if(topP&&topP[1]>=3){
-    tradeCards.push({stripe:'var(--gold)',tags:['relationship','this-league','strong'],
-      title:`Trades with ${topP[0]} frequently — ${topP[1]} deals`,
-      desc:`Established trade partner. You can disrupt this relationship by undercutting their usual offers.`});
-  }
-  if(tr.pG>=4){
-    tradeCards.push({stripe:'var(--purple)',tags:['pick','this-league','strong'],
-      title:`Spends 1st-round picks freely — gave away ${tr.pG}`,
-      desc:`Willing to pay premium draft capital. Target pick-heavy offers when negotiating.`});
-  }
   const leagueAvg=Object.values(LD.tRec).reduce((s,r)=>s+(r.count||0),0)/Math.max(1,LD.teams.length);
   const actPct=leagueAvg>0?Math.round(((tr.count/leagueAvg)-1)*100):0;
   const actRk=LD.teams.filter(tm=>(LD.tRec[tm.username]||{count:0}).count>tr.count).length+1;
-  tradeCards.push({stripe:'var(--teal)',tags:['style','this-league','strong'],
-    title:`#${actRk} of ${LD.teams.length} in trade activity — ${tr.count} deals`,
-    desc:`${actPct>20?`Above average (+${actPct}% vs league). High engagement. Will respond to offers aggressively.`:actPct>-20?'Average trade activity.':'Below average activity — may need very favorable offer to engage.'}`});
+  const sigStr=(count)=>count>=8?'strong':count>=4?'moderate':'limited';
+  const sigColor=(count)=>count>=8?'var(--green)':count>=4?'var(--gold)':'var(--txt3)';
 
+  // Position flow
+  const flowItems=Object.entries(tr.posFlow||{}).filter(([,v])=>Math.abs(v)>=2)
+    .map(([pos,v])=>({pos,v,label:v<0?`${pos} Disposer — net ${v} flow`:`${pos} Acquirer — net +${v} flow`}));
+  for(const fi of flowItems){
+    const sig=sigStr(tr.count);
+    tradeCards.push({stripe:fi.v<0?'var(--red)':'var(--green)',
+      tags:['trade-bias','this-league',sig],
+      title:fi.label,
+      desc:fi.v<0?
+        `Traded away ${Math.abs(fi.v)} more ${fi.pos}s than acquired. Uses ${fi.pos} as trade fuel — lead with ${fi.pos} offers to get engagement.`:
+        `Acquired ${fi.v} more ${fi.pos}s than sent. Consistently buying this position — they see value here.`});
+  }
+
+  // Trade partner relationships
+  const allPartners=Object.entries(tr.partners||{}).sort((a,b)=>b[1]-a[1]);
+  const topP=allPartners[0];
+  if(topP&&topP[1]>=2){
+    const sig=sigStr(topP[1]);
+    tradeCards.push({stripe:'var(--gold)',tags:['relationship','this-league',sig],
+      title:`Trades with ${topP[0]} frequently — ${topP[1]} times`,
+      desc:`Established trade relationship. You can disrupt this by offering better value than their usual partner. ${allPartners.length>1?'Also trades with: '+allPartners.slice(1,3).map(([u,c])=>`${u} (${c}x)`).join(', ')+'.'  :''}`});
+  }
+  // Has never traded with YOU
+  if(!tr.partners[me?.username]&&me){
+    tradeCards.push({stripe:'var(--purple)',tags:['relationship','this-league','strong'],
+      title:`Has never traded with you`,
+      desc:`Zero trade history between you in this league. They may not see you as a trade partner yet — initiate contact with a strong offer to establish the relationship.`});
+  }
+
+  // Pick spending pattern
+  if(tr.pG>=3){
+    const sig=sigStr(tr.pG);
+    tradeCards.push({stripe:'var(--purple)',tags:['pick','this-league',sig],
+      title:`Spends 1st-round picks freely — gave away ${tr.pG} across ${tr.count} trades`,
+      desc:`High capital spending. Willing to part with premium draft assets. Include picks in your offers — they're comfortable with that currency.`});
+  }else if(tr.pR-tr.pG>=3){
+    tradeCards.push({stripe:'var(--teal)',tags:['pick','this-league','strong'],
+      title:`Pick hoarder — sitting on ${tr.pR-tr.pG} more picks than given`,
+      desc:`Capital-rich but needs to convert to talent. Will take quality players for picks — that's the deal structure to pitch.`});
+  }
+
+  // Trade activity + style
+  const actLabel=actRk===1?'Most active trader in the league':
+    actRk<=3?`#${actRk} most active trader`:
+    actPct<-30?'Infrequent trader':'Active trader';
+  const trPerYr=(tr.count/Math.max(1,LD.chain.length)).toFixed(1);
+  const actSig=tr.count>=8?'strong':tr.count>=4?'moderate':'limited';
+  tradeCards.push({stripe:'var(--teal)',tags:['style','this-league',actSig],
+    title:`${actLabel} — ${tr.count} deals (${trPerYr}/yr) (#${actRk} of ${LD.teams.length} in league)`,
+    desc:actPct>30?
+      `Top ${100-Math.min(99,actRk/LD.teams.length*100)|0}% of the league by trade volume (+${actPct}% vs avg). High engagement — will respond to offers and negotiate aggressively.`:
+      actPct>-20?`Average trade activity. Selective but dealable — approach with a clearly favorable offer.`:
+      `One of the least active traders. Limited data on patterns. Don't expect quick engagement — make it easy to say yes.`});
+
+  // Month-based timing from weekDist
+  if(tr.weekDist&&tr.weekDist.length>=3){
+    const wkCounts={};
+    for(const w of tr.weekDist)wkCounts[w]=(wkCounts[w]||0)+1;
+    const peakWks=Object.entries(wkCounts).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([w])=>parseInt(w));
+    const wkToMonth=(w)=>{
+      const months=['Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr','May','Jun','Jul'];
+      return months[Math.floor((w-1)/4.5)|0]||'offseason';
+    };
+    const peakMonths=[...new Set(peakWks.map(wkToMonth))];
+    const isOffseason=peakWks.some(w=>w>18||w<=3);
+    tradeCards.push({stripe:'var(--gold)',tags:['timing','this-league',sigStr(tr.count)],
+      title:`${isOffseason?'Offseason trader':'In-season trader'} — most active ${peakMonths.join(' & ')}`,
+      desc:`Trade volume peaks in ${peakMonths.join(' and ')}. Time your offers for when they're most engaged — cold offers sent at the wrong time get ignored.`});
+  }
+
+  // Window card with specific advice
   if(t.win.w==='CONTENDING'||t.win.w==='PEAKING'){
-    tradeCards.push({stripe:'var(--green)',tags:['window','this-league'],
-      title:`${t.win.w} window — avg age ${t.avgAge.toFixed(1)}`,
-      desc:`This manager is competing now. Win-now moves are on the table. They will pay up for impact players.`});
+    const isAging=t.avgAge>=29;
+    tradeCards.push({stripe:'var(--green)',tags:['window','this-league','strong'],
+      title:`${t.win.w} — avg age ${t.avgAge.toFixed(1)}${isAging?' (window closing)':''}`,
+      desc:isAging?
+        `Aging contender. Their window is closing fast. Will overpay to win now — time your offers for November when playoff pressure peaks. They cannot afford to wait.`:
+        `Active contender with a healthy window. Will pay up for win-now pieces. Strong leverage if you have what they need.`});
   }else if(t.win.w==='REBUILDING'||t.win.w==='DECLINING'){
-    tradeCards.push({stripe:'var(--purple)',tags:['window','this-league'],
+    tradeCards.push({stripe:'var(--purple)',tags:['window','this-league','strong'],
       title:`${t.win.w} — avg age ${t.avgAge.toFixed(1)}`,
-      desc:`Long-term builder. Interested in youth and future picks over win-now talent.`});
+      desc:`Long-term builder. Prioritizes youth and future picks. Veteran/win-now offers will get rejected — pitch young players and capital.`});
+  }
+
+  // Untouchable top assets
+  const topAssets=t.players.slice(0,3);
+  if(topAssets.length>=2){
+    tradeCards.push({stripe:'var(--red)',tags:['untouchable','this-league','strong'],
+      title:`Top ${topAssets.length} assets are likely off-limits`,
+      desc:`${topAssets.map(p=>`${p.name} (${p.pos}, ${p.value.toLocaleString()})`).join(', ')}. Don't waste capital unless you can dramatically overpay — cornerstone players rarely move.`});
+  }
+
+  // Acquirable mid-range players (possible sells)
+  const midAssets=t.players.filter(p=>p.value>1000&&p.value<4000&&(p.age||0)>=28);
+  if(midAssets.length>=1){
+    const target=midAssets[0];
+    tradeCards.push({stripe:'var(--teal)',tags:['acquirable','this-league','moderate'],
+      title:`${target.name} (${target.pos}, ${target.value.toLocaleString()}) may be acquirable`,
+      desc:`Mid-value veteran at age ${target.age||'?'}. Aging asset they may want to move for youth or picks. Worth making an offer — they may sell for below market value.`});
   }
 
   const trNever=LD.teams.filter(x=>!x.isMe&&x.username!==t.username&&!(tRec[t.username]?.partners[x.username]));
@@ -1306,6 +1408,40 @@ function selectMgr(rid){
 
     ${trNever.length?`<div style="font-family:var(--mono);font-size:10px;color:var(--txt3);margin-top:8px">NEVER TRADED WITH: ${trNever.slice(0,4).map(x=>`<span style="color:var(--red)">${x.username}</span>`).join(', ')}</div>`:''}
 
+    <!-- CROSS-LEAGUE INTEL -->
+    <div style="margin-bottom:18px">
+      <div class="is-hd"><div class="is-title" style="color:var(--purple)">CROSS-LEAGUE INTEL</div><div class="is-cnt">REQUIRES THE COACH</div></div>
+      <div class="ic-list">
+        <div class="ic" style="border-color:rgba(155,109,255,0.15)">
+          <div class="ic-stripe" style="background:var(--purple)"></div>
+          <div class="ic-content">
+            <div class="ic-tags"><span class="ic-tag" style="background:rgba(155,109,255,0.12);color:var(--purple);border:1px solid rgba(155,109,255,0.25)">PLAYER CRUSH</span><span class="ic-tag tag-league">CROSS-LEAGUE</span></div>
+            <div class="ic-title">Which players does @${t.username} own in all their leagues?</div>
+            <div class="ic-desc">The Coach tracks every roster position across all their Sleeper leagues — identifying players they consistently hold, what they originally paid for them, and how long they've held them. Emotional attachments are your best negotiating leverage.</div>
+          </div>
+        </div>
+        <div class="ic" style="border-color:rgba(255,183,0,0.15)">
+          <div class="ic-stripe" style="background:var(--gold)"></div>
+          <div class="ic-content">
+            <div class="ic-tags"><span class="ic-tag tag-rel">TEAM FANDOM</span><span class="ic-tag tag-league">CROSS-LEAGUE</span></div>
+            <div class="ic-title">Does @${t.username} overpay for players from a specific NFL team?</div>
+            <div class="ic-desc">Managers who roster the same team's players across multiple leagues almost always overpay for them. The Coach identifies these fandom patterns and tells you exactly which players to pitch at a premium.</div>
+          </div>
+        </div>
+        <div class="ic" style="border-color:rgba(0,212,255,0.12)">
+          <div class="ic-stripe" style="background:var(--teal)"></div>
+          <div class="ic-content">
+            <div class="ic-tags"><span class="ic-tag tag-trade">CROSS-LEAGUE TRADES</span><span class="ic-tag tag-league">CROSS-LEAGUE</span></div>
+            <div class="ic-title">What has @${t.username} traded for across all their leagues?</div>
+            <div class="ic-desc">What they paid for specific players, when they bought them, and how long they've held on — across every league they've ever played in. Not just this one. This is intelligence no other tool can give you.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- YOUR EDGE -->
+    ${buildYourEdge(t,me)}
+
     <div class="cta-bar" style="margin-top:20px">
       <div class="cb-inner">
         <div style="font-family:var(--mono);font-size:20px;flex-shrink:0">▶</div>
@@ -1316,6 +1452,75 @@ function selectMgr(rid){
         </div>
         <a href="/coach.html" class="cb-btn">ASK →</a>
       </div>
+    </div>
+  </div>`;
+}
+
+// YOUR EDGE — what leverage do YOU have against this manager
+function buildYourEdge(t, me){
+  if(!me||t.isMe)return'';
+  const edgeCards=[];
+
+  // Stack angles — do you own a QB that this manager has WRs for?
+  for(const myP of me.players.filter(p=>p.pos==='QB'&&p.value>3000)){
+    const qbTeam=myP.team||'';
+    if(!qbTeam)continue;
+    // Check if they own WRs from same NFL team
+    const theirStackWRs=t.players.filter(p=>(p.pos==='WR'||p.pos==='TE')&&p.team===qbTeam&&p.value>1000);
+    if(theirStackWRs.length>0){
+      edgeCards.push({stripe:'var(--green)',tags:['stack-angle','this-league','strong'],
+        title:`Stack angle: you have ${myP.name}'s WR`,
+        desc:`You own ${theirStackWRs.map(p=>p.name).join(', ')} — ${myP.name}'s target(s) in ${qbTeam}. They may overpay to complete the stack. This is real leverage.`});
+    }
+  }
+  // Do they have your QB's WRs (inverse stack — you want them)
+  for(const theirP of t.players.filter(p=>p.pos==='QB'&&p.value>3000)){
+    const qbTeam=theirP.team||'';
+    if(!qbTeam)continue;
+    const myStackWRs=me.players.filter(p=>(p.pos==='WR'||p.pos==='TE')&&p.team===qbTeam&&p.value>1000);
+    if(myStackWRs.length>0){
+      edgeCards.push({stripe:'var(--teal)',tags:['stack-angle','this-league','strong'],
+        title:`You have ${theirP.name}'s weapon`,
+        desc:`You own ${myStackWRs.map(p=>p.name).join(', ')} — top target(s) for their QB. Pitch these at a premium to complete their offensive stack.`});
+    }
+  }
+
+  // Players they're likely to overpay for (based on positional desperation)
+  const pitchPlayers=[];
+  for(const pos of['QB','RB','WR','TE']){
+    if(t.posGrades[pos]==='weak'){
+      const myDepth=me.byPos[pos]?.slice(1,3)||[];
+      for(const p of myDepth){
+        if(p.value>1500)pitchPlayers.push(p);
+      }
+    }
+  }
+  if(pitchPlayers.length>0){
+    edgeCards.push({stripe:'var(--gold)',tags:['pitch','this-league','strong'],
+      title:`Pitch at a premium — they will overpay for these`,
+      desc:`Based on their roster holes, these assets from your roster are highly desirable to them: ${pitchPlayers.slice(0,3).map(p=>`${p.name} (${p.pos})`).join(', ')}. Anchor your asking price high.`});
+  }
+
+  if(!edgeCards.length)return'';
+
+  return`<div style="margin-bottom:18px">
+    <div class="is-hd"><div class="is-title" style="color:var(--teal)">YOUR EDGE</div><div class="is-cnt">${edgeCards.length} INSIGHTS</div></div>
+    <div class="ic-list">${edgeCards.map(c=>`
+      <div class="ic">
+        <div class="ic-stripe" style="background:${c.stripe}"></div>
+        <div class="ic-content">
+          <div class="ic-tags">${c.tags.map(tg=>{
+            const cls=tg==='stack-angle'?'tag-trade':tg==='pitch'?'tag-rel':
+              tg==='strong'?'tag-sig':tg==='moderate'?'tag-warn':'tag-league';
+            const lbl=tg==='stack-angle'?'STACK ANGLE':tg==='pitch'?'PITCH AT PREMIUM':
+              tg==='strong'?'STRONG SIGNAL':tg==='moderate'?'MODERATE SIGNAL':
+              tg==='this-league'?'THIS LEAGUE':'';
+            return lbl?`<span class="ic-tag ${cls}">${lbl}</span>`:'';
+          }).join('')}</div>
+          <div class="ic-title">${c.title}</div>
+          <div class="ic-desc">${c.desc}</div>
+        </div>
+      </div>`).join('')}
     </div>
   </div>`;
 }
@@ -1744,15 +1949,20 @@ function buildDGResults(){
 
   const picks=[...(draft.picks||[])].sort((a,b)=>(a.round-b.round)||((a.pick_no||a.draft_slot||0)-(b.pick_no||b.draft_slot||0)));
 
+  const draftDateForDisplay=draft.start_time?new Date(draft.start_time).toISOString().slice(0,10):null;
   const rows=picks.map(pick=>{
     const playerId=pick.player_id;
     const p=PM[playerId]||{};
     const team=LD.teams.find(t=>t.roster_id===pick.roster_id||t.owner_id===pick.picked_by);
-    const sv=slotVal(pick.round,pick.pick_no||pick.draft_slot||1);
-    const curVal=LD.isSF?(CSF[n(p.name||'')]||p.value||0):(C1QB[n(p.name||'')]||p.value||0);
-    const surplus=curVal-sv;
+    const curVal=getCurVal(playerId,p.name,LD.isSF);
+    // draftVal = player value on draft day (historical if available, else current)
+    const draftVal=HIST_LOADED&&draftDateForDisplay&&playerId?
+      (getHistVal(playerId,draftDateForDisplay,LD.isSF)||curVal):curVal;
+    const surplus=curVal-draftVal;
     const dg=draftGrade(surplus);
-    const slotStr=`${pick.round}.${String(pick.pick_no||pick.draft_slot||1).padStart(2,'0')}`;
+    const pickSlot=pick.pick_no||pick.draft_slot;
+    const slotStr=pickSlot?`${pick.round}.${String(pickSlot).padStart(2,'0')}`:
+      `${pick.round}.??`;
     const posColors={QB:'var(--teal)',RB:'var(--green)',WR:'var(--gold)',TE:'var(--red)'};
     return`<tr>
       <td><div class="slot-badge">${slotStr}</div></td>
