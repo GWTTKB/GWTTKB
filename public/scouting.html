@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GWTTKB GM Scouting Report — Dynasty Fantasy Football</title>
+<meta name="description" content="Full intelligence profile on any Sleeper manager. Trade tendencies, cross-league behavior, GM grade, and negotiation weaknesses.">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;600;700;800&family=Barlow:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#05080e;--s1:#090e18;--s2:#0d1420;--s3:#131d2e;--s4:#1a2640;
+  --teal:#00d4ff;--teal2:#00f0ff;--green:#00e676;--gold:#ffb700;
+  --red:#ff3d57;--orange:#ff8c00;--purple:#9b6dff;
+  --txt:#e8f0fa;--txt2:#8ba4c0;--txt3:#4d6a8a;
+  --bdr:rgba(0,212,255,0.10);--bdr2:rgba(0,212,255,0.22);
+  --mono:'JetBrains Mono',monospace;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--txt);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--s1);}::-webkit-scrollbar-thumb{background:var(--s3);border-radius:2px;}
+
+/* NAV */
+.nav{position:sticky;top:0;z-index:100;height:52px;display:flex;align-items:center;padding:0 24px;background:rgba(5,8,14,0.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--bdr);gap:16px;}
+.nav-logo{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:4px;color:var(--teal);text-decoration:none;}
+.nav-links{display:flex;gap:20px;list-style:none;}
+.nav-links a{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--txt3);text-decoration:none;transition:color 0.15s;}
+.nav-links a:hover,.nav-links a.active{color:var(--teal);}
+.nav-spacer{flex:1;}
+.nav-cta{padding:6px 16px;background:var(--teal);color:#000;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:3px;text-decoration:none;border-radius:5px;}
+
+/* HERO SEARCH */
+.hero-search{min-height:320px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;position:relative;overflow:hidden;}
+.hero-search::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(0,212,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.02) 1px,transparent 1px);background-size:48px 48px;}
+.hero-search::after{content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:600px;height:300px;background:radial-gradient(ellipse,rgba(0,212,255,0.05),transparent 65%);pointer-events:none;}
+.hero-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:4px;color:var(--teal);text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:10px;position:relative;z-index:1;}
+.hero-eyebrow::before{content:'';width:28px;height:1px;background:var(--teal);}
+.hero-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,6vw,72px);letter-spacing:2px;text-align:center;margin-bottom:8px;position:relative;z-index:1;}
+.hero-sub{font-size:14px;color:var(--txt3);text-align:center;margin-bottom:32px;position:relative;z-index:1;max-width:480px;}
+.search-bar{display:flex;gap:0;max-width:520px;width:100%;position:relative;z-index:1;}
+.search-input{flex:1;padding:14px 20px;background:var(--s1);border:1px solid var(--bdr2);border-right:none;border-radius:10px 0 0 10px;color:var(--txt);font-family:'Barlow',sans-serif;font-size:16px;outline:none;transition:border-color 0.15s;}
+.search-input:focus{border-color:var(--teal);}
+.search-input::placeholder{color:var(--txt3);}
+.search-btn{padding:14px 28px;background:var(--teal);color:#000;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:3px;border:none;border-radius:0 10px 10px 0;cursor:pointer;transition:all 0.15s;white-space:nowrap;}
+.search-btn:hover{background:var(--teal2);}
+.search-btn:disabled{background:var(--s3);color:var(--txt3);cursor:not-allowed;}
+
+/* LOADING */
+.loading-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 24px;gap:16px;}
+.loading-bar-wrap{width:320px;height:3px;background:var(--s3);border-radius:2px;overflow:hidden;}
+.loading-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--teal),var(--purple));border-radius:2px;transition:width 0.4s ease;}
+.loading-step{font-family:var(--mono);font-size:11px;color:var(--teal);letter-spacing:2px;}
+.loading-label{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:var(--txt2);}
+
+/* REPORT */
+.report{max-width:1100px;margin:0 auto;padding:0 24px 80px;}
+
+/* REPORT HEADER */
+.report-header{padding:32px 0 28px;border-bottom:1px solid var(--bdr);margin-bottom:32px;display:flex;align-items:center;gap:24px;}
+.gm-avatar{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--s3),var(--s4));border:2px solid var(--bdr2);display:flex;align-items:center;justify-content:center;font-size:32px;flex-shrink:0;position:relative;}
+.gm-avatar img{width:100%;height:100%;border-radius:50%;object-fit:cover;}
+.gm-info{flex:1;}
+.gm-username{font-family:'Bebas Neue',sans-serif;font-size:42px;letter-spacing:3px;line-height:1;}
+.gm-sub{font-family:var(--mono);font-size:11px;color:var(--txt3);margin-top:4px;}
+.gm-badges{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+.gm-badge{padding:4px 12px;border-radius:5px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;}
+.badge-teal{background:rgba(0,212,255,0.12);color:var(--teal);border:1px solid rgba(0,212,255,0.25);}
+.badge-green{background:rgba(0,230,118,0.12);color:var(--green);border:1px solid rgba(0,230,118,0.25);}
+.badge-gold{background:rgba(255,183,0,0.12);color:var(--gold);border:1px solid rgba(255,183,0,0.25);}
+.badge-red{background:rgba(255,61,87,0.12);color:var(--red);border:1px solid rgba(255,61,87,0.25);}
+.badge-purple{background:rgba(155,109,255,0.12);color:var(--purple);border:1px solid rgba(155,109,255,0.25);}
+.grade-box{text-align:center;flex-shrink:0;}
+.grade-circle{width:90px;height:90px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;border:3px solid;}
+.grade-letter{font-family:'Bebas Neue',sans-serif;font-size:44px;line-height:1;}
+.grade-sublabel{font-family:var(--mono);font-size:9px;letter-spacing:2px;margin-top:4px;}
+.grade-A{border-color:var(--green);color:var(--green);background:rgba(0,230,118,0.06);}
+.grade-B{border-color:var(--teal);color:var(--teal);background:rgba(0,212,255,0.06);}
+.grade-C{border-color:var(--gold);color:var(--gold);background:rgba(255,183,0,0.06);}
+.grade-D{border-color:var(--orange);color:var(--orange);background:rgba(255,140,0,0.06);}
+.grade-F{border-color:var(--red);color:var(--red);background:rgba(255,61,87,0.06);}
+
+/* STAT ROW */
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;}
+.stat-card{background:var(--s1);border:1px solid var(--bdr);border-radius:10px;padding:16px 18px;}
+.stat-val{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--teal);line-height:1;}
+.stat-lbl{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--txt3);margin-top:4px;}
+.stat-sub{font-family:var(--mono);font-size:10px;color:var(--txt3);margin-top:3px;}
+
+/* SECTION */
+.section{margin-bottom:28px;}
+.section-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:var(--txt);margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+.section-title::before{content:'';width:3px;height:22px;background:var(--teal);border-radius:2px;}
+
+/* INTEL CARDS */
+.intel-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.intel-card{background:var(--s1);border:1px solid var(--bdr);border-radius:10px;padding:18px;position:relative;overflow:hidden;}
+.intel-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.intel-card.green::before{background:var(--green);}
+.intel-card.red::before{background:var(--red);}
+.intel-card.gold::before{background:var(--gold);}
+.intel-card.teal::before{background:var(--teal);}
+.intel-card.purple::before{background:var(--purple);}
+.intel-icon{font-size:20px;margin-bottom:8px;}
+.intel-title{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--txt2);margin-bottom:6px;}
+.intel-body{font-size:13px;color:var(--txt2);line-height:1.6;}
+.intel-body strong{color:var(--txt);}
+.intel-body .highlight{color:var(--teal);font-weight:600;}
+.intel-body .warning{color:var(--gold);font-weight:600;}
+.intel-body .danger{color:var(--red);font-weight:600;}
+
+/* TENDENCIES */
+.tendency-list{display:flex;flex-direction:column;gap:8px;}
+.tendency-row{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--s1);border:1px solid var(--bdr);border-radius:8px;}
+.tend-icon{font-size:16px;flex-shrink:0;}
+.tend-text{flex:1;font-size:13px;color:var(--txt2);line-height:1.5;}
+.tend-text strong{color:var(--txt);}
+.tend-badge{padding:3px 8px;border-radius:4px;font-family:var(--mono);font-size:9px;font-weight:600;flex-shrink:0;}
+
+/* POSITION BARS */
+.pos-bars{display:flex;flex-direction:column;gap:8px;}
+.pos-bar-row{display:flex;align-items:center;gap:12px;}
+.pos-bar-label{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;width:32px;flex-shrink:0;}
+.pos-bar-wrap{flex:1;height:8px;background:var(--s3);border-radius:4px;overflow:hidden;}
+.pos-bar-fill{height:100%;border-radius:4px;transition:width 0.8s ease;}
+.pos-bar-val{font-family:var(--mono);font-size:10px;color:var(--txt3);width:40px;text-align:right;flex-shrink:0;}
+
+/* LEAGUES TABLE */
+.leagues-list{display:flex;flex-direction:column;gap:6px;}
+.league-row{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--s1);border:1px solid var(--bdr);border-radius:8px;transition:all 0.15s;}
+.league-row:hover{border-color:var(--bdr2);background:var(--s2);}
+.league-name{flex:1;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--txt);}
+.league-meta{font-family:var(--mono);font-size:10px;color:var(--txt3);}
+.league-format{padding:2px 7px;border-radius:3px;font-family:var(--mono);font-size:9px;font-weight:600;}
+.fmt-sf{background:rgba(0,212,255,0.1);color:var(--teal);border:1px solid rgba(0,212,255,0.2);}
+.fmt-qb{background:rgba(155,109,255,0.1);color:var(--purple);border:1px solid rgba(155,109,255,0.2);}
+
+/* TOP OWNED */
+.owned-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;}
+.owned-card{background:var(--s1);border:1px solid var(--bdr);border-radius:8px;padding:12px;text-align:center;transition:all 0.15s;}
+.owned-card:hover{border-color:var(--bdr2);}
+.owned-hs{width:44px;height:44px;border-radius:50%;object-fit:cover;object-position:top;background:var(--s3);border:1px solid var(--bdr);margin:0 auto 6px;}
+.owned-name{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:var(--txt);}
+.owned-leagues{font-family:var(--mono);font-size:10px;color:var(--teal);}
+
+/* COACH CTA */
+.coach-cta{background:linear-gradient(135deg,var(--s2),var(--s3));border:1px solid var(--bdr2);border-radius:14px;padding:28px 32px;position:relative;overflow:hidden;margin-top:32px;}
+.coach-cta::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--teal),var(--purple));}
+.coach-cta::after{content:'';position:absolute;right:-5%;top:50%;transform:translateY(-50%);width:300px;height:300px;background:radial-gradient(circle,rgba(155,109,255,0.06),transparent 65%);pointer-events:none;}
+.cta-inner{display:flex;align-items:center;gap:24px;position:relative;z-index:1;}
+.cta-icon{font-size:40px;flex-shrink:0;}
+.cta-title{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;margin-bottom:6px;}
+.cta-body{font-size:14px;color:var(--txt2);line-height:1.6;max-width:540px;}
+.cta-body strong{color:var(--txt);}
+.cta-btn{margin-left:auto;flex-shrink:0;padding:12px 24px;background:var(--teal);color:#000;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:3px;text-decoration:none;border-radius:8px;transition:all 0.15s;white-space:nowrap;}
+.cta-btn:hover{background:var(--teal2);transform:translateY(-1px);}
+
+/* EMPTY / ERROR */
+.empty-state{text-align:center;padding:60px 24px;color:var(--txt3);}
+.empty-state h3{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:2px;margin-bottom:8px;color:var(--txt2);}
+
+@media(max-width:768px){
+  .nav-links{display:none;}
+  .stat-row{grid-template-columns:1fr 1fr;}
+  .intel-grid{grid-template-columns:1fr;}
+  .cta-inner{flex-direction:column;text-align:center;}
+  .cta-btn{margin-left:0;}
+  .report-header{flex-wrap:wrap;}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-logo">GWTTKB</a>
+  <ul class="nav-links">
+    <li><a href="/rankings.html">Rankings</a></li>
+    <li><a href="/trade.html">Trade Calc</a></li>
+    <li><a href="/league.html">League</a></li>
+    <li><a href="/stats.html">Stats</a></li>
+    <li><a href="/scouting.html" class="active">GM Scout</a></li>
+    <li><a href="/coach.html">The Coach</a></li>
+  </ul>
+  <div class="nav-spacer"></div>
+  <a href="/coach.html" class="nav-cta">ASK THE COACH</a>
+</nav>
+
+<!-- HERO SEARCH -->
+<div class="hero-search" id="heroSearch">
+  <div class="hero-eyebrow">GM Scouting Report</div>
+  <h1 class="hero-title">INTELLIGENCE<br>BRIEFING</h1>
+  <p class="hero-sub">Enter any Sleeper username. Get a full cross-league intelligence profile — trades, tendencies, and negotiation weaknesses.</p>
+  <div class="search-bar">
+    <input class="search-input" id="usernameInput" type="text" placeholder="Enter Sleeper username..."
+      onkeydown="if(event.key==='Enter')runScout()">
+    <button class="search-btn" id="scoutBtn" onclick="runScout()">SCOUT →</button>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div id="reportContent"></div>
+
+<script>
+const SLEEPER = 'https://api.sleeper.app/v1';
+
+function normName(n) { return String(n).toLowerCase().replace(/[^a-z0-9]/g,''); }
+
+async function get(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`${res.status} ${url}`);
+  return res.json();
+}
+
+function sleep(ms) { return new Promise(r=>setTimeout(r,ms)); }
+
+// ── DYNASTY VALUES ──
+let DYNASTY_SF = {}, DYNASTY_1QB = {};
+let PLAYER_HEADSHOTS = {};
+
+async function loadValues() {
+  try {
+    const [gRes, cRes] = await Promise.all([
+      fetch('/data/leland-rankings.json'),
+      fetch('/data/consensus.json')
+    ]);
+    const gData = await gRes.json();
+    const cData = await cRes.json();
+    for (const p of (gData.formats?.sf_ppr||[])) DYNASTY_SF[normName(p.name)] = p.value;
+    for (const p of (gData.formats?.qb1_ppr||[])) DYNASTY_1QB[normName(p.name)] = p.value;
+    const cp = cData.formats?.sf_ppr?.players || cData.players || [];
+    for (const p of cp) { if (p.headshot_url) PLAYER_HEADSHOTS[normName(p.name)] = { url: p.headshot_url, id: p.id }; }
+  } catch(e) {}
+}
+
+function getHS(name) {
+  const d = PLAYER_HEADSHOTS[normName(name)];
+  return d?.url || '';
+}
+
+// ── MAIN SCOUT ──
+async function runScout() {
+  const username = document.getElementById('usernameInput').value.trim();
+  if (!username) return;
+
+  document.getElementById('scoutBtn').disabled = true;
+  document.getElementById('scoutBtn').textContent = 'LOADING...';
+
+  await loadValues();
+  showLoading(username);
+
+  try {
+    // Step 1: Get user
+    updateLoading('IDENTIFYING MANAGER', 15);
+    const user = await get(`${SLEEPER}/user/${username}`);
+    if (!user?.user_id) throw new Error('User not found. Check the username and try again.');
+
+    // Step 2: Get all leagues
+    updateLoading('SCANNING ALL LEAGUES', 30);
+    await sleep(300);
+    const leagues2025 = await get(`${SLEEPER}/user/${user.user_id}/leagues/nfl/2025`).catch(()=>[]);
+    const leagues2024 = await get(`${SLEEPER}/user/${user.user_id}/leagues/nfl/2024`).catch(()=>[]);
+    const allLeagues = [...(leagues2025||[]), ...(leagues2024||[])];
+    const dynastyLeagues = allLeagues.filter(l => l.settings?.type === 2);
+    const currentLeagues = leagues2025 || [];
+
+    updateLoading('ANALYZING TRADE HISTORY', 50);
+    await sleep(300);
+
+    // Step 3: Get rosters across current leagues
+    const rosterData = [];
+    for (const league of currentLeagues.slice(0, 8)) {
+      try {
+        const rosters = await get(`${SLEEPER}/league/${league.league_id}/rosters`);
+        const myRoster = rosters.find(r => r.owner_id === user.user_id);
+        if (myRoster) {
+          rosterData.push({ league, roster: myRoster });
+        }
+        await sleep(100);
+      } catch(e) {}
+    }
+
+    updateLoading('COMPILING TRADE INTELLIGENCE', 70);
+    await sleep(300);
+
+    // Step 4: Get transactions (trades + waivers) from current leagues
+    const allTrades = [], allWaivers = [];
+    for (const league of currentLeagues.slice(0, 5)) {
+      try {
+        for (let week = 1; week <= 18; week++) {
+          const txns = await get(`${SLEEPER}/league/${league.league_id}/transactions/${week}`);
+          if (!txns?.length) break;
+          for (const t of txns) {
+            if (t.type === 'trade' && t.status === 'complete') {
+              const isInvolved = t.roster_ids?.some(rid => {
+                const r = rosterData.find(rd => rd.league.league_id === league.league_id);
+                return r?.roster?.roster_id === rid;
+              });
+              if (isInvolved) allTrades.push({ ...t, league_name: league.name });
+            }
+            if (t.type === 'waiver' && t.status === 'complete') {
+              const r = rosterData.find(rd => rd.league.league_id === league.league_id);
+              if (r && t.roster_ids?.includes(r.roster.roster_id)) {
+                allWaivers.push({ ...t, league_name: league.name });
+              }
+            }
+          }
+          await sleep(60);
+        }
+      } catch(e) {}
+    }
+
+    updateLoading('BUILDING INTELLIGENCE REPORT', 88);
+    await sleep(400);
+
+    // Step 5: Analyze
+    const report = analyzeGM(user, allLeagues, dynastyLeagues, currentLeagues, rosterData, allTrades, allWaivers);
+
+    updateLoading('REPORT COMPLETE', 100);
+    await sleep(500);
+
+    renderReport(user, report, allLeagues, currentLeagues, rosterData, allTrades, allWaivers);
+
+  } catch(e) {
+    document.getElementById('reportContent').innerHTML = `
+      <div class="empty-state">
+        <h3>NOT FOUND</h3>
+        <p>${e.message || 'Could not load this manager. Check the username and try again.'}</p>
+        <button onclick="resetSearch()" style="margin-top:16px;padding:8px 20px;background:var(--teal);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;cursor:pointer">TRY AGAIN</button>
+      </div>`;
+  }
+  document.getElementById('scoutBtn').disabled = false;
+  document.getElementById('scoutBtn').textContent = 'SCOUT →';
+}
+
+// ── ANALYSIS ENGINE ──
+function analyzeGM(user, allLeagues, dynastyLeagues, currentLeagues, rosterData, trades, waivers) {
+  const report = {};
+
+  // League stats
+  report.totalLeagues = allLeagues.length;
+  report.dynastyLeagues = dynastyLeagues.length;
+  report.currentLeagues = currentLeagues.length;
+
+  // Roster analysis — what players do they own across leagues
+  const playerCount = {};
+  const posCount = { QB:0, RB:0, WR:0, TE:0, DEF:0, K:0, OTHER:0 };
+  let totalPlayers = 0;
+
+  for (const { roster } of rosterData) {
+    for (const pid of (roster.players || [])) {
+      playerCount[pid] = (playerCount[pid]||0) + 1;
+      totalPlayers++;
+    }
+  }
+
+  // Top owned players
+  report.topOwned = Object.entries(playerCount)
+    .sort((a,b)=>b[1]-a[1])
+    .slice(0, 12)
+    .map(([id, count]) => ({ id, count }));
+
+  // Trade analysis
+  report.tradeCount = trades.length;
+  report.waiverCount = waivers.length;
+
+  // Compute roster value
+  let totalValue = 0, valueCount = 0;
+  for (const { roster } of rosterData) {
+    for (const pid of (roster.players||[])) {
+      // We don't have player names easily without a full player map lookup
+      // Use placeholder for now
+      totalValue += 3000; // average placeholder
+      valueCount++;
+    }
+  }
+  report.avgRosterValue = valueCount > 0 ? Math.round(totalValue / valueCount) : 0;
+
+  // Grade — based on trade activity, league count, etc.
+  const tradeFreq = trades.length / Math.max(1, currentLeagues.length);
+  if (tradeFreq > 8) report.grade = 'A';
+  else if (tradeFreq > 4) report.grade = 'B';
+  else if (tradeFreq > 2) report.grade = 'C';
+  else if (tradeFreq > 0) report.grade = 'D';
+  else report.grade = 'C'; // not enough data
+
+  // Tendencies
+  report.isActive = trades.length > 3 || waivers.length > 5;
+  report.tradeFreq = tradeFreq;
+
+  return report;
+}
+
+// ── RENDER REPORT ──
+function renderReport(user, report, allLeagues, currentLeagues, rosterData, trades, waivers) {
+  const username = user.display_name || user.username;
+  const avatarUrl = user.avatar
+    ? `https://sleepercdn.com/avatars/${user.avatar}`
+    : '';
+
+  const gradeClass = `grade-${report.grade.charAt(0)}`;
+
+  // Build leagues list
+  const leagueHtml = currentLeagues.slice(0,8).map(l => {
+    const isSF = (l.roster_positions||[]).includes('SUPER_FLEX');
+    return `<div class="league-row">
+      <div class="league-name">${l.name||'Unnamed League'}</div>
+      <div class="league-meta">${l.total_rosters||12} teams · ${l.season||'2025'}</div>
+      <span class="league-format ${isSF?'fmt-sf':'fmt-qb'}">${isSF?'SF':'1QB'}</span>
+    </div>`;
+  }).join('');
+
+  // Top owned players
+  const ownedHtml = report.topOwned.slice(0,8).map(p => {
+    const leagues = p.count;
+    const totalLeagues = currentLeagues.length || 1;
+    const pct = Math.round((leagues/totalLeagues)*100);
+    return `<div class="owned-card">
+      <div class="owned-leagues">${leagues}/${totalLeagues} leagues</div>
+      <div class="owned-name" style="font-family:var(--mono);font-size:9px;color:var(--txt3)">ID: ${p.id}</div>
+    </div>`;
+  }).join('');
+
+  // Tendencies
+  const tendencies = buildTendencies(report, trades, waivers, currentLeagues);
+
+  document.getElementById('reportContent').innerHTML = `
+  <div class="report">
+    <!-- HEADER -->
+    <div class="report-header">
+      <div class="gm-avatar">
+        ${avatarUrl ? `<img src="${avatarUrl}" onerror="this.style.display='none'">` : '🏈'}
+      </div>
+      <div class="gm-info">
+        <div class="gm-username">@${username}</div>
+        <div class="gm-sub">Sleeper ID: ${user.user_id} · Member since ${user.created ? new Date(user.created).getFullYear() : '—'}</div>
+        <div class="gm-badges">
+          <span class="gm-badge badge-teal">${report.currentLeagues} ACTIVE LEAGUES</span>
+          <span class="gm-badge badge-purple">${report.dynastyLeagues} DYNASTY</span>
+          <span class="gm-badge badge-gold">${report.tradeCount} TRADES THIS SEASON</span>
+          ${report.isActive ? '<span class="gm-badge badge-green">ACTIVE TRADER</span>' : '<span class="gm-badge badge-red">LOW ACTIVITY</span>'}
+        </div>
+      </div>
+      <div class="grade-box">
+        <div class="grade-circle ${gradeClass}">
+          <div class="grade-letter">${report.grade}</div>
+        </div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--txt3);text-align:center;margin-top:6px;letter-spacing:1px">GM GRADE</div>
+      </div>
+    </div>
+
+    <!-- STAT ROW -->
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="stat-val" style="color:var(--teal)">${report.totalLeagues}</div>
+        <div class="stat-lbl">Total Leagues</div>
+        <div class="stat-sub">${report.dynastyLeagues} dynasty</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" style="color:var(--gold)">${report.tradeCount}</div>
+        <div class="stat-lbl">Trades Made</div>
+        <div class="stat-sub">2025 season</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" style="color:var(--green)">${report.waiverCount}</div>
+        <div class="stat-lbl">Waiver Claims</div>
+        <div class="stat-sub">2025 season</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" style="color:${report.tradeFreq > 4 ? 'var(--green)' : report.tradeFreq > 1 ? 'var(--gold)' : 'var(--red)'}">${report.tradeFreq.toFixed(1)}</div>
+        <div class="stat-lbl">Trades / League</div>
+        <div class="stat-sub">activity index</div>
+      </div>
+    </div>
+
+    <!-- INTEL CARDS -->
+    <div class="section">
+      <div class="section-title">INTELLIGENCE BRIEF</div>
+      <div class="intel-grid">
+        <div class="intel-card teal">
+          <div class="intel-icon">🔭</div>
+          <div class="intel-title">Cross-League Overview</div>
+          <div class="intel-body">
+            Active across <strong>${report.currentLeagues} leagues in 2025</strong>${report.dynastyLeagues > 0 ? `, with <strong class="highlight">${report.dynastyLeagues} dynasty leagues</strong>` : ''}. 
+            ${report.tradeCount > 5 ? `Completed <strong class="highlight">${report.tradeCount} trades</strong> this season — this manager is very active in the trade market.` : 
+              report.tradeCount > 0 ? `Made ${report.tradeCount} trades this season — moderate trade activity.` : 
+              'Limited trade activity detected this season.'}
+          </div>
+        </div>
+        <div class="intel-card ${report.isActive ? 'green' : 'gold'}">
+          <div class="intel-icon">📊</div>
+          <div class="intel-title">Trade Activity Level</div>
+          <div class="intel-body">
+            ${report.isActive 
+              ? `This manager is an <strong class="highlight">active dealer</strong>. With ${report.tradeFreq.toFixed(1)} trades per league, they're consistently looking to improve their rosters. <strong>Approach them with trades — they respond.</strong>`
+              : `This manager trades <strong class="warning">infrequently</strong>. May prefer to build through the draft or simply hold. Approach with patience — they may need more convincing before pulling the trigger.`}
+          </div>
+        </div>
+        <div class="intel-card gold">
+          <div class="intel-icon">⚡</div>
+          <div class="intel-title">Waiver Intelligence</div>
+          <div class="intel-body">
+            Submitted <strong class="highlight">${report.waiverCount} waiver claims</strong> this season.
+            ${report.waiverCount > 10 ? ' This manager is <strong>aggressive on waivers</strong> — they react quickly to opportunity and likely have a strong pulse on the wire.' :
+              report.waiverCount > 3 ? ' Moderate waiver activity — selectively picks their spots.' :
+              ' Low waiver activity — either set-and-forget style or managing a roster they feel good about.'}
+          </div>
+        </div>
+        <div class="intel-card purple">
+          <div class="intel-icon">🧠</div>
+          <div class="intel-title">Negotiation Profile</div>
+          <div class="intel-body">
+            ${report.tradeCount > 5 
+              ? `With ${report.tradeCount} completed trades, this manager clearly <strong>enjoys dealmaking</strong>. They're likely receptive to offers — especially if framed around a clear win for their side. <span class="highlight">Lead with value, not desperation.</span>`
+              : report.tradeCount > 0
+              ? `Trades sparingly — when they do deal, it tends to be <strong>intentional and researched</strong>. Make sure your offer is clearly favorable for them or they'll pass.`
+              : `Minimal trade history makes this manager <strong class="warning">hard to read</strong>. May be new to dynasty or simply holding. Start with a low-stakes offer to gauge interest.`}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TENDENCIES -->
+    <div class="section">
+      <div class="section-title">MANAGER TENDENCIES</div>
+      <div class="tendency-list">
+        ${tendencies.map(t => `
+          <div class="tendency-row">
+            <div class="tend-icon">${t.icon}</div>
+            <div class="tend-text">${t.text}</div>
+            <span class="tend-badge" style="background:${t.color}22;color:${t.color};border:1px solid ${t.color}44">${t.tag}</span>
+          </div>`).join('')}
+      </div>
+    </div>
+
+    <!-- ACTIVE LEAGUES -->
+    ${currentLeagues.length ? `
+    <div class="section">
+      <div class="section-title">ACTIVE LEAGUES (2025)</div>
+      <div class="leagues-list">${leagueHtml}</div>
+    </div>` : ''}
+
+    <!-- COACH CTA -->
+    <div class="coach-cta">
+      <div class="cta-inner">
+        <div class="cta-icon">🤖</div>
+        <div style="flex:1">
+          <div class="cta-title">THE COACH KNOWS EVERYTHING THIS MANAGER DOES</div>
+          <div class="cta-body">
+            This is the surface. <strong>The Coach goes deeper.</strong> Every trade they've ever made across all leagues. Every player they're targeting. Every waiver bid they've submitted. Every roster decision that reveals what they actually value vs what they'll tell you they value.<br><br>
+            Ask The Coach: <em>"How do I get a deal done with @${username}?"</em> and get a complete negotiation strategy — the right players to offer, the right framing, and exactly when to strike.
+          </div>
+        </div>
+        <a href="/coach.html" class="cta-btn">ASK THE COACH →</a>
+      </div>
+    </div>
+  </div>`;
+
+  // Scroll to report
+  document.getElementById('reportContent').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function buildTendencies(report, trades, waivers, leagues) {
+  const t = [];
+
+  if (report.dynastyLeagues > 0) {
+    t.push({
+      icon: '🏆',
+      text: `Plays in <strong>${report.dynastyLeagues} dynasty league${report.dynastyLeagues>1?'s':''}</strong> — invested in long-term team building over quick wins.`,
+      color: 'var(--teal)', tag: 'DYNASTY PLAYER'
+    });
+  }
+
+  if (report.tradeCount > 8) {
+    t.push({
+      icon: '🔄',
+      text: `<strong>Heavy trader</strong> — ${report.tradeCount} trades this season means they're always looking to deal. High likelihood of accepting a well-structured offer.`,
+      color: 'var(--green)', tag: 'ACTIVE DEALER'
+    });
+  } else if (report.tradeCount > 0) {
+    t.push({
+      icon: '🤝',
+      text: `Made <strong>${report.tradeCount} trade${report.tradeCount>1?'s':''}</strong> this season. Selective but not inactive — approach with a clear, fair offer.`,
+      color: 'var(--gold)', tag: 'SELECTIVE'
+    });
+  } else {
+    t.push({
+      icon: '🔒',
+      text: `<strong>No trades detected</strong> this season. May prefer to hold and develop. Consider waiver opportunities or a high-value package to open dialogue.`,
+      color: 'var(--red)', tag: 'HOLD & BUILD'
+    });
+  }
+
+  if (report.waiverCount > 10) {
+    t.push({
+      icon: '⚡',
+      text: `<strong>Aggressive on waivers</strong> with ${report.waiverCount} claims — this manager reacts quickly to injuries and breakouts. They likely value upside and depth.`,
+      color: 'var(--teal)', tag: 'WAIVER HAWK'
+    });
+  }
+
+  if (report.currentLeagues > 5) {
+    t.push({
+      icon: '🌐',
+      text: `Manages <strong>${report.currentLeagues} active leagues simultaneously</strong> — experienced player who likely has strong dynasty knowledge and consistent roster philosophy.`,
+      color: 'var(--purple)', tag: 'MULTI-LEAGUE'
+    });
+  }
+
+  const sfCount = leagues.filter(l => (l.roster_positions||[]).includes('SUPER_FLEX')).length;
+  if (sfCount > 0) {
+    t.push({
+      icon: '🏈',
+      text: `Plays in <strong>${sfCount} SF league${sfCount>1?'s':''}</strong> — understands QB value premium. Don't expect to get a QB cheaply from this manager.`,
+      color: 'var(--gold)', tag: 'SF AWARE'
+    });
+  }
+
+  // Always add The Coach upsell tendency
+  t.push({
+    icon: '🤖',
+    text: `<strong>Full cross-league tendencies</strong> — which positions they overpay for, which players they reach for, their historical trade grades — available through The Coach.`,
+    color: 'var(--purple)', tag: 'ASK THE COACH'
+  });
+
+  return t;
+}
+
+// ── LOADING UI ──
+function showLoading(username) {
+  document.getElementById('reportContent').innerHTML = `
+    <div class="loading-screen">
+      <div class="loading-label">SCANNING @${username}</div>
+      <div class="loading-bar-wrap">
+        <div class="loading-bar" id="loadingBar"></div>
+      </div>
+      <div class="loading-step" id="loadingStep">CONNECTING TO SLEEPER...</div>
+    </div>`;
+}
+
+function updateLoading(step, pct) {
+  const bar = document.getElementById('loadingBar');
+  const label = document.getElementById('loadingStep');
+  if (bar) bar.style.width = pct + '%';
+  if (label) label.textContent = step;
+}
+
+function resetSearch() {
+  document.getElementById('reportContent').innerHTML = '';
+  document.getElementById('usernameInput').value = '';
+  document.getElementById('usernameInput').focus();
+}
+
+// Focus input on load
+window.addEventListener('load', () => {
+  document.getElementById('usernameInput').focus();
+});
+</script>
+</body>
+</html>
