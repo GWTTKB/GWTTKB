@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GWTTKB GM Scouting Report — Dynasty Fantasy Football</title>
-<meta name="description" content="Full intelligence profile on any Sleeper manager. Trade tendencies, cross-league behavior, GM grade, and negotiation weaknesses.">
+<title>GWTTKB League War Room — Dynasty Intelligence</title>
+<meta name="description" content="Full league intelligence. Every manager profiled, trade grades, needs matrix, soft targets, and market timing analysis.">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;600;700;800&family=Barlow:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -29,142 +29,170 @@ body{background:var(--bg);color:var(--txt);font-family:'Barlow',sans-serif;overf
 .nav-spacer{flex:1;}
 .nav-cta{padding:6px 16px;background:var(--teal);color:#000;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:3px;text-decoration:none;border-radius:5px;}
 
-/* HERO SEARCH */
-.hero-search{min-height:320px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;position:relative;overflow:hidden;}
-.hero-search::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(0,212,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.02) 1px,transparent 1px);background-size:48px 48px;}
-.hero-search::after{content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:600px;height:300px;background:radial-gradient(ellipse,rgba(0,212,255,0.05),transparent 65%);pointer-events:none;}
-.hero-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:4px;color:var(--teal);text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:10px;position:relative;z-index:1;}
+/* HERO */
+.hero{min-height:280px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(0,212,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.02) 1px,transparent 1px);background-size:48px 48px;}
+.hero::after{content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:700px;height:300px;background:radial-gradient(ellipse,rgba(0,212,255,0.05),transparent 65%);pointer-events:none;}
+.hero-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:4px;color:var(--teal);text-transform:uppercase;margin-bottom:10px;position:relative;z-index:1;display:flex;align-items:center;gap:10px;}
 .hero-eyebrow::before{content:'';width:28px;height:1px;background:var(--teal);}
-.hero-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,6vw,72px);letter-spacing:2px;text-align:center;margin-bottom:8px;position:relative;z-index:1;}
-.hero-sub{font-size:14px;color:var(--txt3);text-align:center;margin-bottom:32px;position:relative;z-index:1;max-width:480px;}
-.search-bar{display:flex;gap:0;max-width:520px;width:100%;position:relative;z-index:1;}
-.search-input{flex:1;padding:14px 20px;background:var(--s1);border:1px solid var(--bdr2);border-right:none;border-radius:10px 0 0 10px;color:var(--txt);font-family:'Barlow',sans-serif;font-size:16px;outline:none;transition:border-color 0.15s;}
+.hero-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,6vw,72px);letter-spacing:2px;text-align:center;margin-bottom:6px;position:relative;z-index:1;}
+.hero-sub{font-size:14px;color:var(--txt3);text-align:center;margin-bottom:28px;position:relative;z-index:1;max-width:500px;}
+.search-bar{display:flex;gap:0;max-width:560px;width:100%;position:relative;z-index:1;}
+.search-input{flex:1;padding:13px 18px;background:var(--s1);border:1px solid var(--bdr2);border-right:none;border-radius:10px 0 0 10px;color:var(--txt);font-family:'Barlow',sans-serif;font-size:15px;outline:none;transition:border-color 0.15s;}
 .search-input:focus{border-color:var(--teal);}
 .search-input::placeholder{color:var(--txt3);}
-.search-btn{padding:14px 28px;background:var(--teal);color:#000;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:3px;border:none;border-radius:0 10px 10px 0;cursor:pointer;transition:all 0.15s;white-space:nowrap;}
+.search-btn{padding:13px 24px;background:var(--teal);color:#000;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:3px;border:none;border-radius:0 10px 10px 0;cursor:pointer;transition:all 0.15s;white-space:nowrap;}
 .search-btn:hover{background:var(--teal2);}
 .search-btn:disabled{background:var(--s3);color:var(--txt3);cursor:not-allowed;}
+.search-hint{font-family:var(--mono);font-size:10px;color:var(--txt3);margin-top:10px;position:relative;z-index:1;}
 
 /* LOADING */
-.loading-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 24px;gap:16px;}
-.loading-bar-wrap{width:320px;height:3px;background:var(--s3);border-radius:2px;overflow:hidden;}
-.loading-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--teal),var(--purple));border-radius:2px;transition:width 0.4s ease;}
-.loading-step{font-family:var(--mono);font-size:11px;color:var(--teal);letter-spacing:2px;}
-.loading-label{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:var(--txt2);}
+.loading-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 24px;gap:14px;}
+.loading-bar-wrap{width:360px;height:3px;background:var(--s3);border-radius:2px;overflow:hidden;}
+.loading-bar{height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--purple));border-radius:2px;transition:width 0.5s ease;}
+.loading-label{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:var(--txt2);}
+.loading-step{font-family:var(--mono);font-size:10px;color:var(--teal);letter-spacing:2px;}
 
-/* REPORT */
-.report{max-width:1100px;margin:0 auto;padding:0 24px 80px;}
+/* TABS */
+.tabs-bar{position:sticky;top:52px;z-index:90;background:rgba(5,8,14,0.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--bdr);padding:0 24px;display:flex;gap:0;max-width:100%;overflow-x:auto;}
+.tab-btn{padding:14px 20px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--txt3);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all 0.15s;white-space:nowrap;}
+.tab-btn:hover{color:var(--txt2);}
+.tab-btn.active{color:var(--teal);border-bottom-color:var(--teal);}
+.league-info-bar{padding:10px 24px;background:var(--s1);border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.lib-name{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--txt);}
+.lib-badge{padding:3px 9px;border-radius:4px;font-family:var(--mono);font-size:9px;font-weight:600;}
+.lib-teal{background:rgba(0,212,255,0.1);color:var(--teal);border:1px solid rgba(0,212,255,0.2);}
+.lib-purple{background:rgba(155,109,255,0.1);color:var(--purple);border:1px solid rgba(155,109,255,0.2);}
+.lib-green{background:rgba(0,230,118,0.1);color:var(--green);border:1px solid rgba(0,230,118,0.2);}
 
-/* REPORT HEADER */
-.report-header{padding:32px 0 28px;border-bottom:1px solid var(--bdr);margin-bottom:32px;display:flex;align-items:center;gap:24px;}
-.gm-avatar{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--s3),var(--s4));border:2px solid var(--bdr2);display:flex;align-items:center;justify-content:center;font-size:32px;flex-shrink:0;position:relative;}
-.gm-avatar img{width:100%;height:100%;border-radius:50%;object-fit:cover;}
-.gm-info{flex:1;}
-.gm-username{font-family:'Bebas Neue',sans-serif;font-size:42px;letter-spacing:3px;line-height:1;}
-.gm-sub{font-family:var(--mono);font-size:11px;color:var(--txt3);margin-top:4px;}
-.gm-badges{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
-.gm-badge{padding:4px 12px;border-radius:5px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;}
-.badge-teal{background:rgba(0,212,255,0.12);color:var(--teal);border:1px solid rgba(0,212,255,0.25);}
-.badge-green{background:rgba(0,230,118,0.12);color:var(--green);border:1px solid rgba(0,230,118,0.25);}
-.badge-gold{background:rgba(255,183,0,0.12);color:var(--gold);border:1px solid rgba(255,183,0,0.25);}
-.badge-red{background:rgba(255,61,87,0.12);color:var(--red);border:1px solid rgba(255,61,87,0.25);}
-.badge-purple{background:rgba(155,109,255,0.12);color:var(--purple);border:1px solid rgba(155,109,255,0.25);}
-.grade-box{text-align:center;flex-shrink:0;}
-.grade-circle{width:90px;height:90px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;border:3px solid;}
-.grade-letter{font-family:'Bebas Neue',sans-serif;font-size:44px;line-height:1;}
-.grade-sublabel{font-family:var(--mono);font-size:9px;letter-spacing:2px;margin-top:4px;}
-.grade-A{border-color:var(--green);color:var(--green);background:rgba(0,230,118,0.06);}
-.grade-B{border-color:var(--teal);color:var(--teal);background:rgba(0,212,255,0.06);}
-.grade-C{border-color:var(--gold);color:var(--gold);background:rgba(255,183,0,0.06);}
-.grade-D{border-color:var(--orange);color:var(--orange);background:rgba(255,140,0,0.06);}
-.grade-F{border-color:var(--red);color:var(--red);background:rgba(255,61,87,0.06);}
+/* MAIN */
+.main{padding:20px 24px 80px;max-width:1400px;margin:0 auto;}
 
-/* STAT ROW */
-.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;}
-.stat-card{background:var(--s1);border:1px solid var(--bdr);border-radius:10px;padding:16px 18px;}
-.stat-val{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--teal);line-height:1;}
-.stat-lbl{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--txt3);margin-top:4px;}
-.stat-sub{font-family:var(--mono);font-size:10px;color:var(--txt3);margin-top:3px;}
+/* MANAGER CARDS */
+.managers-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;}
+.manager-card{background:var(--s1);border:1px solid var(--bdr);border-radius:12px;overflow:hidden;transition:all 0.2s;}
+.manager-card:hover{border-color:var(--bdr2);transform:translateY(-1px);}
+.manager-card.contender{border-color:rgba(0,230,118,0.25);}
+.manager-card.contender::before{content:'';display:block;height:2px;background:linear-gradient(90deg,var(--green),var(--teal));}
+.manager-card.rebuilding::before{content:'';display:block;height:2px;background:linear-gradient(90deg,var(--purple),var(--red));}
+.manager-card.middle::before{content:'';display:block;height:2px;background:linear-gradient(90deg,var(--gold),var(--orange));}
+.mc-header{padding:14px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--bdr);}
+.mc-avatar{width:40px;height:40px;border-radius:50%;background:var(--s3);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;border:1px solid var(--bdr);}
+.mc-avatar img{width:100%;height:100%;border-radius:50%;object-fit:cover;}
+.mc-name{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--txt);flex:1;}
+.mc-team{font-family:var(--mono);font-size:10px;color:var(--txt3);}
+.window-badge{padding:3px 8px;border-radius:4px;font-family:var(--mono);font-size:9px;font-weight:600;flex-shrink:0;}
+.window-contend{background:rgba(0,230,118,0.12);color:var(--green);border:1px solid rgba(0,230,118,0.25);}
+.window-rebuild{background:rgba(155,109,255,0.12);color:var(--purple);border:1px solid rgba(155,109,255,0.25);}
+.window-middle{background:rgba(255,183,0,0.12);color:var(--gold);border:1px solid rgba(255,183,0,0.25);}
+.mc-body{padding:12px 16px;}
+.mc-value{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.mv-val{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--teal);}
+.mv-lbl{font-family:var(--mono);font-size:9px;color:var(--txt3);}
+.mc-pos-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.pos-need{padding:4px 8px;border-radius:5px;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1px;}
+.need-strong{background:rgba(255,61,87,0.15);color:var(--red);border:1px solid rgba(255,61,87,0.3);}
+.need-some{background:rgba(255,183,0,0.12);color:var(--gold);border:1px solid rgba(255,183,0,0.25);}
+.need-ok{background:rgba(0,230,118,0.1);color:var(--green);border:1px solid rgba(0,230,118,0.2);}
+.mc-engagement{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;color:var(--txt3);}
+.eng-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
 
-/* SECTION */
-.section{margin-bottom:28px;}
-.section-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:var(--txt);margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+/* NEEDS MATRIX */
+.matrix-table{width:100%;border-collapse:collapse;font-size:12px;}
+.matrix-table th{padding:8px 12px;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--txt3);border-bottom:1px solid var(--bdr);text-align:left;position:sticky;top:0;background:var(--bg);}
+.matrix-table td{padding:10px 12px;border-bottom:1px solid rgba(0,212,255,0.04);vertical-align:middle;}
+.matrix-table tr:hover td{background:rgba(0,212,255,0.02);}
+.mgr-name-cell{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--txt);white-space:nowrap;}
+.need-cell{text-align:center;}
+.need-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;margin:0 auto;font-weight:700;font-family:var(--mono);}
+.nd-high{background:rgba(255,61,87,0.2);color:var(--red);border:2px solid rgba(255,61,87,0.4);}
+.nd-med{background:rgba(255,183,0,0.15);color:var(--gold);border:2px solid rgba(255,183,0,0.3);}
+.nd-low{background:rgba(0,230,118,0.1);color:var(--green);border:2px solid rgba(0,230,118,0.25);}
+
+/* TRADE PARTNERS */
+.partners-list{display:flex;flex-direction:column;gap:10px;}
+.partner-card{background:var(--s1);border:1px solid var(--bdr);border-radius:10px;padding:16px 18px;display:flex;align-items:flex-start;gap:14px;transition:all 0.15s;}
+.partner-card:hover{border-color:var(--bdr2);}
+.partner-card.hot{border-color:rgba(0,230,118,0.3);background:rgba(0,230,118,0.02);}
+.pc-score{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--teal);min-width:48px;text-align:center;line-height:1;}
+.pc-score-lbl{font-family:var(--mono);font-size:8px;color:var(--txt3);text-align:center;letter-spacing:1px;}
+.pc-info{flex:1;}
+.pc-name{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--txt);margin-bottom:4px;}
+.pc-why{font-size:13px;color:var(--txt2);line-height:1.5;}
+.pc-why strong{color:var(--teal);}
+.pc-badge{padding:4px 10px;border-radius:5px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;flex-shrink:0;}
+
+/* TRADE HISTORY */
+.trades-list{display:flex;flex-direction:column;gap:8px;}
+.trade-card{background:var(--s1);border:1px solid var(--bdr);border-radius:10px;overflow:hidden;transition:all 0.15s;}
+.trade-card:hover{border-color:var(--bdr2);}
+.trade-header{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--bdr);background:var(--s2);}
+.trade-week{font-family:var(--mono);font-size:10px;color:var(--txt3);}
+.trade-teams{flex:1;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--txt);}
+.trade-grade{padding:3px 8px;border-radius:4px;font-family:'Bebas Neue',sans-serif;font-size:14px;}
+.tg-A{background:rgba(0,230,118,0.15);color:var(--green);}
+.tg-B{background:rgba(0,212,255,0.12);color:var(--teal);}
+.tg-C{background:rgba(255,183,0,0.12);color:var(--gold);}
+.tg-D{background:rgba(255,140,0,0.12);color:var(--orange);}
+.tg-F{background:rgba(255,61,87,0.15);color:var(--red);}
+.trade-body{padding:10px 14px;display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;}
+.trade-side{font-size:12px;color:var(--txt2);line-height:1.5;}
+.trade-side strong{color:var(--txt);}
+.trade-side.winner{border-left:3px solid var(--green);padding-left:8px;}
+.trade-side.loser{border-left:3px solid var(--red);padding-left:8px;}
+.trade-vs{font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--txt3);text-align:center;}
+.trade-val-diff{font-family:var(--mono);font-size:10px;text-align:center;}
+
+/* SOFT TARGETS */
+.soft-list{display:flex;flex-direction:column;gap:10px;}
+.soft-card{background:var(--s1);border:1px solid var(--bdr);border-radius:10px;padding:16px 18px;display:flex;align-items:center;gap:14px;}
+.soft-rank{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--txt3);width:32px;text-align:center;flex-shrink:0;}
+.soft-info{flex:1;}
+.soft-name{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;color:var(--txt);margin-bottom:3px;}
+.soft-reason{font-size:12px;color:var(--txt2);line-height:1.5;}
+.soft-reason strong{color:var(--gold);}
+.soft-score{text-align:right;flex-shrink:0;}
+.soft-val{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--red);}
+.soft-lbl{font-family:var(--mono);font-size:9px;color:var(--txt3);}
+
+/* MARKET TIMING */
+.timing-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.timing-card{background:var(--s1);border:1px solid var(--bdr);border-radius:10px;padding:16px;}
+.timing-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.timing-avatar{width:36px;height:36px;border-radius:50%;background:var(--s3);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.timing-name{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:var(--txt);}
+.timing-score{font-family:'Bebas Neue',sans-serif;font-size:28px;margin-left:auto;}
+.timing-plays{display:flex;flex-direction:column;gap:6px;}
+.timing-play{display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--s2);border-radius:6px;font-size:12px;color:var(--txt2);}
+.tp-arrow{font-size:11px;flex-shrink:0;}
+.tp-move{flex:1;}
+.tp-gain{font-family:var(--mono);font-size:10px;font-weight:600;}
+
+/* SECTION TITLE */
+.section-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;margin-bottom:16px;display:flex;align-items:center;gap:10px;}
 .section-title::before{content:'';width:3px;height:22px;background:var(--teal);border-radius:2px;}
-
-/* INTEL CARDS */
-.intel-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.intel-card{background:var(--s1);border:1px solid var(--bdr);border-radius:10px;padding:18px;position:relative;overflow:hidden;}
-.intel-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
-.intel-card.green::before{background:var(--green);}
-.intel-card.red::before{background:var(--red);}
-.intel-card.gold::before{background:var(--gold);}
-.intel-card.teal::before{background:var(--teal);}
-.intel-card.purple::before{background:var(--purple);}
-.intel-icon{font-size:20px;margin-bottom:8px;}
-.intel-title{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--txt2);margin-bottom:6px;}
-.intel-body{font-size:13px;color:var(--txt2);line-height:1.6;}
-.intel-body strong{color:var(--txt);}
-.intel-body .highlight{color:var(--teal);font-weight:600;}
-.intel-body .warning{color:var(--gold);font-weight:600;}
-.intel-body .danger{color:var(--red);font-weight:600;}
-
-/* TENDENCIES */
-.tendency-list{display:flex;flex-direction:column;gap:8px;}
-.tendency-row{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--s1);border:1px solid var(--bdr);border-radius:8px;}
-.tend-icon{font-size:16px;flex-shrink:0;}
-.tend-text{flex:1;font-size:13px;color:var(--txt2);line-height:1.5;}
-.tend-text strong{color:var(--txt);}
-.tend-badge{padding:3px 8px;border-radius:4px;font-family:var(--mono);font-size:9px;font-weight:600;flex-shrink:0;}
-
-/* POSITION BARS */
-.pos-bars{display:flex;flex-direction:column;gap:8px;}
-.pos-bar-row{display:flex;align-items:center;gap:12px;}
-.pos-bar-label{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;width:32px;flex-shrink:0;}
-.pos-bar-wrap{flex:1;height:8px;background:var(--s3);border-radius:4px;overflow:hidden;}
-.pos-bar-fill{height:100%;border-radius:4px;transition:width 0.8s ease;}
-.pos-bar-val{font-family:var(--mono);font-size:10px;color:var(--txt3);width:40px;text-align:right;flex-shrink:0;}
-
-/* LEAGUES TABLE */
-.leagues-list{display:flex;flex-direction:column;gap:6px;}
-.league-row{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--s1);border:1px solid var(--bdr);border-radius:8px;transition:all 0.15s;}
-.league-row:hover{border-color:var(--bdr2);background:var(--s2);}
-.league-name{flex:1;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--txt);}
-.league-meta{font-family:var(--mono);font-size:10px;color:var(--txt3);}
-.league-format{padding:2px 7px;border-radius:3px;font-family:var(--mono);font-size:9px;font-weight:600;}
-.fmt-sf{background:rgba(0,212,255,0.1);color:var(--teal);border:1px solid rgba(0,212,255,0.2);}
-.fmt-qb{background:rgba(155,109,255,0.1);color:var(--purple);border:1px solid rgba(155,109,255,0.2);}
-
-/* TOP OWNED */
-.owned-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;}
-.owned-card{background:var(--s1);border:1px solid var(--bdr);border-radius:8px;padding:12px;text-align:center;transition:all 0.15s;}
-.owned-card:hover{border-color:var(--bdr2);}
-.owned-hs{width:44px;height:44px;border-radius:50%;object-fit:cover;object-position:top;background:var(--s3);border:1px solid var(--bdr);margin:0 auto 6px;}
-.owned-name{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:var(--txt);}
-.owned-leagues{font-family:var(--mono);font-size:10px;color:var(--teal);}
+.section-sub{font-size:13px;color:var(--txt3);margin-bottom:16px;margin-top:-10px;}
 
 /* COACH CTA */
-.coach-cta{background:linear-gradient(135deg,var(--s2),var(--s3));border:1px solid var(--bdr2);border-radius:14px;padding:28px 32px;position:relative;overflow:hidden;margin-top:32px;}
+.coach-cta{background:linear-gradient(135deg,var(--s2),var(--s3));border:1px solid var(--bdr2);border-radius:14px;padding:24px 28px;position:relative;overflow:hidden;margin-top:28px;}
 .coach-cta::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--teal),var(--purple));}
-.coach-cta::after{content:'';position:absolute;right:-5%;top:50%;transform:translateY(-50%);width:300px;height:300px;background:radial-gradient(circle,rgba(155,109,255,0.06),transparent 65%);pointer-events:none;}
-.cta-inner{display:flex;align-items:center;gap:24px;position:relative;z-index:1;}
-.cta-icon{font-size:40px;flex-shrink:0;}
-.cta-title{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;margin-bottom:6px;}
-.cta-body{font-size:14px;color:var(--txt2);line-height:1.6;max-width:540px;}
-.cta-body strong{color:var(--txt);}
-.cta-btn{margin-left:auto;flex-shrink:0;padding:12px 24px;background:var(--teal);color:#000;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:3px;text-decoration:none;border-radius:8px;transition:all 0.15s;white-space:nowrap;}
-.cta-btn:hover{background:var(--teal2);transform:translateY(-1px);}
+.cta-row{display:flex;align-items:center;gap:20px;position:relative;z-index:1;}
+.cta-icon{font-size:36px;flex-shrink:0;}
+.cta-text{}
+.cta-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;margin-bottom:4px;}
+.cta-body{font-size:13px;color:var(--txt2);line-height:1.5;max-width:500px;}
+.cta-btn{margin-left:auto;flex-shrink:0;padding:10px 22px;background:var(--teal);color:#000;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;text-decoration:none;border-radius:7px;transition:all 0.15s;white-space:nowrap;}
+.cta-btn:hover{background:var(--teal2);}
 
-/* EMPTY / ERROR */
-.empty-state{text-align:center;padding:60px 24px;color:var(--txt3);}
-.empty-state h3{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:2px;margin-bottom:8px;color:var(--txt2);}
+/* EMPTY */
+.empty{text-align:center;padding:48px;color:var(--txt3);font-family:'Barlow Condensed',sans-serif;font-size:14px;letter-spacing:1px;}
 
-@media(max-width:768px){
+@media(max-width:900px){
   .nav-links{display:none;}
-  .stat-row{grid-template-columns:1fr 1fr;}
-  .intel-grid{grid-template-columns:1fr;}
-  .cta-inner{flex-direction:column;text-align:center;}
+  .managers-grid{grid-template-columns:1fr;}
+  .intel-grid,.timing-grid{grid-template-columns:1fr;}
+  .cta-row{flex-direction:column;text-align:center;}
   .cta-btn{margin-left:0;}
-  .report-header{flex-wrap:wrap;}
 }
 </style>
 </head>
@@ -184,475 +212,591 @@ body{background:var(--bg);color:var(--txt);font-family:'Barlow',sans-serif;overf
   <a href="/coach.html" class="nav-cta">ASK THE COACH</a>
 </nav>
 
-<!-- HERO SEARCH -->
-<div class="hero-search" id="heroSearch">
-  <div class="hero-eyebrow">GM Scouting Report</div>
-  <h1 class="hero-title">INTELLIGENCE<br>BRIEFING</h1>
-  <p class="hero-sub">Enter any Sleeper username. Get a full cross-league intelligence profile — trades, tendencies, and negotiation weaknesses.</p>
+<!-- HERO -->
+<div class="hero" id="heroSection">
+  <div class="hero-eyebrow">League War Room</div>
+  <h1 class="hero-title">GM INTELLIGENCE<br>BRIEFING</h1>
+  <p class="hero-sub">Enter your Sleeper league ID. Get complete intelligence on every manager — needs, tendencies, trade grades, soft targets, and market timing.</p>
   <div class="search-bar">
-    <input class="search-input" id="usernameInput" type="text" placeholder="Enter Sleeper username..."
+    <input class="search-input" id="leagueInput" type="text" placeholder="Sleeper League ID..."
       onkeydown="if(event.key==='Enter')runScout()">
-    <button class="search-btn" id="scoutBtn" onclick="runScout()">SCOUT →</button>
+    <button class="search-btn" id="scoutBtn" onclick="runScout()">ANALYZE →</button>
   </div>
+  <div class="search-hint">Find your league ID in Sleeper: League Settings → League ID</div>
+</div>
+
+<!-- LEAGUE INFO BAR (hidden until loaded) -->
+<div class="league-info-bar" id="leagueBar" style="display:none"></div>
+
+<!-- TABS (hidden until loaded) -->
+<div class="tabs-bar" id="tabsBar" style="display:none">
+  <button class="tab-btn active" onclick="setTab('overview',this)">📊 Overview</button>
+  <button class="tab-btn" onclick="setTab('needs',this)">🎯 Needs Matrix</button>
+  <button class="tab-btn" onclick="setTab('partners',this)">🤝 Trade Partners</button>
+  <button class="tab-btn" onclick="setTab('trades',this)">📋 Trade History</button>
+  <button class="tab-btn" onclick="setTab('targets',this)">🎣 Soft Targets</button>
+  <button class="tab-btn" onclick="setTab('timing',this)">📈 Market Timing</button>
 </div>
 
 <!-- CONTENT -->
-<div id="reportContent"></div>
+<div id="content"></div>
 
 <script>
 const SLEEPER = 'https://api.sleeper.app/v1';
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
 
-function normName(n) { return String(n).toLowerCase().replace(/[^a-z0-9]/g,''); }
-
-async function get(url) {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`${res.status} ${url}`);
-  return res.json();
-}
-
-function sleep(ms) { return new Promise(r=>setTimeout(r,ms)); }
-
-// ── DYNASTY VALUES ──
+let LEAGUE_DATA = null;
+let PLAYER_MAP = {};
 let DYNASTY_SF = {}, DYNASTY_1QB = {};
-let PLAYER_HEADSHOTS = {};
+let HEADSHOTS = {};
+let CURRENT_TAB = 'overview';
 
-async function loadValues() {
-  try {
-    const [gRes, cRes] = await Promise.all([
-      fetch('/data/leland-rankings.json'),
-      fetch('/data/consensus.json')
-    ]);
-    const gData = await gRes.json();
-    const cData = await cRes.json();
-    for (const p of (gData.formats?.sf_ppr||[])) DYNASTY_SF[normName(p.name)] = p.value;
-    for (const p of (gData.formats?.qb1_ppr||[])) DYNASTY_1QB[normName(p.name)] = p.value;
-    const cp = cData.formats?.sf_ppr?.players || cData.players || [];
-    for (const p of cp) { if (p.headshot_url) PLAYER_HEADSHOTS[normName(p.name)] = { url: p.headshot_url, id: p.id }; }
-  } catch(e) {}
+function normName(n){return String(n).toLowerCase().replace(/[^a-z0-9]/g,'');}
+async function get(url){const r=await fetch(url);if(!r.ok)throw new Error(`${r.status}`);return r.json();}
+
+// ── LOAD DYNASTY VALUES ──
+async function loadValues(){
+  try{
+    const [gRes,cRes]=await Promise.all([fetch('/data/leland-rankings.json'),fetch('/data/consensus.json')]);
+    const g=await gRes.json(), c=await cRes.json();
+    for(const p of (g.formats?.sf_ppr||[])){DYNASTY_SF[p.name]=p.value;DYNASTY_SF[normName(p.name)]=p.value;}
+    for(const p of (g.formats?.qb1_ppr||[])){DYNASTY_1QB[p.name]=p.value;DYNASTY_1QB[normName(p.name)]=p.value;}
+    const cp=c.formats?.sf_ppr?.players||c.players||[];
+    for(const p of cp){
+      if(p.headshot_url){HEADSHOTS[p.id]=p.headshot_url;if(p.name)HEADSHOTS[normName(p.name)]=p.headshot_url;}
+      PLAYER_MAP[p.id]={name:p.name,pos:p.pos,team:p.team,age:p.age,value:p.value,headshot:p.headshot_url};
+    }
+  }catch(e){console.warn('Values load failed:',e);}
 }
 
-function getHS(name) {
-  const d = PLAYER_HEADSHOTS[normName(name)];
-  return d?.url || '';
+// ── LOAD SLEEPER PLAYER MAP ──
+async function loadSleeperPlayers(){
+  try{
+    const data=await get(`${SLEEPER}/players/nfl`);
+    for(const[id,p]of Object.entries(data)){
+      if(!p?.full_name)continue;
+      if(!['QB','RB','WR','TE'].includes(p.position))continue;
+      if(!PLAYER_MAP[id]){
+        PLAYER_MAP[id]={name:p.full_name,pos:p.position,team:p.team||'FA',age:p.age,
+          value:DYNASTY_SF[normName(p.full_name)]||DYNASTY_SF[p.full_name]||0,
+          headshot:`https://sleepercdn.com/content/nfl/players/${id}.jpg`};
+      }
+    }
+    console.log('Player map:',Object.keys(PLAYER_MAP).length);
+  }catch(e){console.warn('Player map failed:',e);}
 }
 
 // ── MAIN SCOUT ──
-async function runScout() {
-  const username = document.getElementById('usernameInput').value.trim();
-  if (!username) return;
+async function runScout(){
+  const leagueId=document.getElementById('leagueInput').value.trim();
+  if(!leagueId)return;
+  document.getElementById('scoutBtn').disabled=true;
+  document.getElementById('scoutBtn').textContent='LOADING...';
+  document.getElementById('tabsBar').style.display='none';
+  document.getElementById('leagueBar').style.display='none';
+  showLoading('INITIALIZING WAR ROOM',0);
 
-  document.getElementById('scoutBtn').disabled = true;
-  document.getElementById('scoutBtn').textContent = 'LOADING...';
+  try{
+    updateLoading('LOADING DYNASTY VALUES',10);
+    await Promise.all([loadValues(), loadSleeperPlayers()]);
 
-  await loadValues();
-  showLoading(username);
+    updateLoading('FETCHING LEAGUE DATA',25);
+    const [league,rosters,users]=await Promise.all([
+      get(`${SLEEPER}/league/${leagueId}`),
+      get(`${SLEEPER}/league/${leagueId}/rosters`),
+      get(`${SLEEPER}/league/${leagueId}/users`)
+    ]);
 
-  try {
-    // Step 1: Get user
-    updateLoading('IDENTIFYING MANAGER', 15);
-    const user = await get(`${SLEEPER}/user/${username}`);
-    if (!user?.user_id) throw new Error('User not found. Check the username and try again.');
-
-    // Step 2: Get all leagues
-    updateLoading('SCANNING ALL LEAGUES', 30);
-    await sleep(300);
-    const leagues2025 = await get(`${SLEEPER}/user/${user.user_id}/leagues/nfl/2025`).catch(()=>[]);
-    const leagues2024 = await get(`${SLEEPER}/user/${user.user_id}/leagues/nfl/2024`).catch(()=>[]);
-    const allLeagues = [...(leagues2025||[]), ...(leagues2024||[])];
-    const dynastyLeagues = allLeagues.filter(l => l.settings?.type === 2);
-    const currentLeagues = leagues2025 || [];
-
-    updateLoading('ANALYZING TRADE HISTORY', 50);
+    updateLoading('ANALYZING ALL ROSTERS',45);
     await sleep(300);
 
-    // Step 3: Get rosters across current leagues
-    const rosterData = [];
-    for (const league of currentLeagues.slice(0, 8)) {
-      try {
-        const rosters = await get(`${SLEEPER}/league/${league.league_id}/rosters`);
-        const myRoster = rosters.find(r => r.owner_id === user.user_id);
-        if (myRoster) {
-          rosterData.push({ league, roster: myRoster });
+    // Build user map
+    const userMap={};
+    for(const u of users)userMap[u.user_id]=u;
+
+    // Match rosters to users
+    const teams=rosters.map(r=>{
+      const user=userMap[r.owner_id]||{};
+      const players=(r.players||[]).map(id=>({
+        id,
+        ...(PLAYER_MAP[id]||{name:id,pos:'?',value:0})
+      }));
+      const totalValue=players.reduce((s,p)=>s+(p.value||0),0);
+      const byPos={QB:[],RB:[],WR:[],TE:[]};
+      for(const p of players){
+        if(byPos[p.pos])byPos[p.pos].push(p);
+      }
+      // Sort by value
+      for(const pos of Object.keys(byPos))byPos[pos].sort((a,b)=>(b.value||0)-(a.value||0));
+
+      // Positional grades based on value
+      const posGrades={};
+      for(const[pos,arr]of Object.entries(byPos)){
+        const topVal=arr.slice(0,pos==='QB'?2:pos==='TE'?2:3).reduce((s,p)=>s+(p.value||0),0);
+        posGrades[pos]=topVal>15000?'strong':topVal>8000?'ok':'weak';
+      }
+
+      // Window
+      const avgAge=players.filter(p=>p.age).reduce((s,p,_,a)=>s+p.age/a.length,0)||26;
+      const window=totalValue>50000&&avgAge<27?'contend':totalValue<25000||avgAge>30?'rebuild':'middle';
+
+      return{
+        roster_id:r.roster_id,
+        owner_id:r.owner_id,
+        username:user.display_name||user.username||'Unknown',
+        avatar:user.avatar?`https://sleepercdn.com/avatars/${user.avatar}`:'',
+        team_name:r.metadata?.team_name||user.metadata?.team_name||'',
+        players,totalValue,byPos,posGrades,window,avgAge,
+        wins:r.settings?.wins||0,
+        losses:r.settings?.losses||0,
+        waiver_budget_used:r.settings?.waiver_budget_used||0
+      };
+    }).sort((a,b)=>b.totalValue-a.totalValue);
+
+    updateLoading('SCANNING TRADE HISTORY',65);
+    await sleep(200);
+
+    // Get transactions
+    const allTrades=[];
+    for(let week=1;week<=20;week++){
+      try{
+        const txns=await get(`${SLEEPER}/league/${leagueId}/transactions/${week}`);
+        if(!txns?.length)break;
+        for(const t of txns){
+          if(t.type==='trade'&&t.status==='complete')allTrades.push({...t,week});
         }
-        await sleep(100);
-      } catch(e) {}
+        await sleep(50);
+      }catch(e){break;}
     }
 
-    updateLoading('COMPILING TRADE INTELLIGENCE', 70);
+    updateLoading('GRADING TRADES',80);
     await sleep(300);
 
-    // Step 4: Get transactions (trades + waivers) from current leagues
-    const allTrades = [], allWaivers = [];
-    for (const league of currentLeagues.slice(0, 5)) {
-      try {
-        for (let week = 1; week <= 18; week++) {
-          const txns = await get(`${SLEEPER}/league/${league.league_id}/transactions/${week}`);
-          if (!txns?.length) break;
-          for (const t of txns) {
-            if (t.type === 'trade' && t.status === 'complete') {
-              const isInvolved = t.roster_ids?.some(rid => {
-                const r = rosterData.find(rd => rd.league.league_id === league.league_id);
-                return r?.roster?.roster_id === rid;
-              });
-              if (isInvolved) allTrades.push({ ...t, league_name: league.name });
-            }
-            if (t.type === 'waiver' && t.status === 'complete') {
-              const r = rosterData.find(rd => rd.league.league_id === league.league_id);
-              if (r && t.roster_ids?.includes(r.roster.roster_id)) {
-                allWaivers.push({ ...t, league_name: league.name });
-              }
-            }
+    // Grade each trade
+    const gradedTrades=allTrades.map(t=>{
+      const sides=t.roster_ids||[];
+      const sideData=sides.map(rid=>{
+        const team=teams.find(tm=>tm.roster_id===rid);
+        const adds=(t.adds||{});
+        const drops=(t.drops||{});
+        const addedPlayers=Object.entries(adds).filter(([,r])=>r===rid).map(([id])=>id);
+        const droppedPlayers=Object.entries(drops).filter(([,r])=>r===rid).map(([id])=>id);
+        const addVal=addedPlayers.reduce((s,id)=>{
+          const p=PLAYER_MAP[id];
+          return s+(p?.value||DYNASTY_SF[normName(p?.name||'')]||0);
+        },0);
+        const dropVal=droppedPlayers.reduce((s,id)=>{
+          const p=PLAYER_MAP[id];
+          return s+(p?.value||DYNASTY_SF[normName(p?.name||'')]||0);
+        },0);
+        // Also check picks
+        const addPicks=(t.draft_picks||[]).filter(pk=>pk.owner_id===rid);
+        const dropPicks=(t.draft_picks||[]).filter(pk=>pk.previous_owner_id===rid&&pk.owner_id!==rid);
+        const pickAddVal=addPicks.length*4000;
+        const pickDropVal=dropPicks.length*4000;
+        return{
+          team,rid,
+          addedPlayers:addedPlayers.map(id=>PLAYER_MAP[id]?.name||id),
+          droppedPlayers:droppedPlayers.map(id=>PLAYER_MAP[id]?.name||id),
+          addedPicks:addPicks.length,droppedPicks:dropPicks.length,
+          netValue:(addVal+pickAddVal)-(dropVal+pickDropVal),
+          totalAdd:addVal+pickAddVal,totalDrop:dropVal+pickDropVal
+        };
+      });
+      // Who won?
+      const winner=sideData.sort((a,b)=>b.netValue-a.netValue)[0];
+      const loser=sideData[1];
+      const diff=Math.abs((winner?.netValue||0)-(loser?.netValue||0));
+      const pct=Math.round(diff/Math.max(1,(winner?.totalAdd||1)+1000)*100);
+      let grade='C';
+      if(pct<=5)grade='A';
+      else if(pct<=15)grade='B';
+      else if(pct<=30)grade='C';
+      else if(pct<=50)grade='D';
+      else grade='F';
+      return{...t,sideData,winner,loser,diff,pct,grade};
+    });
+
+    updateLoading('IDENTIFYING SOFT TARGETS',92);
+    await sleep(200);
+
+    // Build trade record per manager
+    const tradeRecord={};
+    for(const t of gradedTrades){
+      for(const side of t.sideData){
+        const username=side.team?.username||'Unknown';
+        if(!tradeRecord[username])tradeRecord[username]={won:0,lost:0,valueGained:0,count:0};
+        tradeRecord[username].count++;
+        if(side===t.winner){tradeRecord[username].won++;tradeRecord[username].valueGained+=t.diff;}
+        else{tradeRecord[username].lost++;tradeRecord[username].valueGained-=t.diff;}
+      }
+    }
+
+    // Soft targets = most losses + most value given away
+    const softTargets=Object.entries(tradeRecord)
+      .filter(([,r])=>r.count>=1)
+      .map(([username,r])=>({
+        username,
+        ...r,
+        exploitScore:r.lost*2-r.won+(r.valueGained<0?Math.abs(r.valueGained/1000):0)
+      }))
+      .sort((a,b)=>b.exploitScore-a.exploitScore);
+
+    // Waiver activity per team
+    const waiverActivity={};
+    for(let week=1;week<=20;week++){
+      try{
+        const txns=await get(`${SLEEPER}/league/${leagueId}/transactions/${week}`);
+        if(!txns?.length)break;
+        for(const t of txns){
+          if(t.type==='waiver'&&t.status==='complete'&&t.roster_ids?.[0]){
+            const rid=t.roster_ids[0];
+            if(!waiverActivity[rid])waiverActivity[rid]=0;
+            waiverActivity[rid]++;
           }
-          await sleep(60);
         }
-      } catch(e) {}
+      }catch(e){break;}
     }
 
-    updateLoading('BUILDING INTELLIGENCE REPORT', 88);
+    LEAGUE_DATA={league,teams,users,userMap,gradedTrades,tradeRecord,softTargets,waiverActivity};
+
+    updateLoading('WAR ROOM READY',100);
     await sleep(400);
 
-    // Step 5: Analyze
-    const report = analyzeGM(user, allLeagues, dynastyLeagues, currentLeagues, rosterData, allTrades, allWaivers);
+    // Show UI
+    showLeagueBar(league);
+    document.getElementById('tabsBar').style.display='flex';
+    setTab('overview',document.querySelector('.tab-btn'));
 
-    updateLoading('REPORT COMPLETE', 100);
-    await sleep(500);
-
-    renderReport(user, report, allLeagues, currentLeagues, rosterData, allTrades, allWaivers);
-
-  } catch(e) {
-    document.getElementById('reportContent').innerHTML = `
-      <div class="empty-state">
-        <h3>NOT FOUND</h3>
-        <p>${e.message || 'Could not load this manager. Check the username and try again.'}</p>
-        <button onclick="resetSearch()" style="margin-top:16px;padding:8px 20px;background:var(--teal);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;cursor:pointer">TRY AGAIN</button>
+  }catch(e){
+    console.error(e);
+    document.getElementById('content').innerHTML=`
+      <div class="empty">
+        <h3 style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:var(--txt2);margin-bottom:8px">NOT FOUND</h3>
+        <p>${e.message||'Could not load league. Check the ID and try again.'}</p>
+        <button onclick="document.getElementById('content').innerHTML=''" style="margin-top:16px;padding:8px 20px;background:var(--teal);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;cursor:pointer">TRY AGAIN</button>
       </div>`;
   }
-  document.getElementById('scoutBtn').disabled = false;
-  document.getElementById('scoutBtn').textContent = 'SCOUT →';
+  document.getElementById('scoutBtn').disabled=false;
+  document.getElementById('scoutBtn').textContent='ANALYZE →';
 }
 
-// ── ANALYSIS ENGINE ──
-function analyzeGM(user, allLeagues, dynastyLeagues, currentLeagues, rosterData, trades, waivers) {
-  const report = {};
-
-  // League stats
-  report.totalLeagues = allLeagues.length;
-  report.dynastyLeagues = dynastyLeagues.length;
-  report.currentLeagues = currentLeagues.length;
-
-  // Roster analysis — what players do they own across leagues
-  const playerCount = {};
-  const posCount = { QB:0, RB:0, WR:0, TE:0, DEF:0, K:0, OTHER:0 };
-  let totalPlayers = 0;
-
-  for (const { roster } of rosterData) {
-    for (const pid of (roster.players || [])) {
-      playerCount[pid] = (playerCount[pid]||0) + 1;
-      totalPlayers++;
-    }
-  }
-
-  // Top owned players
-  report.topOwned = Object.entries(playerCount)
-    .sort((a,b)=>b[1]-a[1])
-    .slice(0, 12)
-    .map(([id, count]) => ({ id, count }));
-
-  // Trade analysis
-  report.tradeCount = trades.length;
-  report.waiverCount = waivers.length;
-
-  // Compute roster value
-  let totalValue = 0, valueCount = 0;
-  for (const { roster } of rosterData) {
-    for (const pid of (roster.players||[])) {
-      // We don't have player names easily without a full player map lookup
-      // Use placeholder for now
-      totalValue += 3000; // average placeholder
-      valueCount++;
-    }
-  }
-  report.avgRosterValue = valueCount > 0 ? Math.round(totalValue / valueCount) : 0;
-
-  // Grade — based on trade activity, league count, etc.
-  const tradeFreq = trades.length / Math.max(1, currentLeagues.length);
-  if (tradeFreq > 8) report.grade = 'A';
-  else if (tradeFreq > 4) report.grade = 'B';
-  else if (tradeFreq > 2) report.grade = 'C';
-  else if (tradeFreq > 0) report.grade = 'D';
-  else report.grade = 'C'; // not enough data
-
-  // Tendencies
-  report.isActive = trades.length > 3 || waivers.length > 5;
-  report.tradeFreq = tradeFreq;
-
-  return report;
+function showLeagueBar(league){
+  const isSF=(league.roster_positions||[]).includes('SUPER_FLEX');
+  document.getElementById('leagueBar').style.display='flex';
+  document.getElementById('leagueBar').innerHTML=`
+    <div class="lib-name">${league.name||'League'}</div>
+    <span class="lib-badge lib-teal">${league.total_rosters||12} TEAMS</span>
+    <span class="lib-badge ${isSF?'lib-teal':'lib-purple'}">${isSF?'SF PPR':'1QB PPR'}</span>
+    <span class="lib-badge lib-green">2025 SEASON</span>
+    <span style="margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--txt3)">${LEAGUE_DATA.gradedTrades.length} TRADES ANALYZED</span>`;
 }
 
-// ── RENDER REPORT ──
-function renderReport(user, report, allLeagues, currentLeagues, rosterData, trades, waivers) {
-  const username = user.display_name || user.username;
-  const avatarUrl = user.avatar
-    ? `https://sleepercdn.com/avatars/${user.avatar}`
-    : '';
+// ── TABS ──
+function setTab(tab,btn){
+  CURRENT_TAB=tab;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  renderTab();
+}
 
-  const gradeClass = `grade-${report.grade.charAt(0)}`;
+function renderTab(){
+  const el=document.getElementById('content');
+  if(CURRENT_TAB==='overview')el.innerHTML=renderOverview();
+  else if(CURRENT_TAB==='needs')el.innerHTML=renderNeeds();
+  else if(CURRENT_TAB==='partners')el.innerHTML=renderPartners();
+  else if(CURRENT_TAB==='trades')el.innerHTML=renderTrades();
+  else if(CURRENT_TAB==='targets')el.innerHTML=renderSoftTargets();
+  else if(CURRENT_TAB==='timing')el.innerHTML=renderTiming();
+}
 
-  // Build leagues list
-  const leagueHtml = currentLeagues.slice(0,8).map(l => {
-    const isSF = (l.roster_positions||[]).includes('SUPER_FLEX');
-    return `<div class="league-row">
-      <div class="league-name">${l.name||'Unnamed League'}</div>
-      <div class="league-meta">${l.total_rosters||12} teams · ${l.season||'2025'}</div>
-      <span class="league-format ${isSF?'fmt-sf':'fmt-qb'}">${isSF?'SF':'1QB'}</span>
+// ── OVERVIEW ──
+function renderOverview(){
+  const{teams,waiverActivity,tradeRecord}=LEAGUE_DATA;
+  const cards=teams.map(t=>{
+    const wc=waiverActivity[t.roster_id]||0;
+    const tr=tradeRecord[t.username]||{won:0,lost:0,count:0};
+    const totalActivity=(tr.count||0)+(wc||0);
+    const engColor=totalActivity>10?'var(--green)':totalActivity>4?'var(--gold)':'var(--red)';
+    const engLabel=totalActivity>10?'HIGH':totalActivity>4?'MODERATE':'LOW';
+    const windowClass=t.window==='contend'?'contender':t.window==='rebuild'?'rebuilding':'middle';
+    const windowBadgeClass=`window-${t.window}`;
+    const windowLabel=t.window==='contend'?'CONTENDER':t.window==='rebuild'?'REBUILDING':'MIDDLE';
+    const needsHtml=Object.entries(t.posGrades).map(([pos,grade])=>{
+      const cls=grade==='weak'?'need-strong':grade==='ok'?'need-some':'need-ok';
+      return `<span class="pos-need ${cls}">${pos}</span>`;
+    }).join('');
+    return`<div class="manager-card ${windowClass}">
+      <div class="mc-header">
+        <div class="mc-avatar">${t.avatar?`<img src="${t.avatar}" onerror="this.outerHTML='🏈'">`:'🏈'}</div>
+        <div>
+          <div class="mc-name">${t.username}</div>
+          <div class="mc-team">${t.team_name||''} · ${t.wins}W-${t.losses}L</div>
+        </div>
+        <span class="window-badge ${windowBadgeClass}">${windowLabel}</span>
+      </div>
+      <div class="mc-body">
+        <div class="mc-value">
+          <div><div class="mv-val">${t.totalValue.toLocaleString()}</div><div class="mv-lbl">DYNASTY VALUE</div></div>
+          <div style="text-align:right"><div class="mv-val" style="color:var(--txt2);font-size:16px">${t.avgAge.toFixed(1)}</div><div class="mv-lbl">AVG AGE</div></div>
+        </div>
+        <div class="mc-pos-row">${needsHtml}</div>
+        <div class="mc-engagement">
+          <div class="eng-dot" style="background:${engColor}"></div>
+          <span>${engLabel} ACTIVITY · ${tr.count||0} trades · ${wc} waiver claims</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  return`<div class="main">
+    <div class="section-title">LEAGUE OVERVIEW</div>
+    <p class="section-sub">Every team ranked by dynasty value · Color coded by competitive window</p>
+    <div class="managers-grid">${cards}</div>
+    ${coachCta('The Coach knows every manager in this league across ALL their Sleeper leagues — not just this one. Ask for a complete opponent briefing before your next trade.')}
+  </div>`;
+}
+
+// ── NEEDS MATRIX ──
+function renderNeeds(){
+  const{teams}=LEAGUE_DATA;
+  const rows=teams.map(t=>{
+    const cells=['QB','RB','WR','TE','PICK'].map(pos=>{
+      if(pos==='PICK'){
+        // Estimate pick holdings
+        return`<td class="need-cell"><div class="need-dot nd-med">?</div></td>`;
+      }
+      const grade=t.posGrades[pos]||'weak';
+      const cls=grade==='weak'?'nd-high':grade==='ok'?'nd-med':'nd-low';
+      const icon=grade==='weak'?'✗':grade==='ok'?'~':'✓';
+      return`<td class="need-cell"><div class="need-dot ${cls}">${icon}</div></td>`;
+    }).join('');
+    return`<tr>
+      <td><div class="mgr-name-cell">${t.username}</div><div style="font-family:var(--mono);font-size:9px;color:var(--txt3)">${t.window.toUpperCase()}</div></td>
+      ${cells}
+    </tr>`;
+  }).join('');
+  return`<div class="main">
+    <div class="section-title">NEEDS MATRIX</div>
+    <p class="section-sub">🔴 Needs badly &nbsp; 🟡 Thin &nbsp; 🟢 Covered</p>
+    <div style="overflow-x:auto;background:var(--s1);border:1px solid var(--bdr);border-radius:12px;padding:4px">
+    <table class="matrix-table">
+      <thead><tr>
+        <th>MANAGER</th><th>QB</th><th>RB</th><th>WR</th><th>TE</th><th>PICKS</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>
+    ${coachCta('Ask The Coach to match your specific roster needs against every manager in this league and identify the perfect trade structure.')}
+  </div>`;
+}
+
+// ── TRADE PARTNERS ──
+function renderPartners(){
+  const{teams}=LEAGUE_DATA;
+  if(!teams.length)return`<div class="main"><div class="empty">No data available</div></div>`;
+
+  // My team = highest value (placeholder — ideally user picks their team)
+  const myTeam=teams[0];
+
+  // Find best partners based on complementary needs
+  const partners=teams.slice(1).map(t=>{
+    let score=0, reasons=[];
+    // Check positional complement
+    for(const pos of['QB','RB','WR','TE']){
+      const myGrade=myTeam.posGrades[pos];
+      const theirGrade=t.posGrades[pos];
+      if(myGrade==='strong'&&theirGrade==='weak'){score+=3;reasons.push(`You have <strong>${pos} depth</strong> they need`);}
+      else if(myGrade==='weak'&&theirGrade==='strong'){score+=3;reasons.push(`They have <strong>${pos} depth</strong> you need`);}
+    }
+    // Window complement
+    if(myTeam.window==='contend'&&t.window==='rebuild')score+=2;
+    if(myTeam.window==='rebuild'&&t.window==='contend')score+=2;
+    return{team:t,score,reasons};
+  }).filter(p=>p.score>0).sort((a,b)=>b.score-a.score);
+
+  const html=partners.length?partners.slice(0,8).map(p=>{
+    const isHot=p.score>=5;
+    return`<div class="partner-card ${isHot?'hot':''}">
+      <div>
+        <div class="pc-score">${p.score}</div>
+        <div class="pc-score-lbl">MATCH</div>
+      </div>
+      <div class="pc-info">
+        <div class="pc-name">${p.team.username}</div>
+        <div class="pc-why">${p.reasons.slice(0,3).join(' · ')} · ${p.team.window.toUpperCase()}</div>
+      </div>
+      <span class="pc-badge" style="background:${isHot?'rgba(0,230,118,0.12)':'rgba(0,212,255,0.08)'};color:${isHot?'var(--green)':'var(--teal)'};border:1px solid ${isHot?'rgba(0,230,118,0.3)':'rgba(0,212,255,0.2)'}">${isHot?'HOT MATCH':'POTENTIAL'}</span>
+    </div>`;
+  }).join(''):`<div class="empty">Need more roster value data to identify trade partners</div>`;
+
+  return`<div class="main">
+    <div class="section-title">TRADE PARTNERS</div>
+    <p class="section-sub">Managers with complementary roster needs — based on positional strength/weakness analysis</p>
+    <div class="partners-list">${html}</div>
+    ${coachCta('The Coach can analyze who in this league would accept a trade for any specific player you want to move, and tell you exactly what to offer.')}
+  </div>`;
+}
+
+// ── TRADE HISTORY ──
+function renderTrades(){
+  const{gradedTrades,teams}=LEAGUE_DATA;
+  if(!gradedTrades.length)return`<div class="main"><div class="empty">No trades found this season</div></div>`;
+
+  const html=gradedTrades.map(t=>{
+    const[sideA,sideB]=t.sideData||[];
+    if(!sideA||!sideB)return'';
+    const winA=sideA===t.winner;
+    const aAdds=[...sideA.addedPlayers,...(sideA.addedPicks>0?[`${sideA.addedPicks} pick${sideA.addedPicks>1?'s':''}`]:[])].join(', ')||'—';
+    const bAdds=[...sideB.addedPlayers,...(sideB.addedPicks>0?[`${sideB.addedPicks} pick${sideB.addedPicks>1?'s':''}`]:[])].join(', ')||'—';
+    return`<div class="trade-card">
+      <div class="trade-header">
+        <div class="trade-week">WEEK ${t.week}</div>
+        <div class="trade-teams">${sideA.team?.username||'?'} ↔ ${sideB.team?.username||'?'}</div>
+        <span class="trade-grade tg-${t.grade}">${t.grade}</span>
+      </div>
+      <div class="trade-body">
+        <div class="trade-side ${winA?'winner':'loser'}">
+          <strong>${sideA.team?.username||'?'}</strong> received:<br>${aAdds}
+        </div>
+        <div class="trade-vs">
+          VS
+          <div class="trade-val-diff" style="color:${t.pct>20?'var(--red)':'var(--gold)'}">±${t.pct}%</div>
+        </div>
+        <div class="trade-side ${!winA?'winner':'loser'}" style="text-align:right">
+          <strong>${sideB.team?.username||'?'}</strong> received:<br>${bAdds}
+        </div>
+      </div>
     </div>`;
   }).join('');
 
-  // Top owned players
-  const ownedHtml = report.topOwned.slice(0,8).map(p => {
-    const leagues = p.count;
-    const totalLeagues = currentLeagues.length || 1;
-    const pct = Math.round((leagues/totalLeagues)*100);
-    return `<div class="owned-card">
-      <div class="owned-leagues">${leagues}/${totalLeagues} leagues</div>
-      <div class="owned-name" style="font-family:var(--mono);font-size:9px;color:var(--txt3)">ID: ${p.id}</div>
+  return`<div class="main">
+    <div class="section-title">TRADE HISTORY</div>
+    <p class="section-sub">Every trade graded using GWTTKB dynasty values at time of transaction</p>
+    <div class="trades-list">${html}</div>
+    ${coachCta('Ask The Coach to analyze any trade in your league\'s history and explain exactly who won and why.')}
+  </div>`;
+}
+
+// ── SOFT TARGETS ──
+function renderSoftTargets(){
+  const{softTargets,tradeRecord}=LEAGUE_DATA;
+  if(!softTargets.length)return`<div class="main"><div class="empty">Not enough trade history to identify soft targets</div></div>`;
+
+  const html=softTargets.slice(0,10).map((t,i)=>{
+    const winRate=t.count>0?Math.round((t.won/t.count)*100):0;
+    const isTarget=t.exploitScore>3;
+    return`<div class="soft-card">
+      <div class="soft-rank">${i+1}</div>
+      <div class="soft-info">
+        <div class="soft-name">${t.username}</div>
+        <div class="soft-reason">
+          ${t.count} trades · <strong>${t.won}W - ${t.lost}L</strong> · ${winRate}% win rate ·
+          ${t.valueGained>0?`<span style="color:var(--green)">+${t.valueGained.toLocaleString()} value gained</span>`:`<span style="color:var(--red)">${t.valueGained.toLocaleString()} value lost</span>`}
+          ${isTarget?`<br><strong style="color:var(--gold)">⚠ Consistently accepts unfavorable deals — approach with value-skewed offers</strong>`:''}
+        </div>
+      </div>
+      <div class="soft-score">
+        <div class="soft-val" style="color:${isTarget?'var(--red)':'var(--gold)'}">${Math.round(t.exploitScore)}</div>
+        <div class="soft-lbl">EXPLOIT SCORE</div>
+      </div>
     </div>`;
   }).join('');
 
-  // Tendencies
-  const tendencies = buildTendencies(report, trades, waivers, currentLeagues);
+  return`<div class="main">
+    <div class="section-title">SOFT TARGETS</div>
+    <p class="section-sub">Managers who consistently lose trade value — ranked by exploitability score</p>
+    <div class="soft-list">${html}</div>
+    ${coachCta('The Coach knows every trade these managers have accepted across ALL their leagues — not just this one. Ask for their complete vulnerability profile.')}
+  </div>`;
+}
 
-  document.getElementById('reportContent').innerHTML = `
-  <div class="report">
-    <!-- HEADER -->
-    <div class="report-header">
-      <div class="gm-avatar">
-        ${avatarUrl ? `<img src="${avatarUrl}" onerror="this.style.display='none'">` : '🏈'}
-      </div>
-      <div class="gm-info">
-        <div class="gm-username">@${username}</div>
-        <div class="gm-sub">Sleeper ID: ${user.user_id} · Member since ${user.created ? new Date(user.created).getFullYear() : '—'}</div>
-        <div class="gm-badges">
-          <span class="gm-badge badge-teal">${report.currentLeagues} ACTIVE LEAGUES</span>
-          <span class="gm-badge badge-purple">${report.dynastyLeagues} DYNASTY</span>
-          <span class="gm-badge badge-gold">${report.tradeCount} TRADES THIS SEASON</span>
-          ${report.isActive ? '<span class="gm-badge badge-green">ACTIVE TRADER</span>' : '<span class="gm-badge badge-red">LOW ACTIVITY</span>'}
-        </div>
-      </div>
-      <div class="grade-box">
-        <div class="grade-circle ${gradeClass}">
-          <div class="grade-letter">${report.grade}</div>
-        </div>
-        <div style="font-family:var(--mono);font-size:9px;color:var(--txt3);text-align:center;margin-top:6px;letter-spacing:1px">GM GRADE</div>
-      </div>
-    </div>
+// ── MARKET TIMING ──
+function renderTiming(){
+  const{gradedTrades,teams}=LEAGUE_DATA;
 
-    <!-- STAT ROW -->
-    <div class="stat-row">
-      <div class="stat-card">
-        <div class="stat-val" style="color:var(--teal)">${report.totalLeagues}</div>
-        <div class="stat-lbl">Total Leagues</div>
-        <div class="stat-sub">${report.dynastyLeagues} dynasty</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-val" style="color:var(--gold)">${report.tradeCount}</div>
-        <div class="stat-lbl">Trades Made</div>
-        <div class="stat-sub">2025 season</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-val" style="color:var(--green)">${report.waiverCount}</div>
-        <div class="stat-lbl">Waiver Claims</div>
-        <div class="stat-sub">2025 season</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-val" style="color:${report.tradeFreq > 4 ? 'var(--green)' : report.tradeFreq > 1 ? 'var(--gold)' : 'var(--red)'}">${report.tradeFreq.toFixed(1)}</div>
-        <div class="stat-lbl">Trades / League</div>
-        <div class="stat-sub">activity index</div>
-      </div>
-    </div>
+  // Build timing scores per manager
+  const timingMap={};
+  for(const t of gradedTrades){
+    for(const side of t.sideData){
+      const username=side.team?.username||'?';
+      if(!timingMap[username])timingMap[username]={buys:[],sells:[],score:0};
+      // If they won the trade they timed the market well (bought low or sold high)
+      if(side===t.winner){
+        timingMap[username].score+=t.pct;
+        timingMap[username].buys.push({
+          players:side.addedPlayers.slice(0,2),gain:t.diff
+        });
+      } else {
+        timingMap[username].score-=t.pct/2;
+        timingMap[username].sells.push({
+          players:side.droppedPlayers.slice(0,2),loss:t.diff
+        });
+      }
+    }
+  }
 
-    <!-- INTEL CARDS -->
-    <div class="section">
-      <div class="section-title">INTELLIGENCE BRIEF</div>
-      <div class="intel-grid">
-        <div class="intel-card teal">
-          <div class="intel-icon">🔭</div>
-          <div class="intel-title">Cross-League Overview</div>
-          <div class="intel-body">
-            Active across <strong>${report.currentLeagues} leagues in 2025</strong>${report.dynastyLeagues > 0 ? `, with <strong class="highlight">${report.dynastyLeagues} dynasty leagues</strong>` : ''}. 
-            ${report.tradeCount > 5 ? `Completed <strong class="highlight">${report.tradeCount} trades</strong> this season — this manager is very active in the trade market.` : 
-              report.tradeCount > 0 ? `Made ${report.tradeCount} trades this season — moderate trade activity.` : 
-              'Limited trade activity detected this season.'}
-          </div>
-        </div>
-        <div class="intel-card ${report.isActive ? 'green' : 'gold'}">
-          <div class="intel-icon">📊</div>
-          <div class="intel-title">Trade Activity Level</div>
-          <div class="intel-body">
-            ${report.isActive 
-              ? `This manager is an <strong class="highlight">active dealer</strong>. With ${report.tradeFreq.toFixed(1)} trades per league, they're consistently looking to improve their rosters. <strong>Approach them with trades — they respond.</strong>`
-              : `This manager trades <strong class="warning">infrequently</strong>. May prefer to build through the draft or simply hold. Approach with patience — they may need more convincing before pulling the trigger.`}
-          </div>
-        </div>
-        <div class="intel-card gold">
-          <div class="intel-icon">⚡</div>
-          <div class="intel-title">Waiver Intelligence</div>
-          <div class="intel-body">
-            Submitted <strong class="highlight">${report.waiverCount} waiver claims</strong> this season.
-            ${report.waiverCount > 10 ? ' This manager is <strong>aggressive on waivers</strong> — they react quickly to opportunity and likely have a strong pulse on the wire.' :
-              report.waiverCount > 3 ? ' Moderate waiver activity — selectively picks their spots.' :
-              ' Low waiver activity — either set-and-forget style or managing a roster they feel good about.'}
-          </div>
-        </div>
-        <div class="intel-card purple">
-          <div class="intel-icon">🧠</div>
-          <div class="intel-title">Negotiation Profile</div>
-          <div class="intel-body">
-            ${report.tradeCount > 5 
-              ? `With ${report.tradeCount} completed trades, this manager clearly <strong>enjoys dealmaking</strong>. They're likely receptive to offers — especially if framed around a clear win for their side. <span class="highlight">Lead with value, not desperation.</span>`
-              : report.tradeCount > 0
-              ? `Trades sparingly — when they do deal, it tends to be <strong>intentional and researched</strong>. Make sure your offer is clearly favorable for them or they'll pass.`
-              : `Minimal trade history makes this manager <strong class="warning">hard to read</strong>. May be new to dynasty or simply holding. Start with a low-stakes offer to gauge interest.`}
-          </div>
-        </div>
-      </div>
-    </div>
+  const sorted=Object.entries(timingMap)
+    .filter(([,v])=>v.buys.length+v.sells.length>0)
+    .sort((a,b)=>b[1].score-a[1].score);
 
-    <!-- TENDENCIES -->
-    <div class="section">
-      <div class="section-title">MANAGER TENDENCIES</div>
-      <div class="tendency-list">
-        ${tendencies.map(t => `
-          <div class="tendency-row">
-            <div class="tend-icon">${t.icon}</div>
-            <div class="tend-text">${t.text}</div>
-            <span class="tend-badge" style="background:${t.color}22;color:${t.color};border:1px solid ${t.color}44">${t.tag}</span>
-          </div>`).join('')}
-      </div>
-    </div>
+  if(!sorted.length)return`<div class="main"><div class="empty">Not enough trade history for market timing analysis</div></div>`;
 
-    <!-- ACTIVE LEAGUES -->
-    ${currentLeagues.length ? `
-    <div class="section">
-      <div class="section-title">ACTIVE LEAGUES (2025)</div>
-      <div class="leagues-list">${leagueHtml}</div>
-    </div>` : ''}
-
-    <!-- COACH CTA -->
-    <div class="coach-cta">
-      <div class="cta-inner">
-        <div class="cta-icon">🤖</div>
-        <div style="flex:1">
-          <div class="cta-title">THE COACH KNOWS EVERYTHING THIS MANAGER DOES</div>
-          <div class="cta-body">
-            This is the surface. <strong>The Coach goes deeper.</strong> Every trade they've ever made across all leagues. Every player they're targeting. Every waiver bid they've submitted. Every roster decision that reveals what they actually value vs what they'll tell you they value.<br><br>
-            Ask The Coach: <em>"How do I get a deal done with @${username}?"</em> and get a complete negotiation strategy — the right players to offer, the right framing, and exactly when to strike.
-          </div>
+  const html=sorted.slice(0,8).map(([username,data])=>{
+    const color=data.score>20?'var(--green)':data.score>0?'var(--teal)':data.score>-20?'var(--gold)':'var(--red)';
+    const label=data.score>20?'ELITE TIMER':data.score>0?'GOOD INSTINCTS':data.score>-20?'AVERAGE':'POOR TIMING';
+    const plays=[...data.buys.slice(0,2).map(b=>`<div class="timing-play"><div class="tp-arrow" style="color:var(--green)">▲</div><div class="tp-move">Bought: ${b.players.join(', ')||'picks'}</div><div class="tp-gain" style="color:var(--green)">+${b.gain.toLocaleString()}</div></div>`),
+      ...data.sells.slice(0,1).map(s=>`<div class="timing-play"><div class="tp-arrow" style="color:var(--red)">▼</div><div class="tp-move">Sold: ${s.players.join(', ')||'picks'}</div><div class="tp-gain" style="color:var(--red)">-${s.loss.toLocaleString()}</div></div>`)
+    ].join('');
+    return`<div class="timing-card">
+      <div class="timing-header">
+        <div class="timing-avatar">🏈</div>
+        <div>
+          <div class="timing-name">${username}</div>
+          <div style="font-family:var(--mono);font-size:9px;color:var(--txt3)">${label}</div>
         </div>
-        <a href="/coach.html" class="cta-btn">ASK THE COACH →</a>
+        <div class="timing-score" style="color:${color}">${Math.round(Math.abs(data.score))}</div>
       </div>
+      <div class="timing-plays">${plays||'<div style="font-family:var(--mono);font-size:10px;color:var(--txt3)">No significant trades</div>'}</div>
+    </div>`;
+  }).join('');
+
+  return`<div class="main">
+    <div class="section-title">MARKET TIMING</div>
+    <p class="section-sub">Who buys low and sells high? Ranked by trade timing intelligence score.</p>
+    <div class="timing-grid">${html}</div>
+    ${coachCta('The Coach tracks every manager\'s trade timing across all their leagues. Ask who you should target before their window closes.')}
+  </div>`;
+}
+
+function coachCta(text){
+  return`<div class="coach-cta">
+    <div class="cta-row">
+      <div class="cta-icon">🤖</div>
+      <div class="cta-text">
+        <div class="cta-title">THE COACH GOES DEEPER</div>
+        <div class="cta-body">${text}</div>
+      </div>
+      <a href="/coach.html" class="cta-btn">ASK THE COACH →</a>
     </div>
   </div>`;
-
-  // Scroll to report
-  document.getElementById('reportContent').scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-function buildTendencies(report, trades, waivers, leagues) {
-  const t = [];
-
-  if (report.dynastyLeagues > 0) {
-    t.push({
-      icon: '🏆',
-      text: `Plays in <strong>${report.dynastyLeagues} dynasty league${report.dynastyLeagues>1?'s':''}</strong> — invested in long-term team building over quick wins.`,
-      color: 'var(--teal)', tag: 'DYNASTY PLAYER'
-    });
-  }
-
-  if (report.tradeCount > 8) {
-    t.push({
-      icon: '🔄',
-      text: `<strong>Heavy trader</strong> — ${report.tradeCount} trades this season means they're always looking to deal. High likelihood of accepting a well-structured offer.`,
-      color: 'var(--green)', tag: 'ACTIVE DEALER'
-    });
-  } else if (report.tradeCount > 0) {
-    t.push({
-      icon: '🤝',
-      text: `Made <strong>${report.tradeCount} trade${report.tradeCount>1?'s':''}</strong> this season. Selective but not inactive — approach with a clear, fair offer.`,
-      color: 'var(--gold)', tag: 'SELECTIVE'
-    });
-  } else {
-    t.push({
-      icon: '🔒',
-      text: `<strong>No trades detected</strong> this season. May prefer to hold and develop. Consider waiver opportunities or a high-value package to open dialogue.`,
-      color: 'var(--red)', tag: 'HOLD & BUILD'
-    });
-  }
-
-  if (report.waiverCount > 10) {
-    t.push({
-      icon: '⚡',
-      text: `<strong>Aggressive on waivers</strong> with ${report.waiverCount} claims — this manager reacts quickly to injuries and breakouts. They likely value upside and depth.`,
-      color: 'var(--teal)', tag: 'WAIVER HAWK'
-    });
-  }
-
-  if (report.currentLeagues > 5) {
-    t.push({
-      icon: '🌐',
-      text: `Manages <strong>${report.currentLeagues} active leagues simultaneously</strong> — experienced player who likely has strong dynasty knowledge and consistent roster philosophy.`,
-      color: 'var(--purple)', tag: 'MULTI-LEAGUE'
-    });
-  }
-
-  const sfCount = leagues.filter(l => (l.roster_positions||[]).includes('SUPER_FLEX')).length;
-  if (sfCount > 0) {
-    t.push({
-      icon: '🏈',
-      text: `Plays in <strong>${sfCount} SF league${sfCount>1?'s':''}</strong> — understands QB value premium. Don't expect to get a QB cheaply from this manager.`,
-      color: 'var(--gold)', tag: 'SF AWARE'
-    });
-  }
-
-  // Always add The Coach upsell tendency
-  t.push({
-    icon: '🤖',
-    text: `<strong>Full cross-league tendencies</strong> — which positions they overpay for, which players they reach for, their historical trade grades — available through The Coach.`,
-    color: 'var(--purple)', tag: 'ASK THE COACH'
-  });
-
-  return t;
 }
 
 // ── LOADING UI ──
-function showLoading(username) {
-  document.getElementById('reportContent').innerHTML = `
+function showLoading(label,pct){
+  document.getElementById('content').innerHTML=`
     <div class="loading-screen">
-      <div class="loading-label">SCANNING @${username}</div>
-      <div class="loading-bar-wrap">
-        <div class="loading-bar" id="loadingBar"></div>
-      </div>
+      <div class="loading-label">${label}</div>
+      <div class="loading-bar-wrap"><div class="loading-bar" id="loadingBar" style="width:${pct}%"></div></div>
       <div class="loading-step" id="loadingStep">CONNECTING TO SLEEPER...</div>
     </div>`;
 }
-
-function updateLoading(step, pct) {
-  const bar = document.getElementById('loadingBar');
-  const label = document.getElementById('loadingStep');
-  if (bar) bar.style.width = pct + '%';
-  if (label) label.textContent = step;
+function updateLoading(step,pct){
+  const b=document.getElementById('loadingBar');
+  const s=document.getElementById('loadingStep');
+  if(b)b.style.width=pct+'%';
+  if(s)s.textContent=step;
 }
 
-function resetSearch() {
-  document.getElementById('reportContent').innerHTML = '';
-  document.getElementById('usernameInput').value = '';
-  document.getElementById('usernameInput').focus();
-}
-
-// Focus input on load
-window.addEventListener('load', () => {
-  document.getElementById('usernameInput').focus();
-});
+window.addEventListener('load',()=>document.getElementById('leagueInput').focus());
 </script>
 </body>
 </html>
