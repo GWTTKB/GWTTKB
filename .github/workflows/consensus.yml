@@ -4,8 +4,14 @@ on:
   repository_dispatch:
     types: [build-consensus]
   schedule:
-    - cron: '0 7 * * *'
+    - cron: '0 7 * * *'  # 2am ET = 7am UTC
   workflow_dispatch:
+    inputs:
+      run_historical_import:
+        description: 'Run historical import (only needed once)'
+        required: false
+        default: 'false'
+        type: boolean
 
 permissions:
   contents: write
@@ -26,13 +32,17 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Run historical import (one-time setup)
+        if: ${{ github.event.inputs.run_historical_import == 'true' }}
+        run: node scripts/import-historical.mjs
+
       - name: Build consensus rankings
         run: node scripts/build-consensus.mjs
 
-      - name: Commit updated consensus
+      - name: Commit updated data
         run: |
           git config user.name "GWTTKB Bot"
           git config user.email "bot@gwttkb.com"
-          git add public/data/consensus.json public/data/adp-history/ || true
-          git diff --staged --quiet || git commit -m "chore: update consensus rankings $(date +%Y-%m-%d)"
+          git add public/data/ || true
+          git diff --staged --quiet || git commit -m "chore: update rankings + data $(date +%Y-%m-%d)"
           git push
