@@ -173,9 +173,9 @@ body{background:var(--bg);color:var(--txt);font-family:'Barlow',sans-serif;overf
 
 <div class="toolbar">
   <div class="mode-toggle">
-    <button class="mode-btn active" onclick="setMode('current',this)">Current</button>
+    <button class="mode-btn active" onclick="setMode('risk',this)">Risk Index</button>
+    <button class="mode-btn" onclick="setMode('current',this)">Current</button>
     <button class="mode-btn" onclick="setMode('history',this)">Player History</button>
-    <button class="mode-btn" onclick="setMode('risk',this)">Risk Index</button>
   </div>
   <div class="pos-toggle" id="posToggle">
     <button class="pos-btn all active" onclick="setPos('ALL',this)">ALL</button>
@@ -209,14 +209,15 @@ body{background:var(--bg);color:var(--txt);font-family:'Barlow',sans-serif;overf
 </div>
 
 <script>
-let MODE = 'current';
+let MODE = 'risk';
 let POS = 'ALL';
 let STATUS = 'ALL';
 let SEASON = '2025';
 let ALL_INJURIES = [];
 let DYNASTY_VALUES = { sf:{}, qb1:{} };
+let HEADSHOTS = {}; // normalized name → headshot URL
 let historyPlayer = null;
-let historyAllSeasons = [];
+let RISK_SORT = 'desc'; // desc = most injured first, asc = most durable first
 
 const FANTASY_POS = ['QB','RB','WR','TE'];
 
@@ -235,15 +236,36 @@ function sevColor(sev) {
 
 function normName(n) { return String(n).toLowerCase().replace(/[^a-z0-9]/g,''); }
 
-// Load dynasty values
+// Load dynasty values + headshots from consensus
 async function loadDynastyValues() {
   try {
-    const [gRes] = await Promise.all([fetch('/data/leland-rankings.json')]);
+    const [gRes, cRes] = await Promise.all([
+      fetch('/data/leland-rankings.json'),
+      fetch('/data/consensus.json')
+    ]);
     const gData = await gRes.json();
+    const cData = await cRes.json();
+    // Dynasty values from GWTTKB rankings
     for (const p of (gData.formats?.sf_ppr||[])) DYNASTY_VALUES.sf[normName(p.name)] = p.value;
     for (const p of (gData.formats?.qb1_ppr||[])) DYNASTY_VALUES.qb1[normName(p.name)] = p.value;
-  } catch(e) {}
+    // Headshots from consensus (has correct Sleeper CDN URLs)
+    const cPlayers = cData.formats?.sf_ppr?.players || cData.players || [];
+    for (const p of cPlayers) {
+      if (p.headshot_url) HEADSHOTS[normName(p.name)] = p.headshot_url;
+    }
+  } catch(e) { console.warn('Could not load dynasty values:', e); }
 }
+
+function getHeadshot(name, gsisId) {
+  // Try consensus lookup first (has Sleeper URLs for top ~550 players)
+  const fromConsensus = HEADSHOTS[normName(name)];
+  if (fromConsensus) return fromConsensus;
+  // Use NFL.com CDN with GSIS ID — works for all NFL players
+  if (gsisId) return `https://static.www.nfl.com/image/upload/w_65,h_90,c_fill,g_face/league/players/full/${gsisId}`;
+  return '';
+}
+
+async function loadSleeperMap() { /* no-op — using NFL CDN instead */ }
 
 async function loadData() {
   SEASON = document.getElementById('seasonSelect').value;
@@ -339,7 +361,7 @@ function renderCurrent() {
         const statusClass = `status-${statusKey}` in {'status-IR':1,'status-Out':1,'status-Questionable':1,'status-Doubtful':1} ? `status-${statusKey}` : 'status-default';
         const injury = r.report_primary_injury || r.primary_injury || r.injury || '—';
         const sev = getSeverity(injury);
-        const hsUrl = `https://sleepercdn.com/content/nfl/players/${r.gsis_id||'0'}.jpg`;
+        const hsUrl = getHeadshot(r.full_name||r.player_name||'', r.gsis_id);
         const name = r.full_name || r.player_name || 'Unknown';
         const dynasty = DYNASTY_VALUES.sf[normName(name)];
         return `<div class="injury-row">
@@ -376,7 +398,7 @@ function renderHistory() {
   const selectedHtml = historyPlayer ? `
     <div class="player-profile">
       <div class="profile-header">
-        <img class="profile-hs" src="https://sleepercdn.com/content/nfl/players/${historyPlayer.gsis_id||'0'}.jpg" onerror="this.style.opacity=0.1">
+        <img class="profile-hs" src="${getHeadshot(historyPlayer.full_name||historyPlayer.player_name||'', historyPlayer.gsis_id)}" onerror="this.style.opacity=0.1">
         <div>
           <div class="profile-name">${historyPlayer.full_name||historyPlayer.player_name}</div>
           <div class="profile-meta">${historyPlayer.team||''} · ${(historyPlayer.position||'').toUpperCase()}</div>
@@ -482,7 +504,7 @@ function showHistoryResults(query) {
     const pos = (r.position||'').toUpperCase();
     const posClass = FANTASY_POS.includes(pos) ? `pos-${pos}` : '';
     return `<div class="hd-row" onmousedown="selectHistoryPlayer('${(r.full_name||r.player_name||'').replace(/'/g,"\\'")}')">
-      <img class="hd-hs" src="https://sleepercdn.com/content/nfl/players/${r.gsis_id||'0'}.jpg" onerror="this.style.opacity=0.1">
+      <img class="hd-hs" src="${getHeadshot(r.full_name||r.player_name||'', r.gsis_id)}" onerror="this.style.opacity=0.1">
       <div class="hd-name">${r.full_name||r.player_name}</div>
       <div class="hd-meta">${r.team||''} <span class="pos-badge ${posClass}">${pos}</span></div>
     </div>`;
@@ -531,7 +553,7 @@ function renderRiskIndex() {
     score: p.highCount * 3 + (p.count - p.highCount),
     missedWeeks: p.weeks.size
   })).filter(p => p.count >= 1)
-    .sort((a,b) => b.score - a.score)
+    .sort((a,b) => RISK_SORT === 'asc' ? a.score - b.score : b.score - a.score)
     .slice(0, 60);
 
   const maxScore = scored[0]?.score || 1;
@@ -539,8 +561,18 @@ function renderRiskIndex() {
   const filtered = search ? scored.filter(p => p.name.toLowerCase().includes(search)) : scored;
 
   document.getElementById('mainContent').innerHTML = `
-    <div style="font-family:var(--mono);font-size:10px;color:var(--txt3);margin-bottom:14px;letter-spacing:1px">
-      INJURY RISK INDEX · ${SEASON} SEASON · Ranked by injury frequency and severity
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--txt3);letter-spacing:1px">
+        INJURY RISK INDEX · ${SEASON} SEASON · Ranked by injury frequency and severity
+      </div>
+      <div style="display:flex;gap:6px">
+        <button onclick="RISK_SORT='desc';renderRiskIndex()" style="padding:5px 12px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;border-radius:5px;cursor:pointer;transition:all 0.15s;border:1px solid ${RISK_SORT==='desc'?'var(--red)':'var(--bdr)'};background:${RISK_SORT==='desc'?'rgba(255,61,87,0.12)':'var(--s1)'};color:${RISK_SORT==='desc'?'var(--red)':'var(--txt3)'}">
+          ↑ MOST INJURED
+        </button>
+        <button onclick="RISK_SORT='asc';renderRiskIndex()" style="padding:5px 12px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;border-radius:5px;cursor:pointer;transition:all 0.15s;border:1px solid ${RISK_SORT==='asc'?'var(--green)':'var(--bdr)'};background:${RISK_SORT==='asc'?'rgba(0,230,118,0.1)':'var(--s1)'};color:${RISK_SORT==='asc'?'var(--green)':'var(--txt3)'}">
+          ↓ MOST DURABLE
+        </button>
+      </div>
     </div>
     <div class="risk-grid">
       ${filtered.map((p,i) => {
@@ -552,7 +584,7 @@ function renderRiskIndex() {
         const dynasty = DYNASTY_VALUES.sf[normName(p.name)];
         return `<div class="risk-row">
           <div class="risk-rank">${i+1}</div>
-          <img class="injury-hs" src="https://sleepercdn.com/content/nfl/players/${p.gsis_id||'0'}.jpg" onerror="this.style.opacity=0.1" alt="">
+          <img class="injury-hs" src="${getHeadshot(p.name, p.gsis_id)}" onerror="this.style.opacity=0.1" alt="">
           <div style="flex:1;min-width:0">
             <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--txt)">${p.name}</div>
             <div style="font-family:var(--mono);font-size:10px;color:var(--txt3)">${p.team} · <span class="pos-badge ${posClass}">${pos}</span> · ${p.count} injuries · ${p.highCount} high-risk</div>
