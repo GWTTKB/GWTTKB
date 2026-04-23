@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GWTTKB Trade Calculator — Dynasty Fantasy Football</title>
+<meta name="description" content="Dynasty trade calculator. Real values, fair trade finder, and grade every deal. SF PPR and 1QB PPR.">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;600;700;800&family=Barlow:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#05080e;--s1:#090e18;--s2:#0d1420;--s3:#131d2e;
+  --teal:#00d4ff;--teal2:#00f0ff;--green:#00e676;--gold:#ffb700;
+  --red:#ff3d57;--purple:#9b6dff;--orange:#ff8c00;
+  --txt:#e8f0fa;--txt2:#8ba4c0;--txt3:#4d6a8a;
+  --bdr:rgba(0,212,255,0.10);--bdr2:rgba(0,212,255,0.22);
+  --mono:'JetBrains Mono',monospace;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--txt);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--s1);}::-webkit-scrollbar-thumb{background:var(--s3);border-radius:2px;}
+
+/* NAV */
+.nav{position:sticky;top:0;z-index:100;height:52px;display:flex;align-items:center;padding:0 24px;background:rgba(5,8,14,0.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--bdr);gap:16px;}
+.nav-logo{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:4px;color:var(--teal);text-decoration:none;}
+.nav-links{display:flex;gap:20px;list-style:none;}
+.nav-links a{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--txt3);text-decoration:none;transition:color 0.15s;}
+.nav-links a:hover,.nav-links a.active{color:var(--teal);}
+.nav-spacer{flex:1;}
+.nav-cta{padding:6px 16px;background:var(--teal);color:#000;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:3px;text-decoration:none;border-radius:5px;}
+
+/* PAGE HEADER */
+.page-header{padding:28px 24px 24px;max-width:1200px;margin:0 auto;}
+.page-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:3px;color:var(--teal);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:10px;}
+.page-eyebrow::before{content:'';width:28px;height:1px;background:var(--teal);}
+.page-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,5vw,60px);letter-spacing:2px;line-height:1;margin-bottom:6px;}
+.page-sub{font-size:13px;color:var(--txt3);font-weight:300;}
+
+/* FORMAT TOGGLE */
+.format-bar{padding:0 24px 20px;max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:12px;}
+.format-toggle{display:flex;background:var(--s1);border:1px solid var(--bdr);border-radius:8px;overflow:hidden;}
+.fmt-btn{padding:8px 20px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--txt3);background:none;border:none;border-right:1px solid var(--bdr);cursor:pointer;transition:all 0.15s;}
+.fmt-btn:last-child{border-right:none;}
+.fmt-btn.active{background:rgba(0,212,255,0.12);color:var(--teal);}
+.reset-btn{padding:8px 16px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;color:var(--txt3);background:var(--s1);border:1px solid var(--bdr);border-radius:7px;cursor:pointer;transition:all 0.15s;margin-left:auto;}
+.reset-btn:hover{border-color:var(--red);color:var(--red);}
+
+/* TRADE LAYOUT */
+.trade-layout{padding:0 24px;max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr 80px 1fr;gap:0;align-items:start;}
+
+/* TRADE SIDE */
+.trade-side{background:var(--s1);border:1px solid var(--bdr);border-radius:14px;overflow:hidden;}
+.trade-side.winning{border-color:rgba(0,230,118,0.4);box-shadow:0 0 32px rgba(0,230,118,0.05);}
+.trade-side.losing{border-color:rgba(255,61,87,0.25);}
+
+.side-header{padding:16px 20px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;}
+.side-label{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:var(--txt);}
+.side-total{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;color:var(--teal);}
+.side-total.winning{color:var(--green);}
+.side-total.losing{color:var(--red);}
+
+/* SEARCH */
+.search-area{padding:14px 16px;border-bottom:1px solid var(--bdr);position:relative;}
+.search-input{width:100%;padding:9px 12px 9px 32px;background:var(--s2);border:1px solid var(--bdr);border-radius:7px;color:var(--txt);font-family:'Barlow',sans-serif;font-size:13px;outline:none;transition:border-color 0.15s;}
+.search-input:focus{border-color:var(--teal);}
+.search-input::placeholder{color:var(--txt3);}
+.search-icon{position:absolute;left:26px;top:50%;transform:translateY(-50%);color:var(--txt3);font-size:13px;pointer-events:none;}
+.search-results{position:absolute;top:calc(100% - 6px);left:16px;right:16px;background:var(--s2);border:1px solid var(--bdr2);border-radius:8px;z-index:50;max-height:280px;overflow-y:auto;box-shadow:0 16px 48px rgba(0,0,0,0.5);}
+.search-result{display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;transition:background 0.1s;border-bottom:1px solid var(--bdr);}
+.search-result:last-child{border-bottom:none;}
+.search-result:hover{background:rgba(0,212,255,0.06);}
+.sr-hs{width:30px;height:30px;border-radius:50%;object-fit:cover;object-position:top;background:var(--s3);flex-shrink:0;}
+.sr-name{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--txt);flex:1;}
+.sr-meta{font-family:var(--mono);font-size:10px;color:var(--txt3);}
+.sr-val{font-family:'Bebas Neue',sans-serif;font-size:15px;color:var(--teal);}
+
+/* PICKS SECTION */
+.picks-area{padding:10px 16px;border-bottom:1px solid var(--bdr);}
+.picks-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;color:var(--txt3);text-transform:uppercase;margin-bottom:8px;}
+.picks-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.pick-btn{padding:6px 4px;background:var(--s2);border:1px solid var(--bdr);border-radius:6px;font-family:var(--mono);font-size:9px;color:var(--txt3);cursor:pointer;transition:all 0.15s;text-align:center;line-height:1.3;}
+.pick-btn:hover{border-color:var(--purple);color:var(--purple);background:rgba(155,109,255,0.08);}
+
+/* ASSETS LIST */
+.assets-list{padding:12px 16px;min-height:120px;}
+.asset-item{display:flex;align-items:center;gap:10px;padding:9px 10px;background:var(--s2);border:1px solid var(--bdr);border-radius:8px;margin-bottom:7px;transition:all 0.15s;}
+.asset-item:hover{border-color:var(--bdr2);}
+.asset-hs{width:32px;height:32px;border-radius:50%;object-fit:cover;object-position:top;background:var(--s3);flex-shrink:0;}
+.asset-info{flex:1;min-width:0;}
+.asset-name{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.asset-meta{font-family:var(--mono);font-size:10px;color:var(--txt3);}
+.pos-badge{font-family:var(--mono);font-size:9px;font-weight:600;padding:2px 5px;border-radius:3px;}
+.pos-QB{background:rgba(0,212,255,0.1);color:#00d4ff;border:1px solid rgba(0,212,255,0.2);}
+.pos-RB{background:rgba(0,230,118,0.1);color:#00e676;border:1px solid rgba(0,230,118,0.2);}
+.pos-WR{background:rgba(255,183,0,0.1);color:#ffb700;border:1px solid rgba(255,183,0,0.2);}
+.pos-TE{background:rgba(255,61,87,0.1);color:#ff3d57;border:1px solid rgba(255,61,87,0.2);}
+.pos-PICK{background:rgba(155,109,255,0.1);color:#9b6dff;border:1px solid rgba(155,109,255,0.2);}
+.asset-val{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--teal);white-space:nowrap;}
+.asset-remove{width:22px;height:22px;border-radius:50%;background:rgba(255,61,87,0.1);border:1px solid rgba(255,61,87,0.2);color:var(--red);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;transition:all 0.15s;}
+.asset-remove:hover{background:rgba(255,61,87,0.2);}
+.empty-side{text-align:center;padding:32px 16px;color:var(--txt3);font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:1px;}
+
+/* VS COLUMN */
+.vs-col{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:80px;gap:12px;}
+.vs-badge{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:4px;color:var(--txt3);}
+.vs-arrow{font-size:20px;color:var(--txt3);}
+
+/* VERDICT */
+.verdict-section{padding:24px;max-width:1200px;margin:20px auto 0;}
+.verdict-card{background:var(--s1);border:1px solid var(--bdr);border-radius:14px;padding:28px;position:relative;overflow:hidden;}
+.verdict-card.has-result{border-color:var(--bdr2);}
+.verdict-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--teal),var(--purple));opacity:0;transition:opacity 0.3s;}
+.verdict-card.has-result::before{opacity:1;}
+.verdict-empty{text-align:center;padding:24px;color:var(--txt3);font-family:'Barlow Condensed',sans-serif;font-size:14px;letter-spacing:1px;}
+.verdict-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;align-items:center;}
+.verdict-side{}
+.verdict-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--txt3);margin-bottom:6px;}
+.verdict-team{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;margin-bottom:4px;}
+.verdict-team.winner{color:var(--green);}
+.verdict-team.loser{color:var(--red);}
+.verdict-val{font-family:var(--mono);font-size:13px;color:var(--txt2);}
+.grade-box{text-align:center;}
+.grade-circle{width:80px;height:80px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 8px;border:2px solid;position:relative;}
+.grade-letter{font-family:'Bebas Neue',sans-serif;font-size:36px;line-height:1;}
+.grade-plus{font-family:'Bebas Neue',sans-serif;font-size:18px;line-height:1;}
+.grade-label{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--txt3);}
+.grade-A{border-color:var(--green);color:var(--green);background:rgba(0,230,118,0.08);}
+.grade-B{border-color:var(--teal);color:var(--teal);background:rgba(0,212,255,0.08);}
+.grade-C{border-color:var(--gold);color:var(--gold);background:rgba(255,183,0,0.08);}
+.grade-D{border-color:var(--orange);color:var(--orange);background:rgba(255,140,0,0.08);}
+.grade-F{border-color:var(--red);color:var(--red);background:rgba(255,61,87,0.08);}
+.winner-label{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;}
+.win-margin{font-family:var(--mono);font-size:11px;color:var(--txt3);margin-top:4px;}
+
+/* FAIR TRADE FINDER */
+.fair-section{padding:0 24px 24px;max-width:1200px;margin:0 auto;}
+.fair-card{background:var(--s1);border:1px solid var(--bdr);border-radius:14px;overflow:hidden;}
+.fair-header{padding:18px 24px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:12px;}
+.fair-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;}
+.fair-sub{font-size:12px;color:var(--txt3);font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;}
+.fair-empty{padding:28px;text-align:center;color:var(--txt3);font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:1px;}
+.fair-body{padding:20px 24px;}
+.fair-target{display:flex;align-items:center;gap:8px;margin-bottom:16px;padding:10px 14px;background:var(--s2);border:1px solid var(--bdr2);border-radius:8px;}
+.fair-target-label{font-family:var(--mono);font-size:10px;color:var(--teal);letter-spacing:1px;}
+.fair-target-val{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--teal);margin-left:auto;}
+.fair-options{display:flex;flex-direction:column;gap:8px;}
+.fair-option{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--s2);border:1px solid var(--bdr);border-radius:8px;cursor:pointer;transition:all 0.15s;}
+.fair-option:hover{border-color:var(--bdr2);background:var(--s3);}
+.fo-players{flex:1;}
+.fo-combo{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--txt);}
+.fo-val{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--teal);white-space:nowrap;}
+.fo-diff{font-family:var(--mono);font-size:10px;margin-left:8px;}
+.fo-diff.pos{color:var(--green);}
+.fo-diff.neg{color:var(--red);}
+.fo-load{padding:0 24px 20px;text-align:center;}
+
+/* COACH CTA */
+.coach-cta{margin:0 24px 40px;max-width:1200px;margin-left:auto;margin-right:auto;}
+.coach-cta-card{background:linear-gradient(135deg,var(--s2),var(--s3));border:1px solid var(--bdr2);border-radius:14px;padding:28px 32px;display:flex;align-items:center;gap:24px;position:relative;overflow:hidden;}
+.coach-cta-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--teal),var(--purple));}
+.coach-cta-card::after{content:'';position:absolute;right:-5%;top:50%;transform:translateY(-50%);width:300px;height:300px;background:radial-gradient(circle,rgba(155,109,255,0.06),transparent 65%);pointer-events:none;}
+.cta-icon{font-size:36px;flex-shrink:0;}
+.cta-text{}
+.cta-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;margin-bottom:4px;}
+.cta-desc{font-size:13px;color:var(--txt2);line-height:1.5;max-width:480px;}
+.cta-btn{margin-left:auto;flex-shrink:0;padding:12px 24px;background:var(--teal);color:#000;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:3px;text-decoration:none;border-radius:8px;transition:all 0.15s;white-space:nowrap;position:relative;z-index:1;}
+.cta-btn:hover{background:var(--teal2);transform:translateY(-1px);}
+
+@media(max-width:900px){
+  .nav-links{display:none;}
+  .trade-layout{grid-template-columns:1fr;gap:16px;}
+  .vs-col{flex-direction:row;padding-top:0;padding:8px 0;}
+  .verdict-grid{grid-template-columns:1fr;gap:16px;}
+  .coach-cta-card{flex-direction:column;text-align:center;}
+  .cta-btn{margin-left:0;}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-logo">GWTTKB</a>
+  <ul class="nav-links">
+    <li><a href="/rankings.html">Rankings</a></li>
+    <li><a href="/trade.html" class="active">Trade Calc</a></li>
+    <li><a href="/league.html">League</a></li>
+    <li><a href="/stats.html">Stats</a></li>
+    <li><a href="/scouting.html">GM Scout</a></li>
+    <li><a href="/coach.html">The Coach</a></li>
+  </ul>
+  <div class="nav-spacer"></div>
+  <a href="/coach.html" class="nav-cta">ASK THE COACH</a>
+</nav>
+
+<div class="page-header">
+  <div class="page-eyebrow">Trade Calculator</div>
+  <h1 class="page-title">TRADE CALCULATOR</h1>
+  <p class="page-sub">Real dynasty values · SF PPR & 1QB PPR · Fair Trade Finder included</p>
+</div>
+
+<div class="format-bar">
+  <div class="format-toggle">
+    <button class="fmt-btn active" onclick="setFormat('sf_ppr',this)">SF PPR</button>
+    <button class="fmt-btn" onclick="setFormat('qb1_ppr',this)">1QB PPR</button>
+  </div>
+  <button class="reset-btn" onclick="resetAll()">↺ RESET</button>
+</div>
+
+<div class="trade-layout">
+  <!-- SIDE A -->
+  <div class="trade-side" id="sideA">
+    <div class="side-header">
+      <div class="side-label">SIDE A</div>
+      <div class="side-total" id="totalA">0</div>
+    </div>
+    <div class="search-area" style="position:relative">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" id="searchA" type="text" placeholder="Add player or pick..." oninput="search('A',this.value)" onblur="closeSearch('A',300)">
+      <div class="search-results" id="resultsA" style="display:none"></div>
+    </div>
+    <div class="picks-area">
+      <div class="picks-label">Quick Add Picks</div>
+      <div class="picks-grid" id="picksA"></div>
+    </div>
+    <div class="assets-list" id="assetsA">
+      <div class="empty-side" id="emptyA">Add players or picks to Side A</div>
+    </div>
+  </div>
+
+  <!-- VS -->
+  <div class="vs-col">
+    <div class="vs-badge">VS</div>
+  </div>
+
+  <!-- SIDE B -->
+  <div class="trade-side" id="sideB">
+    <div class="side-header">
+      <div class="side-label">SIDE B</div>
+      <div class="side-total" id="totalB">0</div>
+    </div>
+    <div class="search-area" style="position:relative">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" id="searchB" type="text" placeholder="Add player or pick..." oninput="search('B',this.value)" onblur="closeSearch('B',300)">
+      <div class="search-results" id="resultsB" style="display:none"></div>
+    </div>
+    <div class="picks-area">
+      <div class="picks-label">Quick Add Picks</div>
+      <div class="picks-grid" id="picksB"></div>
+    </div>
+    <div class="assets-list" id="assetsB">
+      <div class="empty-side" id="emptyB">Add players or picks to Side B</div>
+    </div>
+  </div>
+</div>
+
+<!-- VERDICT -->
+<div class="verdict-section">
+  <div class="verdict-card" id="verdictCard">
+    <div class="verdict-empty" id="verdictEmpty">Add players to both sides to see the trade verdict</div>
+    <div id="verdictResult" style="display:none">
+      <div class="verdict-grid">
+        <div class="verdict-side">
+          <div class="verdict-label">Side A</div>
+          <div class="verdict-team" id="vTeamA">—</div>
+          <div class="verdict-val" id="vValA">—</div>
+        </div>
+        <div class="grade-box">
+          <div class="grade-circle grade-A" id="gradeCircle">
+            <div class="grade-letter" id="gradeLetter">A</div>
+          </div>
+          <div class="winner-label" id="winnerLabel">—</div>
+          <div class="win-margin" id="winMargin">—</div>
+        </div>
+        <div class="verdict-side" style="text-align:right">
+          <div class="verdict-label">Side B</div>
+          <div class="verdict-team" id="vTeamB">—</div>
+          <div class="verdict-val" id="vValB">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FAIR TRADE FINDER -->
+<div class="fair-section">
+  <div class="fair-card">
+    <div class="fair-header">
+      <div>
+        <div class="fair-title">FAIR TRADE FINDER</div>
+        <div class="fair-sub">What should you get back for Side A?</div>
+      </div>
+    </div>
+    <div id="fairBody">
+      <div class="fair-empty">Add at least one player to Side A to see fair trade options</div>
+    </div>
+  </div>
+</div>
+
+<!-- COACH CTA -->
+<div class="coach-cta">
+  <div class="coach-cta-card">
+    <div class="cta-icon">🤖</div>
+    <div class="cta-text">
+      <div class="cta-title">WANT TO KNOW WHO IN YOUR LEAGUE WOULD TAKE THIS TRADE?</div>
+      <div class="cta-desc">The Coach analyzes every roster in your league — who needs what you have, who has what you need, and which managers are most likely to say yes. Plus negotiation angles for each.</div>
+    </div>
+    <a href="/coach.html" class="cta-btn">ASK THE COACH →</a>
+  </div>
+</div>
+
+<script>
+// ── STATE ──
+let FORMAT = 'sf_ppr';
+let PLAYERS = {}; // normalized name → player data
+let PICKS = [];   // pick objects
+let SIDES = { A: [], B: [] }; // arrays of asset objects
+
+// ── LOAD DATA ──
+async function loadData() {
+  try {
+    const [gRes, cRes] = await Promise.all([
+      fetch('/data/leland-rankings.json'),
+      fetch('/data/consensus.json')
+    ]);
+    const gData = await gRes.json();
+    const cData = await cRes.json();
+
+    // Build player lookup from GWTTKB rankings (primary)
+    function buildLookup(fmt) {
+      const lookup = {};
+      // GWTTKB values
+      const gPlayers = gData.formats?.[fmt] || [];
+      gPlayers.forEach(p => {
+        const key = normName(p.name);
+        lookup[key] = { name: p.name, value: p.value, source: 'gwttkb' };
+      });
+      // Fill in pos/team/headshot from consensus
+      const fmtKey = fmt;
+      const cPlayers = cData.formats?.[fmtKey]?.players || cData.players || [];
+      cPlayers.forEach(p => {
+        const key = normName(p.name);
+        if (!lookup[key]) {
+          lookup[key] = { name: p.name, value: p.value, source: 'consensus' };
+        }
+        lookup[key].pos      = p.pos;
+        lookup[key].team     = p.team;
+        lookup[key].age      = p.age;
+        lookup[key].headshot = p.headshot_url || `https://sleepercdn.com/content/nfl/players/${p.id}.jpg`;
+        lookup[key].id       = p.id;
+      });
+      return lookup;
+    }
+
+    PLAYERS = {
+      sf_ppr:  buildLookup('sf_ppr'),
+      qb1_ppr: buildLookup('qb1_ppr')
+    };
+
+    // Build picks from consensus JSON
+    buildPickValues(gData, cData);
+    renderPicks();
+
+  } catch(e) {
+    console.error('Failed to load data:', e);
+  }
+}
+
+function buildPickValues(gData, cData) {
+  // Find pick values from GWTTKB rankings
+  const gPlayers = gData.formats?.sf_ppr || [];
+  PICKS = [];
+  const years = [2026, 2027, 2028];
+  const tiers = ['Early', 'Mid', 'Late'];
+  const rounds = ['1st', '2nd'];
+
+  years.forEach(yr => {
+    rounds.forEach(rd => {
+      tiers.forEach(tier => {
+        const name = `${yr} ${tier} ${rd}`;
+        const key  = normName(name);
+        const p    = gPlayers.find(p => normName(p.name) === key);
+        const val  = p ? p.value : estimatePickVal(yr, rd, tier);
+        if (val > 200) {
+          PICKS.push({ name, value: val, pos: 'PICK', tier, round: rd, year: yr });
+        }
+      });
+    });
+  });
+}
+
+function estimatePickVal(year, round, tier) {
+  const base = round === '1st' ? 5500 : round === '2nd' ? 3200 : 1800;
+  const tierMod = tier === 'Early' ? 1.15 : tier === 'Mid' ? 1.0 : 0.85;
+  const yearMod = year === 2026 ? 1.0 : year === 2027 ? 0.88 : 0.75;
+  return Math.round(base * tierMod * yearMod);
+}
+
+function normName(n) {
+  return String(n).toLowerCase().replace(/[^a-z0-9]/g,'');
+}
+
+// ── RENDER PICKS ──
+function renderPicks() {
+  ['A','B'].forEach(side => {
+    const el = document.getElementById(`picks${side}`);
+    const current2026 = PICKS.filter(p => p.year === 2026);
+    const future = PICKS.filter(p => p.year >= 2027 && p.round === '1st').slice(0,3);
+    const display = [...current2026.slice(0,6), ...future.slice(0,3)];
+    el.innerHTML = display.map(p => {
+      const label = p.name.replace('Early ','E ').replace('Mid ','M ').replace('Late ','L ');
+      return `<button class="pick-btn" onclick="addAsset('${side}','${p.name}',${p.value},'PICK',null,null,'')"
+        title="${p.name} = ${p.value.toLocaleString()}">
+        ${label}<br><span style="color:var(--purple);font-size:9px">${p.value.toLocaleString()}</span>
+      </button>`;
+    }).join('');
+  });
+}
+
+// ── SEARCH ──
+let searchTimers = {};
+function search(side, query) {
+  clearTimeout(searchTimers[side]);
+  if (!query.trim()) { closeSearch(side, 0); return; }
+  searchTimers[side] = setTimeout(() => {
+    const q = query.toLowerCase();
+    const lookup = PLAYERS[FORMAT] || {};
+    const results = Object.values(lookup)
+      .filter(p => p.name.toLowerCase().includes(q) && p.pos !== 'PICK')
+      .sort((a,b) => b.value - a.value)
+      .slice(0, 8);
+
+    // Also search picks
+    const pickResults = PICKS.filter(p => p.name.toLowerCase().includes(q)).slice(0,3);
+
+    const el = document.getElementById(`results${side}`);
+    if (!results.length && !pickResults.length) { closeSearch(side,0); return; }
+
+    el.innerHTML = [...results, ...pickResults].map(p => {
+      const posClass = `pos-${p.pos || 'PICK'}`;
+      const hs = p.headshot
+        ? `<img class="sr-hs" src="${p.headshot}" onerror="this.style.opacity=0.2" alt="">`
+        : `<div class="sr-hs"></div>`;
+      return `<div class="search-result" onmousedown="addAsset('${side}','${p.name}',${p.value},'${p.pos||'PICK'}',${p.age||null},'${p.team||''}','${p.headshot||''}')">
+        ${hs}
+        <div class="sr-name">${p.name}</div>
+        <span class="pos-badge ${posClass}">${p.pos||'PICK'}</span>
+        <div class="sr-val">${p.value.toLocaleString()}</div>
+      </div>`;
+    }).join('');
+    el.style.display = 'block';
+  }, 120);
+}
+
+function closeSearch(side, delay) {
+  setTimeout(() => {
+    const el = document.getElementById(`results${side}`);
+    if (el) el.style.display = 'none';
+  }, delay);
+}
+
+// ── ADD ASSET ──
+function addAsset(side, name, value, pos, age, team, headshot) {
+  // Don't add duplicates
+  if (SIDES[side].find(a => a.name === name)) return;
+  SIDES[side].push({ name, value, pos, age, team, headshot });
+  document.getElementById(`search${side}`).value = '';
+  closeSearch(side, 0);
+  renderSide(side);
+  updateVerdict();
+  updateFairFinder();
+}
+
+// ── REMOVE ASSET ──
+function removeAsset(side, name) {
+  SIDES[side] = SIDES[side].filter(a => a.name !== name);
+  renderSide(side);
+  updateVerdict();
+  updateFairFinder();
+}
+
+// ── RENDER SIDE ──
+function renderSide(side) {
+  const assets = SIDES[side];
+  const total = assets.reduce((s,a) => s+a.value, 0);
+
+  const totalEl = document.getElementById(`total${side}`);
+  totalEl.textContent = total.toLocaleString();
+
+  const listEl = document.getElementById(`assets${side}`);
+  const emptyEl = document.getElementById(`empty${side}`);
+
+  if (!assets.length) {
+    listEl.innerHTML = '';
+    emptyEl.style.display = 'block';
+    return;
+  }
+  emptyEl.style.display = 'none';
+
+  listEl.innerHTML = assets.map(a => {
+    const posClass = `pos-${a.pos||'PICK'}`;
+    const hs = a.headshot
+      ? `<img class="asset-hs" src="${a.headshot}" onerror="this.style.opacity=0.1" alt="">`
+      : `<div class="asset-hs"></div>`;
+    return `<div class="asset-item">
+      ${hs}
+      <div class="asset-info">
+        <div class="asset-name">${a.name}</div>
+        <div class="asset-meta">${a.team||''} ${a.age ? `· Age ${a.age}` : ''}</div>
+      </div>
+      <span class="pos-badge ${posClass}">${a.pos||'PICK'}</span>
+      <div class="asset-val">${a.value.toLocaleString()}</div>
+      <button class="asset-remove" onclick="removeAsset('${side}','${a.name.replace(/'/g,"\\'")}')">✕</button>
+    </div>`;
+  }).join('');
+}
+
+// ── VERDICT ──
+function updateVerdict() {
+  const tA = SIDES.A.reduce((s,a) => s+a.value, 0);
+  const tB = SIDES.B.reduce((s,a) => s+a.value, 0);
+  const card = document.getElementById('verdictCard');
+  const empty = document.getElementById('verdictEmpty');
+  const result = document.getElementById('verdictResult');
+
+  if (!SIDES.A.length || !SIDES.B.length) {
+    card.classList.remove('has-result');
+    empty.style.display = 'block';
+    result.style.display = 'none';
+    // Reset side styling
+    document.getElementById('sideA').className = 'trade-side';
+    document.getElementById('sideB').className = 'trade-side';
+    document.getElementById('totalA').className = 'side-total';
+    document.getElementById('totalB').className = 'side-total';
+    return;
+  }
+
+  card.classList.add('has-result');
+  empty.style.display = 'none';
+  result.style.display = 'block';
+
+  const diff = Math.abs(tA - tB);
+  const bigger = tA > tB ? 'A' : 'B';
+  const pct = Math.round((diff / Math.max(tA, tB)) * 100);
+
+  // Grade
+  let grade, gradeMod;
+  if (pct <= 3)       { grade = 'A';  gradeMod = '+'; }
+  else if (pct <= 8)  { grade = 'A';  gradeMod = ''; }
+  else if (pct <= 15) { grade = 'B';  gradeMod = '+'; }
+  else if (pct <= 22) { grade = 'B';  gradeMod = ''; }
+  else if (pct <= 30) { grade = 'C';  gradeMod = '+'; }
+  else if (pct <= 40) { grade = 'C';  gradeMod = ''; }
+  else if (pct <= 50) { grade = 'D';  gradeMod = ''; }
+  else                { grade = 'F';  gradeMod = ''; }
+
+  document.getElementById('vTeamA').textContent = tA.toLocaleString();
+  document.getElementById('vTeamA').className = `verdict-team ${tA >= tB ? 'winner' : 'loser'}`;
+  document.getElementById('vValA').textContent = `Side A total`;
+  document.getElementById('vTeamB').textContent = tB.toLocaleString();
+  document.getElementById('vTeamB').className = `verdict-team ${tB >= tA ? 'winner' : 'loser'}`;
+  document.getElementById('vValB').textContent = `Side B total`;
+
+  const gradeEl = document.getElementById('gradeCircle');
+  gradeEl.className = `grade-circle grade-${grade}`;
+  document.getElementById('gradeLetter').textContent = grade;
+
+  if (pct <= 3) {
+    document.getElementById('winnerLabel').textContent = 'EVEN TRADE';
+    document.getElementById('winnerLabel').style.color = 'var(--green)';
+    document.getElementById('winMargin').textContent = `Within ${pct}% — fair deal`;
+  } else {
+    document.getElementById('winnerLabel').textContent = `SIDE ${bigger} WINS`;
+    document.getElementById('winnerLabel').style.color = bigger === 'A' ? (tA > tB ? 'var(--green)' : 'var(--red)') : (tB > tA ? 'var(--green)' : 'var(--red)');
+    document.getElementById('winMargin').textContent = `+${diff.toLocaleString()} pts · ${pct}% advantage`;
+  }
+
+  // Side styling
+  document.getElementById('sideA').className = `trade-side ${tA > tB ? 'winning' : tA < tB ? 'losing' : ''}`;
+  document.getElementById('sideB').className = `trade-side ${tB > tA ? 'winning' : tB < tA ? 'losing' : ''}`;
+  document.getElementById('totalA').className = `side-total ${tA > tB ? 'winning' : tA < tB ? 'losing' : ''}`;
+  document.getElementById('totalB').className = `side-total ${tB > tA ? 'winning' : tB < tA ? 'losing' : ''}`;
+}
+
+// ── FAIR TRADE FINDER ──
+function updateFairFinder() {
+  const fairBody = document.getElementById('fairBody');
+  const tA = SIDES.A.reduce((s,a) => s+a.value, 0);
+
+  if (!SIDES.A.length) {
+    fairBody.innerHTML = '<div class="fair-empty">Add at least one player to Side A to see fair trade options</div>';
+    return;
+  }
+
+  const lookup = PLAYERS[FORMAT] || {};
+  const allPlayers = Object.values(lookup)
+    .filter(p => p.pos && ['QB','RB','WR','TE'].includes(p.pos))
+    .sort((a,b) => b.value - a.value);
+
+  const sideANames = new Set(SIDES.A.map(a => normName(a.name)));
+  const sideBNames = new Set(SIDES.B.map(a => normName(a.name)));
+  const used = new Set([...sideANames, ...sideBNames]);
+
+  const available = allPlayers.filter(p => !used.has(normName(p.name)));
+  const tolerance = 0.12; // within 12%
+
+  // Find single player matches
+  const singles = available.filter(p => Math.abs(p.value - tA) / tA <= tolerance)
+    .slice(0, 3);
+
+  // Find 2-player combos near target
+  const combos = [];
+  const pool = available.slice(0, 80);
+  outer: for (let i=0; i<pool.length; i++) {
+    for (let j=i+1; j<pool.length; j++) {
+      const combo = pool[i].value + pool[j].value;
+      if (Math.abs(combo - tA) / tA <= tolerance) {
+        combos.push({ players: [pool[i], pool[j]], total: combo });
+        if (combos.length >= 4) break outer;
+      }
+    }
+  }
+
+  // Find player + pick combos
+  const pickCombos = [];
+  const topPicks = PICKS.slice(0, 8);
+  outer2: for (const player of available.slice(0, 40)) {
+    for (const pick of topPicks) {
+      const combo = player.value + pick.value;
+      if (Math.abs(combo - tA) / tA <= tolerance) {
+        pickCombos.push({ players: [player], picks: [pick], total: combo });
+        if (pickCombos.length >= 3) break outer2;
+      }
+    }
+  }
+
+  let html = `<div class="fair-body">
+    <div class="fair-target">
+      <div class="fair-target-label">SIDE A VALUE TARGET</div>
+      <div class="fair-target-val">${tA.toLocaleString()}</div>
+    </div>
+    <div class="fair-options">`;
+
+  if (!singles.length && !combos.length && !pickCombos.length) {
+    html += `<div class="fair-empty" style="padding:20px">No close matches found — try adjusting your side A assets</div>`;
+  }
+
+  singles.forEach(p => {
+    const diff = p.value - tA;
+    const diffClass = diff >= 0 ? 'pos' : 'neg';
+    const diffStr = diff >= 0 ? `+${diff.toLocaleString()}` : diff.toLocaleString();
+    const posClass = `pos-${p.pos}`;
+    html += `<div class="fair-option" onclick="addAsset('B','${p.name}',${p.value},'${p.pos}',${p.age||null},'${p.team||''}','${p.headshot||''}')">
+      <div class="fo-players">
+        <div class="fo-combo">${p.name} <span class="pos-badge ${posClass}">${p.pos}</span></div>
+        <div style="font-size:11px;color:var(--txt3);font-family:var(--mono)">${p.team||''} ${p.age?`· Age ${p.age}`:''}</div>
+      </div>
+      <div class="fo-val">${p.value.toLocaleString()}<span class="fo-diff ${diffClass}"> ${diffStr}</span></div>
+    </div>`;
+  });
+
+  combos.forEach(c => {
+    const diff = c.total - tA;
+    const diffClass = diff >= 0 ? 'pos' : 'neg';
+    const diffStr = diff >= 0 ? `+${diff.toLocaleString()}` : diff.toLocaleString();
+    const names = c.players.map(p => `${p.name} (${p.pos})`).join(' + ');
+    html += `<div class="fair-option">
+      <div class="fo-players">
+        <div class="fo-combo">${names}</div>
+      </div>
+      <div class="fo-val">${c.total.toLocaleString()}<span class="fo-diff ${diffClass}"> ${diffStr}</span></div>
+    </div>`;
+  });
+
+  pickCombos.forEach(c => {
+    const diff = c.total - tA;
+    const diffClass = diff >= 0 ? 'pos' : 'neg';
+    const diffStr = diff >= 0 ? `+${diff.toLocaleString()}` : diff.toLocaleString();
+    const names = [...c.players.map(p=>`${p.name} (${p.pos})`), ...c.picks.map(p=>p.name)].join(' + ');
+    html += `<div class="fair-option">
+      <div class="fo-players">
+        <div class="fo-combo">${names}</div>
+      </div>
+      <div class="fo-val">${c.total.toLocaleString()}<span class="fo-diff ${diffClass}"> ${diffStr}</span></div>
+    </div>`;
+  });
+
+  html += `</div></div>`;
+  fairBody.innerHTML = html;
+}
+
+// ── FORMAT ──
+function setFormat(fmt, btn) {
+  FORMAT = fmt;
+  document.querySelectorAll('.fmt-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  // Refresh values for current assets
+  ['A','B'].forEach(side => {
+    SIDES[side] = SIDES[side].map(a => {
+      const key = normName(a.name);
+      const p = PLAYERS[FORMAT]?.[key];
+      return p ? { ...a, value: p.value } : a;
+    });
+    renderSide(side);
+  });
+  renderPicks();
+  updateVerdict();
+  updateFairFinder();
+}
+
+// ── RESET ──
+function resetAll() {
+  SIDES = { A: [], B: [] };
+  ['A','B'].forEach(side => {
+    renderSide(side);
+    document.getElementById(`search${side}`).value = '';
+  });
+  updateVerdict();
+  updateFairFinder();
+}
+
+loadData();
+</script>
+</body>
+</html>
