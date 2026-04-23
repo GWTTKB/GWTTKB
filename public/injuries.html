@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GWTTKB Injury Database — Dynasty Fantasy Football</title>
+<meta name="description" content="Complete NFL injury history for every player. Current injuries, career history, and dynasty value impact.">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;600;700;800&family=Barlow:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#05080e;--s1:#090e18;--s2:#0d1420;--s3:#131d2e;
+  --teal:#00d4ff;--green:#00e676;--gold:#ffb700;
+  --red:#ff3d57;--orange:#ff8c00;--purple:#9b6dff;
+  --txt:#e8f0fa;--txt2:#8ba4c0;--txt3:#4d6a8a;
+  --bdr:rgba(0,212,255,0.10);--bdr2:rgba(0,212,255,0.22);
+  --mono:'JetBrains Mono',monospace;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--txt);font-family:'Barlow',sans-serif;overflow-x:hidden;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--s1);}::-webkit-scrollbar-thumb{background:var(--s3);border-radius:2px;}
+
+.nav{position:sticky;top:0;z-index:100;height:52px;display:flex;align-items:center;padding:0 24px;background:rgba(5,8,14,0.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--bdr);gap:16px;}
+.nav-logo{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:4px;color:var(--teal);text-decoration:none;}
+.nav-links{display:flex;gap:20px;list-style:none;}
+.nav-links a{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--txt3);text-decoration:none;transition:color 0.15s;}
+.nav-links a:hover,.nav-links a.active{color:var(--teal);}
+.nav-spacer{flex:1;}
+.nav-cta{padding:6px 16px;background:var(--teal);color:#000;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:3px;text-decoration:none;border-radius:5px;}
+
+/* HEADER */
+.page-header{padding:28px 24px 0;max-width:1400px;margin:0 auto;}
+.page-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:3px;color:var(--teal);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:10px;}
+.page-eyebrow::before{content:'';width:28px;height:1px;background:var(--teal);}
+.page-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,5vw,60px);letter-spacing:2px;line-height:1;margin-bottom:6px;}
+.page-sub{font-size:13px;color:var(--txt3);margin-bottom:20px;}
+
+/* TOOLBAR */
+.toolbar{padding:16px 24px;max-width:1400px;margin:0 auto;display:flex;gap:10px;flex-wrap:wrap;align-items:center;border-bottom:1px solid var(--bdr);}
+.mode-toggle{display:flex;background:var(--s1);border:1px solid var(--bdr);border-radius:8px;overflow:hidden;}
+.mode-btn{padding:8px 20px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--txt3);background:none;border:none;border-right:1px solid var(--bdr);cursor:pointer;transition:all 0.15s;}
+.mode-btn:last-child{border-right:none;}
+.mode-btn.active{background:rgba(0,212,255,0.12);color:var(--teal);}
+.pos-toggle{display:flex;background:var(--s1);border:1px solid var(--bdr);border-radius:8px;overflow:hidden;}
+.pos-btn{padding:7px 14px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;color:var(--txt3);background:none;border:none;border-right:1px solid var(--bdr);cursor:pointer;transition:all 0.15s;}
+.pos-btn:last-child{border-right:none;}
+.pos-btn.active{color:#000;}
+.pos-btn.active.all{background:var(--teal);}
+.pos-btn.active.qb{background:var(--teal);}
+.pos-btn.active.rb{background:var(--green);}
+.pos-btn.active.wr{background:var(--gold);}
+.pos-btn.active.te{background:var(--red);}
+.season-select{padding:7px 12px;background:var(--s1);border:1px solid var(--bdr);border-radius:7px;color:var(--txt2);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;cursor:pointer;outline:none;}
+.search-wrap{position:relative;flex:1;max-width:280px;}
+.tb-search{width:100%;padding:7px 12px 7px 30px;background:var(--s1);border:1px solid var(--bdr);border-radius:7px;color:var(--txt);font-family:'Barlow',sans-serif;font-size:13px;outline:none;transition:border-color 0.15s;}
+.tb-search:focus{border-color:var(--teal);}
+.tb-search::placeholder{color:var(--txt3);}
+.search-wrap::before{content:'🔍';position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:11px;pointer-events:none;}
+.status-filter{display:flex;gap:6px;flex-wrap:wrap;}
+.status-btn{padding:5px 10px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;background:var(--s1);border:1px solid var(--bdr);border-radius:5px;color:var(--txt3);cursor:pointer;transition:all 0.15s;}
+.status-btn.active-ir{background:rgba(255,61,87,0.12);border-color:rgba(255,61,87,0.3);color:var(--red);}
+.status-btn.active-out{background:rgba(255,140,0,0.12);border-color:rgba(255,140,0,0.3);color:var(--orange);}
+.status-btn.active-q{background:rgba(255,183,0,0.12);border-color:rgba(255,183,0,0.3);color:var(--gold);}
+.status-btn.active-all{background:rgba(0,212,255,0.12);border-color:rgba(0,212,255,0.25);color:var(--teal);}
+
+/* MAIN */
+.main{padding:20px 24px 60px;max-width:1400px;margin:0 auto;}
+
+/* INJURY CARDS */
+.injury-grid{display:flex;flex-direction:column;gap:6px;}
+.injury-row{display:flex;align-items:center;gap:14px;padding:12px 16px;background:var(--s1);border:1px solid var(--bdr);border-radius:10px;transition:all 0.15s;cursor:default;}
+.injury-row:hover{border-color:var(--bdr2);background:var(--s2);}
+.injury-hs{width:38px;height:38px;border-radius:50%;object-fit:cover;object-position:top;background:var(--s3);border:1px solid var(--bdr);flex-shrink:0;}
+.injury-info{flex:1;min-width:0;}
+.injury-name{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--txt);}
+.injury-meta{font-family:var(--mono);font-size:10px;color:var(--txt3);margin-top:2px;}
+.pos-badge{font-family:var(--mono);font-size:9px;font-weight:600;padding:2px 5px;border-radius:3px;}
+.pos-QB{background:rgba(0,212,255,0.1);color:#00d4ff;border:1px solid rgba(0,212,255,0.2);}
+.pos-RB{background:rgba(0,230,118,0.1);color:#00e676;border:1px solid rgba(0,230,118,0.2);}
+.pos-WR{background:rgba(255,183,0,0.1);color:#ffb700;border:1px solid rgba(255,183,0,0.2);}
+.pos-TE{background:rgba(255,61,87,0.1);color:#ff3d57;border:1px solid rgba(255,61,87,0.2);}
+.injury-type{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--txt2);min-width:160px;}
+.injury-week{font-family:var(--mono);font-size:11px;color:var(--txt3);min-width:60px;text-align:center;}
+.status-badge{padding:4px 10px;border-radius:5px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;white-space:nowrap;}
+.status-IR{background:rgba(255,61,87,0.15);color:var(--red);border:1px solid rgba(255,61,87,0.3);}
+.status-Out{background:rgba(255,140,0,0.15);color:var(--orange);border:1px solid rgba(255,140,0,0.3);}
+.status-Questionable{background:rgba(255,183,0,0.12);color:var(--gold);border:1px solid rgba(255,183,0,0.25);}
+.status-Doubtful{background:rgba(255,61,87,0.1);color:var(--red);border:1px solid rgba(255,61,87,0.2);}
+.status-default{background:rgba(139,164,192,0.1);color:var(--txt3);border:1px solid rgba(139,164,192,0.2);}
+
+/* RISK INDEX */
+.risk-grid{display:flex;flex-direction:column;gap:6px;}
+.risk-row{display:flex;align-items:center;gap:14px;padding:12px 16px;background:var(--s1);border:1px solid var(--bdr);border-radius:10px;transition:all 0.15s;}
+.risk-row:hover{border-color:var(--bdr2);}
+.risk-rank{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--txt3);width:36px;text-align:center;flex-shrink:0;}
+.risk-bar-wrap{flex:1;height:6px;background:var(--s3);border-radius:3px;overflow:hidden;min-width:80px;}
+.risk-bar{height:100%;border-radius:3px;}
+.risk-high{background:linear-gradient(90deg,var(--red),var(--orange));}
+.risk-med{background:linear-gradient(90deg,var(--gold),#ffd700);}
+.risk-low{background:linear-gradient(90deg,var(--green),#00ff88);}
+.risk-score{font-family:'Bebas Neue',sans-serif;font-size:22px;min-width:50px;text-align:right;}
+.risk-label{font-family:var(--mono);font-size:9px;color:var(--txt3);text-align:right;}
+.risk-count{font-family:var(--mono);font-size:10px;color:var(--txt3);min-width:80px;text-align:right;}
+
+/* PLAYER HISTORY */
+.history-search-wrap{margin-bottom:20px;position:relative;max-width:400px;}
+.history-search{width:100%;padding:12px 16px 12px 38px;background:var(--s1);border:1px solid var(--bdr2);border-radius:10px;color:var(--txt);font-family:'Barlow',sans-serif;font-size:15px;outline:none;transition:border-color 0.15s;}
+.history-search:focus{border-color:var(--teal);}
+.history-search::placeholder{color:var(--txt3);}
+.history-search-wrap::before{content:'🔍';position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;pointer-events:none;}
+.history-dropdown{position:absolute;top:calc(100%+4px);left:0;right:0;background:var(--s2);border:1px solid var(--bdr2);border-radius:8px;z-index:50;max-height:240px;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,0.5);}
+.hd-row{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--bdr);transition:background 0.1s;}
+.hd-row:last-child{border-bottom:none;}
+.hd-row:hover{background:rgba(0,212,255,0.06);}
+.hd-hs{width:30px;height:30px;border-radius:50%;object-fit:cover;background:var(--s3);}
+.hd-name{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--txt);flex:1;}
+.hd-meta{font-family:var(--mono);font-size:10px;color:var(--txt3);}
+.player-profile{background:var(--s1);border:1px solid var(--bdr2);border-radius:14px;overflow:hidden;margin-bottom:20px;}
+.profile-header{padding:20px 24px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:16px;background:var(--s2);}
+.profile-hs{width:56px;height:56px;border-radius:50%;object-fit:cover;object-position:top;border:2px solid var(--bdr2);}
+.profile-name{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;}
+.profile-meta{font-family:var(--mono);font-size:11px;color:var(--txt3);}
+.profile-stats{display:flex;gap:24px;margin-left:auto;flex-wrap:wrap;}
+.ps-stat{text-align:center;}
+.ps-val{font-family:'Bebas Neue',sans-serif;font-size:22px;}
+.ps-val.red{color:var(--red);}
+.ps-val.gold{color:var(--gold);}
+.ps-val.green{color:var(--green);}
+.ps-label{font-family:var(--mono);font-size:9px;color:var(--txt3);letter-spacing:1px;}
+.history-timeline{padding:20px 24px;}
+.timeline-year{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:3px;color:var(--txt3);text-transform:uppercase;padding:8px 0;border-bottom:1px solid var(--bdr);margin-bottom:10px;margin-top:16px;}
+.timeline-year:first-child{margin-top:0;}
+.timeline-entry{display:flex;align-items:flex-start;gap:14px;padding:10px 0;border-bottom:1px solid rgba(0,212,255,0.04);}
+.timeline-entry:last-child{border-bottom:none;}
+.te-week{font-family:var(--mono);font-size:10px;color:var(--txt3);width:60px;flex-shrink:0;padding-top:2px;}
+.te-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.te-info{flex:1;}
+.te-injury{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:var(--txt);}
+.te-detail{font-size:12px;color:var(--txt3);margin-top:2px;font-family:var(--mono);}
+.te-severity{padding:2px 8px;border-radius:4px;font-family:var(--mono);font-size:9px;font-weight:600;margin-left:auto;align-self:flex-start;flex-shrink:0;}
+.sev-high{background:rgba(255,61,87,0.15);color:var(--red);border:1px solid rgba(255,61,87,0.3);}
+.sev-med{background:rgba(255,183,0,0.12);color:var(--gold);border:1px solid rgba(255,183,0,0.25);}
+.sev-low{background:rgba(0,230,118,0.1);color:var(--green);border:1px solid rgba(0,230,118,0.2);}
+.empty-history{text-align:center;padding:48px;color:var(--txt3);font-family:'Barlow Condensed',sans-serif;font-size:14px;letter-spacing:1px;}
+
+/* LOADING */
+.loading-state{text-align:center;padding:80px 24px;color:var(--txt3);font-family:var(--mono);font-size:12px;}
+.loading-state h3{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:2px;color:var(--txt2);margin-bottom:8px;}
+
+@media(max-width:768px){.nav-links{display:none;}.status-filter{display:none;}}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-logo">GWTTKB</a>
+  <ul class="nav-links">
+    <li><a href="/rankings.html">Rankings</a></li>
+    <li><a href="/trade.html">Trade Calc</a></li>
+    <li><a href="/league.html">League</a></li>
+    <li><a href="/stats.html">Stats</a></li>
+    <li><a href="/injuries.html" class="active">Injuries</a></li>
+    <li><a href="/coach.html">The Coach</a></li>
+  </ul>
+  <div class="nav-spacer"></div>
+  <a href="/coach.html" class="nav-cta">ASK THE COACH</a>
+</nav>
+
+<div class="page-header">
+  <div class="page-eyebrow">Injury Database</div>
+  <h1 class="page-title">INJURY TRACKER</h1>
+  <p class="page-sub">Current injuries, full career history, and dynasty risk profiles for every NFL player</p>
+</div>
+
+<div class="toolbar">
+  <div class="mode-toggle">
+    <button class="mode-btn active" onclick="setMode('current',this)">Current</button>
+    <button class="mode-btn" onclick="setMode('history',this)">Player History</button>
+    <button class="mode-btn" onclick="setMode('risk',this)">Risk Index</button>
+  </div>
+  <div class="pos-toggle" id="posToggle">
+    <button class="pos-btn all active" onclick="setPos('ALL',this)">ALL</button>
+    <button class="pos-btn qb" onclick="setPos('QB',this)">QB</button>
+    <button class="pos-btn rb" onclick="setPos('RB',this)">RB</button>
+    <button class="pos-btn wr" onclick="setPos('WR',this)">WR</button>
+    <button class="pos-btn te" onclick="setPos('TE',this)">TE</button>
+  </div>
+  <select class="season-select" id="seasonSelect" onchange="loadData()">
+    <option value="2025" selected>2025 Season</option>
+    <option value="2024">2024 Season</option>
+    <option value="2023">2023 Season</option>
+    <option value="2022">2022 Season</option>
+    <option value="2021">2021 Season</option>
+    <option value="2020">2020 Season</option>
+  </select>
+  <div class="status-filter" id="statusFilter">
+    <button class="status-btn active-all" onclick="setStatus('ALL',this)">ALL</button>
+    <button class="status-btn" onclick="setStatus('IR',this)">IR</button>
+    <button class="status-btn" onclick="setStatus('Out',this)">OUT</button>
+    <button class="status-btn" onclick="setStatus('Doubtful',this)">DOUBTFUL</button>
+    <button class="status-btn" onclick="setStatus('Questionable',this)">QUESTIONABLE</button>
+  </div>
+  <div class="search-wrap">
+    <input class="tb-search" id="tbSearch" type="text" placeholder="Search players..." oninput="render()">
+  </div>
+</div>
+
+<div class="main" id="mainContent">
+  <div class="loading-state"><h3>LOADING INJURIES</h3><p>Pulling from NFLverse...</p></div>
+</div>
+
+<script>
+let MODE = 'current';
+let POS = 'ALL';
+let STATUS = 'ALL';
+let SEASON = '2025';
+let ALL_INJURIES = [];
+let DYNASTY_VALUES = { sf:{}, qb1:{} };
+let historyPlayer = null;
+let historyAllSeasons = [];
+
+const FANTASY_POS = ['QB','RB','WR','TE'];
+
+// Severity mapping based on injury type keywords
+function getSeverity(injury) {
+  if (!injury) return 'low';
+  const inj = injury.toLowerCase();
+  if (/acl|achilles|torn|fracture|surgery|season|pectoral|hamstring.*torn/.test(inj)) return 'high';
+  if (/hamstring|knee|shoulder|ankle.*sprain|concussion|hip|quad/.test(inj)) return 'med';
+  return 'low';
+}
+
+function sevColor(sev) {
+  return sev==='high' ? 'var(--red)' : sev==='med' ? 'var(--gold)' : 'var(--green)';
+}
+
+function normName(n) { return String(n).toLowerCase().replace(/[^a-z0-9]/g,''); }
+
+// Load dynasty values
+async function loadDynastyValues() {
+  try {
+    const [gRes] = await Promise.all([fetch('/data/leland-rankings.json')]);
+    const gData = await gRes.json();
+    for (const p of (gData.formats?.sf_ppr||[])) DYNASTY_VALUES.sf[normName(p.name)] = p.value;
+    for (const p of (gData.formats?.qb1_ppr||[])) DYNASTY_VALUES.qb1[normName(p.name)] = p.value;
+  } catch(e) {}
+}
+
+async function loadData() {
+  SEASON = document.getElementById('seasonSelect').value;
+  document.getElementById('mainContent').innerHTML =
+    `<div class="loading-state"><h3>LOADING INJURIES</h3><p>Pulling ${SEASON} injury data...</p></div>`;
+
+  try {
+    await loadDynastyValues();
+    const res = await fetch(`/api/stats?file=injuries&season=${SEASON}`);
+    if (!res.ok) throw new Error(`API error: ${res.status}`);
+    const data = await res.json();
+
+    // Filter to fantasy positions only
+    ALL_INJURIES = (data.rows || []).filter(r => {
+      const pos = (r.position || r.pos || '').toUpperCase();
+      return FANTASY_POS.includes(pos);
+    });
+
+    console.log(`Loaded ${ALL_INJURIES.length} fantasy player injury records for ${SEASON}`);
+    render();
+  } catch(e) {
+    console.error(e);
+    document.getElementById('mainContent').innerHTML = `
+      <div class="loading-state">
+        <h3>ERROR</h3>
+        <p style="color:var(--red)">${e.message}</p>
+        <button onclick="loadData()" style="margin-top:16px;padding:8px 20px;background:var(--teal);color:#000;border:none;border-radius:6px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;cursor:pointer">RETRY</button>
+      </div>`;
+  }
+}
+
+function render() {
+  if (MODE === 'current') renderCurrent();
+  else if (MODE === 'history') renderHistory();
+  else renderRiskIndex();
+}
+
+// ── CURRENT INJURIES ──
+function renderCurrent() {
+  const search = document.getElementById('tbSearch').value.toLowerCase();
+  let rows = [...ALL_INJURIES];
+
+  // Filter by most recent week per player — get current status
+  const playerLatest = {};
+  for (const r of rows) {
+    const key = r.gsis_id || r.full_name || r.player_name;
+    const week = parseInt(r.week) || 0;
+    if (!playerLatest[key] || week > (parseInt(playerLatest[key].week)||0)) {
+      playerLatest[key] = r;
+    }
+  }
+  rows = Object.values(playerLatest);
+
+  // Filter by status
+  if (STATUS !== 'ALL') {
+    rows = rows.filter(r => (r.report_status||'').includes(STATUS));
+  }
+  // Filter by position
+  if (POS !== 'ALL') {
+    rows = rows.filter(r => (r.position||r.pos||'').toUpperCase() === POS);
+  }
+  // Filter by search
+  if (search) {
+    rows = rows.filter(r => (r.full_name||r.player_name||'').toLowerCase().includes(search) ||
+                            (r.team||'').toLowerCase().includes(search));
+  }
+
+  // Sort by severity then status
+  const statusOrder = { 'IR':0, 'Out':1, 'Doubtful':2, 'Questionable':3 };
+  rows.sort((a,b) => {
+    const as = statusOrder[(a.report_status||'').split('/')[0]?.trim()] ?? 9;
+    const bs = statusOrder[(b.report_status||'').split('/')[0]?.trim()] ?? 9;
+    if (as !== bs) return as - bs;
+    return (a.full_name||'').localeCompare(b.full_name||'');
+  });
+
+  if (!rows.length) {
+    document.getElementById('mainContent').innerHTML =
+      `<div class="loading-state" style="padding:48px"><p>No injuries found matching your filters</p></div>`;
+    return;
+  }
+
+  const html = `
+    <div style="font-family:var(--mono);font-size:10px;color:var(--txt3);margin-bottom:14px;letter-spacing:1px">
+      ${rows.length} PLAYERS · ${SEASON} SEASON
+    </div>
+    <div class="injury-grid">
+      ${rows.map(r => {
+        const pos = (r.position||r.pos||'?').toUpperCase();
+        const posClass = FANTASY_POS.includes(pos) ? `pos-${pos}` : '';
+        const status = r.report_status || r.status || 'Unknown';
+        const statusKey = status.split('/')[0]?.trim() || 'default';
+        const statusClass = `status-${statusKey}` in {'status-IR':1,'status-Out':1,'status-Questionable':1,'status-Doubtful':1} ? `status-${statusKey}` : 'status-default';
+        const injury = r.report_primary_injury || r.primary_injury || r.injury || '—';
+        const sev = getSeverity(injury);
+        const hsUrl = `https://sleepercdn.com/content/nfl/players/${r.gsis_id||'0'}.jpg`;
+        const name = r.full_name || r.player_name || 'Unknown';
+        const dynasty = DYNASTY_VALUES.sf[normName(name)];
+        return `<div class="injury-row">
+          <img class="injury-hs" src="${hsUrl}" onerror="this.style.opacity=0.1" alt="">
+          <div class="injury-info">
+            <div class="injury-name">${name}</div>
+            <div class="injury-meta">${r.team||''} · <span class="pos-badge ${posClass}">${pos}</span> · Week ${r.week||'?'}</div>
+          </div>
+          <div class="injury-type">${injury}</div>
+          <div class="injury-week" style="color:${sevColor(sev)};font-family:var(--mono);font-size:10px">${sev.toUpperCase()} RISK</div>
+          ${dynasty ? `<div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--teal);min-width:60px;text-align:right">${dynasty.toLocaleString()}</div>` : '<div style="min-width:60px"></div>'}
+          <div class="status-badge ${statusClass}">${status}</div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="margin-top:28px;padding:20px 24px;background:linear-gradient(135deg,var(--s2),var(--s3));border:1px solid var(--bdr2);border-radius:12px;display:flex;align-items:center;gap:20px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--teal),var(--purple))"></div>
+      <div style="font-size:28px;flex-shrink:0">🤖</div>
+      <div style="flex:1">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;margin-bottom:4px">ASK THE COACH ABOUT ANY INJURED PLAYER</div>
+        <div style="font-size:13px;color:var(--txt2);line-height:1.5">Historical injury patterns, expected recovery timelines, dynasty value impact, and whether to buy low or sell now.</div>
+      </div>
+      <a href="/coach.html" style="flex-shrink:0;padding:10px 20px;background:var(--teal);color:#000;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;text-decoration:none;border-radius:7px">ASK THE COACH →</a>
+    </div>`;
+
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+// ── PLAYER HISTORY ──
+function renderHistory() {
+  document.getElementById('posToggle').style.display = 'none';
+  document.getElementById('statusFilter').style.display = 'none';
+
+  const selectedHtml = historyPlayer ? `
+    <div class="player-profile">
+      <div class="profile-header">
+        <img class="profile-hs" src="https://sleepercdn.com/content/nfl/players/${historyPlayer.gsis_id||'0'}.jpg" onerror="this.style.opacity=0.1">
+        <div>
+          <div class="profile-name">${historyPlayer.full_name||historyPlayer.player_name}</div>
+          <div class="profile-meta">${historyPlayer.team||''} · ${(historyPlayer.position||'').toUpperCase()}</div>
+        </div>
+        <div class="profile-stats">
+          ${buildProfileStats(historyPlayer.full_name||historyPlayer.player_name)}
+        </div>
+      </div>
+      <div class="history-timeline">
+        ${buildTimeline(historyPlayer.full_name||historyPlayer.player_name)}
+      </div>
+    </div>` : '';
+
+  document.getElementById('mainContent').innerHTML = `
+    <div class="history-search-wrap">
+      <input class="history-search" id="historySearch" type="text" placeholder="Search any player..."
+        oninput="showHistoryResults(this.value)" onblur="hideHistoryDrop(200)">
+      <div class="history-dropdown" id="historyDrop" style="display:none"></div>
+    </div>
+    ${selectedHtml || '<div class="empty-history">Search for a player to see their full injury history</div>'}`;
+}
+
+function buildProfileStats(playerName) {
+  const pn = normName(playerName);
+  const allSeasons = [2020,2021,2022,2023,2024,2025];
+  let totalInjuries = 0, highCount = 0, seasonsAffected = new Set();
+
+  // Count from current loaded data
+  const playerRecords = ALL_INJURIES.filter(r =>
+    normName(r.full_name||r.player_name||'') === pn
+  );
+
+  const uniqueInjuries = new Set();
+  for (const r of playerRecords) {
+    const key = `${r.season||SEASON}-${r.week}-${r.report_primary_injury}`;
+    if (!uniqueInjuries.has(key)) {
+      uniqueInjuries.add(key);
+      totalInjuries++;
+      if (getSeverity(r.report_primary_injury||'') === 'high') highCount++;
+      seasonsAffected.add(r.season||SEASON);
+    }
+  }
+
+  const dynasty = DYNASTY_VALUES.sf[pn];
+  const riskColor = highCount > 2 ? 'var(--red)' : highCount > 0 ? 'var(--gold)' : 'var(--green)';
+
+  return `
+    <div class="ps-stat"><div class="ps-val" style="color:${riskColor}">${totalInjuries}</div><div class="ps-label">INJURIES</div></div>
+    <div class="ps-stat"><div class="ps-val red">${highCount}</div><div class="ps-label">HIGH RISK</div></div>
+    <div class="ps-stat"><div class="ps-val gold">${seasonsAffected.size}</div><div class="ps-label">SEASONS</div></div>
+    ${dynasty ? `<div class="ps-stat"><div class="ps-val" style="color:var(--teal)">${dynasty.toLocaleString()}</div><div class="ps-label">DYN VALUE</div></div>` : ''}`;
+}
+
+function buildTimeline(playerName) {
+  const pn = normName(playerName);
+  const records = ALL_INJURIES.filter(r =>
+    normName(r.full_name||r.player_name||'') === pn
+  ).sort((a,b) => (parseInt(b.week)||0) - (parseInt(a.week)||0));
+
+  if (!records.length) return '<div class="empty-history" style="padding:24px">No injury records found for this season</div>';
+
+  // Group by season
+  const bySeason = {};
+  for (const r of records) {
+    const s = r.season || SEASON;
+    if (!bySeason[s]) bySeason[s] = [];
+    bySeason[s].push(r);
+  }
+
+  return Object.entries(bySeason).sort((a,b)=>b[0]-a[0]).map(([season, recs]) => `
+    <div class="timeline-year">${season} Season</div>
+    ${recs.map(r => {
+      const inj = r.report_primary_injury || r.primary_injury || 'Undisclosed';
+      const sev = getSeverity(inj);
+      const status = r.report_status || r.status || '';
+      return `<div class="timeline-entry">
+        <div class="te-week">WK ${r.week||'?'}</div>
+        <div class="te-dot" style="background:${sevColor(sev)}"></div>
+        <div class="te-info">
+          <div class="te-injury">${inj}</div>
+          <div class="te-detail">${status} · ${r.team||''}</div>
+        </div>
+        <div class="te-severity sev-${sev}">${sev.toUpperCase()}</div>
+      </div>`;
+    }).join('')}
+  `).join('');
+}
+
+function showHistoryResults(query) {
+  if (!query.trim()) { hideHistoryDrop(0); return; }
+  const q = query.toLowerCase();
+  const seen = new Set();
+  const results = ALL_INJURIES.filter(r => {
+    const name = r.full_name||r.player_name||'';
+    if (!name.toLowerCase().includes(q)) return false;
+    if (seen.has(name)) return false;
+    seen.add(name); return true;
+  }).slice(0, 8);
+
+  const el = document.getElementById('historyDrop');
+  if (!el) return;
+  el.innerHTML = results.map(r => {
+    const pos = (r.position||'').toUpperCase();
+    const posClass = FANTASY_POS.includes(pos) ? `pos-${pos}` : '';
+    return `<div class="hd-row" onmousedown="selectHistoryPlayer('${(r.full_name||r.player_name||'').replace(/'/g,"\\'")}')">
+      <img class="hd-hs" src="https://sleepercdn.com/content/nfl/players/${r.gsis_id||'0'}.jpg" onerror="this.style.opacity=0.1">
+      <div class="hd-name">${r.full_name||r.player_name}</div>
+      <div class="hd-meta">${r.team||''} <span class="pos-badge ${posClass}">${pos}</span></div>
+    </div>`;
+  }).join('');
+  el.style.display = results.length ? 'block' : 'none';
+}
+
+function selectHistoryPlayer(name) {
+  historyPlayer = ALL_INJURIES.find(r => (r.full_name||r.player_name||'') === name);
+  hideHistoryDrop(0);
+  renderHistory();
+}
+
+function hideHistoryDrop(delay) {
+  setTimeout(() => {
+    const el = document.getElementById('historyDrop');
+    if (el) el.style.display = 'none';
+  }, delay);
+}
+
+// ── RISK INDEX ──
+function renderRiskIndex() {
+  // Build risk scores from injury frequency + severity
+  const playerMap = {};
+  for (const r of ALL_INJURIES) {
+    const name = r.full_name || r.player_name || '';
+    if (!name) continue;
+    const pos = (r.position||r.pos||'').toUpperCase();
+    if (POS !== 'ALL' && pos !== POS) continue;
+    if (!playerMap[name]) {
+      playerMap[name] = {
+        name, pos, team: r.team||'', gsis_id: r.gsis_id||'',
+        count: 0, highCount: 0, weeks: new Set()
+      };
+    }
+    const inj = r.report_primary_injury || '';
+    const sev = getSeverity(inj);
+    playerMap[name].count++;
+    if (sev === 'high') playerMap[name].highCount++;
+    playerMap[name].weeks.add(r.week);
+  }
+
+  // Score: high severity injuries worth 3pts, others 1pt
+  const scored = Object.values(playerMap).map(p => ({
+    ...p,
+    score: p.highCount * 3 + (p.count - p.highCount),
+    missedWeeks: p.weeks.size
+  })).filter(p => p.count >= 1)
+    .sort((a,b) => b.score - a.score)
+    .slice(0, 60);
+
+  const maxScore = scored[0]?.score || 1;
+  const search = document.getElementById('tbSearch').value.toLowerCase();
+  const filtered = search ? scored.filter(p => p.name.toLowerCase().includes(search)) : scored;
+
+  document.getElementById('mainContent').innerHTML = `
+    <div style="font-family:var(--mono);font-size:10px;color:var(--txt3);margin-bottom:14px;letter-spacing:1px">
+      INJURY RISK INDEX · ${SEASON} SEASON · Ranked by injury frequency and severity
+    </div>
+    <div class="risk-grid">
+      ${filtered.map((p,i) => {
+        const barPct = (p.score/maxScore)*100;
+        const riskLevel = p.score >= 6 ? 'high' : p.score >= 3 ? 'med' : 'low';
+        const scoreColor = riskLevel==='high'?'var(--red)':riskLevel==='med'?'var(--gold)':'var(--green)';
+        const pos = p.pos || '?';
+        const posClass = FANTASY_POS.includes(pos) ? `pos-${pos}` : '';
+        const dynasty = DYNASTY_VALUES.sf[normName(p.name)];
+        return `<div class="risk-row">
+          <div class="risk-rank">${i+1}</div>
+          <img class="injury-hs" src="https://sleepercdn.com/content/nfl/players/${p.gsis_id||'0'}.jpg" onerror="this.style.opacity=0.1" alt="">
+          <div style="flex:1;min-width:0">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--txt)">${p.name}</div>
+            <div style="font-family:var(--mono);font-size:10px;color:var(--txt3)">${p.team} · <span class="pos-badge ${posClass}">${pos}</span> · ${p.count} injuries · ${p.highCount} high-risk</div>
+          </div>
+          <div class="risk-bar-wrap">
+            <div class="risk-bar risk-${riskLevel}" style="width:${barPct}%"></div>
+          </div>
+          ${dynasty ? `<div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--teal);min-width:60px;text-align:right">${dynasty.toLocaleString()}</div>` : '<div style="min-width:60px"></div>'}
+          <div style="min-width:70px;text-align:right">
+            <div class="risk-score" style="color:${scoreColor}">${p.score}</div>
+            <div class="risk-label">RISK SCORE</div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+// ── CONTROLS ──
+function setMode(mode, btn) {
+  MODE = mode; historyPlayer = null;
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  // Show/hide position toggle and status filter
+  document.getElementById('posToggle').style.display = mode==='history' ? 'none' : 'flex';
+  document.getElementById('statusFilter').style.display = mode==='current' ? 'flex' : 'none';
+  render();
+}
+
+function setPos(pos, btn) {
+  POS = pos;
+  document.querySelectorAll('.pos-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+function setStatus(status, btn) {
+  STATUS = status;
+  document.querySelectorAll('.status-btn').forEach(b=>{
+    b.classList.remove('active-all','active-ir','active-out','active-q');
+  });
+  const cls = status==='ALL'?'active-all':status==='IR'?'active-ir':status==='Out'?'active-out':'active-q';
+  btn.classList.add(cls);
+  render();
+}
+
+// Init
+loadData();
+</script>
+</body>
+</html>
