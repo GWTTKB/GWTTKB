@@ -395,37 +395,90 @@ let ALL_DRAFTS=[];
 function n(s){return String(s).toLowerCase().replace(/[^a-z0-9]/g,'');}
 async function g(url){const r=await fetch(url);if(!r.ok)throw new Error(r.status);return r.json();}
 
-// ── PICK LABEL: "2026 2.02" format — uses traded_picks for exact slot ──
+// ── PICK SLOT LOOKUP — built from actual completed draft data ──
+// DRAFT_SLOTS[season][round][roster_id] = pick_no
+const DRAFT_SLOTS={};
+
+function buildDraftSlots(){
+  // Build from ALL_DRAFTS — most reliable source (actual completed drafts)
+  for(const draft of ALL_DRAFTS){
+    const yr=String(draft.season||'');
+    if(!DRAFT_SLOTS[yr])DRAFT_SLOTS[yr]={};
+    for(const pick of draft.picks||[]){
+      const rd=String(pick.round||'');
+      const rid=String(pick.roster_id||pick.draft_slot||'');
+      const slot=pick.pick_no||pick.draft_slot;
+      if(slot&&rd&&rid){
+        if(!DRAFT_SLOTS[yr][rd])DRAFT_SLOTS[yr][rd]={};
+        DRAFT_SLOTS[yr][rd][rid]=slot;
+      }
+    }
+  }
+  // Supplement with traded_picks data
+  for(const[key,slot]of Object.entries(TRADED_PICKS)){
+    // key formats: "lgId_season_round_rid" or "season_round_rid"
+    const parts=key.split('_');
+    if(parts.length>=3){
+      const yr=parts[parts.length-3];
+      const rd=parts[parts.length-2];
+      const rid=parts[parts.length-1];
+      if(yr&&rd&&rid&&!rid.startsWith('own')&&!rid.startsWith('prev')){
+        if(!DRAFT_SLOTS[yr])DRAFT_SLOTS[yr]={};
+        if(!DRAFT_SLOTS[yr][rd])DRAFT_SLOTS[yr][rd]={};
+        if(!DRAFT_SLOTS[yr][rd][rid])DRAFT_SLOTS[yr][rd][rid]=slot;
+      }
+    }
+  }
+  console.log('Draft slots built:',Object.keys(DRAFT_SLOTS).map(yr=>`${yr}:${Object.values(DRAFT_SLOTS[yr]).reduce((s,r)=>s+Object.keys(r).length,0)}`).join(', '));
+}
+
+// Round number to name
+function rdName(rd){
+  const r=parseInt(rd);
+  return r===1?'1st':r===2?'2nd':r===3?'3rd':`${r}th`;
+}
+
+// ── PICK LABEL: "2026 2.04" if known, "2026 2nd" if unknown ──
 function PL(pk,leagueId){
   if(!pk)return'?';
   const yr=String(pk.season||pk.year||'?');
   const rd=parseInt(pk.round||1);
   const rid=String(pk.roster_id||'');
   const prevId=String(pk.previous_owner_id||'');
-  const ownId=String(pk.owner_id||'');
 
-  // First try: direct pick_no on the pick object
+  // Try 1: direct pick_no on the transaction pick object
   let slot=pk.pick_no!=null?pk.pick_no:null;
 
-  // Second try: check all key formats in TRADED_PICKS
+  // Try 2: look up in DRAFT_SLOTS (built from actual completed drafts)
   if(slot==null){
-    const keysToTry=[
-      leagueId?`${leagueId}_${yr}_${rd}_${rid}`:null,
-      leagueId?`${leagueId}_${yr}_${rd}_${prevId}`:null,
-      leagueId?`${leagueId}_${yr}_${rd}_own_${ownId}`:null,
-      leagueId?`${leagueId}_${yr}_${rd}_prev_${prevId}`:null,
-      `${yr}_${rd}_${rid}`,
-      `${yr}_${rd}_${prevId}`,
-    ].filter(Boolean);
-    for(const k of keysToTry){
-      if(TRADED_PICKS[k]!=null){slot=TRADED_PICKS[k];break;}
+    const slots=DRAFT_SLOTS[yr]?.[String(rd)];
+    if(slots){
+      slot=slots[rid]??slots[prevId]??null;
+      // Also try numeric versions
+      if(slot==null){
+        for(const[k,v]of Object.entries(slots)){
+          if(String(k)===rid||String(k)===prevId){slot=v;break;}
+        }
+      }
     }
   }
 
+  // Try 3: traded_picks map (for picks not in completed drafts)
+  if(slot==null){
+    for(const k of[
+      `${leagueId}_${yr}_${rd}_${rid}`,
+      `${yr}_${rd}_${rid}`,
+      `${yr}_${rd}_${prevId}`,
+    ]){
+      if(k&&TRADED_PICKS[k]!=null){slot=TRADED_PICKS[k];break;}
+    }
+  }
+
+  // Known slot: "2026 2.04"
   if(slot!=null)return`${yr} ${rd}.${String(slot).padStart(2,'0')}`;
-  // Still unknown — show tier hint if we can estimate
-  if(pk.order){const t=pk.order<=4?'Early':pk.order<=8?'Mid':'Late';return`${yr} ${rd} (${t})`;}
-  return`${yr} ${rd}.??`;
+
+  // Unknown slot: "2026 2nd" — clean, no ??
+  return`${yr} ${rdName(rd)}`;
 }
 
 // Pick value: historical value on a specific date, or formula fallback
@@ -639,6 +692,8 @@ async function loadTradedPicksForChain(chain){
     }catch(e){console.warn('traded_picks failed for',lgId);}
   }
   console.log('Traded picks loaded:',Object.keys(TRADED_PICKS).length,'entries');
+  // Rebuild slots with traded_picks data
+  if(ALL_DRAFTS.length)buildDraftSlots();
 }
 
 async function loadPlayers(){
@@ -871,36 +926,39 @@ async function runScout(username,leagueId){
       try{
         const drafts=await g(`${API}/league/${lgId}/drafts`);
         for(const draft of (drafts||[])){
-          if(draft.type==='snake'||draft.type==='linear'){
-            try{
-              const picks=await g(`${API}/draft/${draft.draft_id}/picks`);
-              const draftObj={...draft,season,picks:picks||[]};
-              ALL_DRAFTS.push(draftObj);
-              rawDrafts.push(draftObj);
-            }catch(e){}
-            await S(60);
-          }
+          // Accept any draft type — filter by rounds later, not type
+          try{
+            const picks=await g(`${API}/draft/${draft.draft_id}/picks`);
+            const draftObj={...draft,season,picks:picks||[]};
+            ALL_DRAFTS.push(draftObj);
+            rawDrafts.push(draftObj);
+            console.log(`Draft found: ${draft.draft_id} type=${draft.type} rounds=${draft.settings?.rounds} status=${draft.status} season=${season} picks=${picks?.length||0}`);
+          }catch(e){console.warn('Draft picks fetch failed:',draft.draft_id,e.message);}
+          await S(40);
         }
       }catch(e){}
     }
     // Keep rookie drafts (type=linear/snake with <=6 rounds) 
     // Startup drafts have many more rounds (15+) so filter those
+    // Filter: keep rookie drafts (<=8 rounds). Startup drafts have 15+ rounds.
+    const preFilter=ALL_DRAFTS.length;
     ALL_DRAFTS=ALL_DRAFTS.filter(d=>{
-      const rounds=parseInt(d.settings?.rounds||99);
-      const status=d.status||'';
-      // Keep: completed or in-progress drafts with <= 6 rounds (rookie)
-      return rounds<=6&&status!=='pre_draft'||
-             (rounds<=6&&ALL_DRAFTS.length<=2); // if few drafts found, keep all
+      const rounds=parseInt(d.settings?.rounds||0);
+      if(rounds===0)return true; // unknown rounds — keep it
+      return rounds<=8; // rookie = 4-5 rounds, startup = 15+
     });
-    // If nothing passes filter, keep all non-startup drafts
-    if(!ALL_DRAFTS.length){
-      ALL_DRAFTS=rawDrafts.filter(d=>parseInt(d.settings?.rounds||99)<=8);
+    // If nothing passes, keep everything (better to show something)
+    if(!ALL_DRAFTS.length&&preFilter>0){
+      ALL_DRAFTS=[...rawDrafts];
+      console.warn('Draft filter removed everything — showing all',preFilter,'drafts');
     }
     console.log('Drafts loaded:',ALL_DRAFTS.length,'rookie drafts across',chain.length,'seasons');
 
+    // Build draft slot lookup from completed drafts + traded picks
+    buildDraftSlots();
     upLoad('WAR ROOM READY',100);await S(400);
 
-    LD={league,isSF,teams,users,um,myUID,chain,
+    LD={league,isSF,teams,users,um,myUID,chain,rawDraftCount:rawDrafts.length,
         gradedTrades,tRec,softT,waiverAct};
 
     const me=teams.find(t=>t.isMe);
@@ -957,7 +1015,17 @@ function setMain(tab,btn){
   const el=document.getElementById('content');
   if(tab==='warroom')el.innerHTML=buildWarRoom();
   else if(tab==='trades'){el.innerHTML=buildTradeGrades();bindTradeEvents();setTimeout(renderTradeList,50);}
-  else if(tab==='drafts'){el.innerHTML=buildDraftGrades();}
+  else if(tab==='drafts'){
+    try{el.innerHTML=buildDraftGrades();}
+    catch(e){
+      console.error('Draft grades error:',e);
+      el.innerHTML=`<div class="empty" style="padding:48px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--txt2);margin-bottom:8px">DRAFT GRADES ERROR</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--red)">${e.message}</div>
+        <div style="margin-top:8px;font-family:var(--mono);font-size:10px;color:var(--txt3)">Check console for details</div>
+      </div>`;
+    }
+  }
   else if(tab==='targets')el.innerHTML=buildTargets();
   if(tab==='warroom'&&ACTIVE_MGR)setTimeout(()=>selectMgr(ACTIVE_MGR),60);
 }
@@ -1568,11 +1636,12 @@ function buildTGRecords(){
 // DRAFT GRADES
 // ═══════════════════════════════════════════════════
 function buildDraftGrades(){
+  console.log('buildDraftGrades called, ALL_DRAFTS.length=',ALL_DRAFTS.length);
   if(!ALL_DRAFTS.length)return`<div style="padding:20px 24px">
     <div class="empty" style="padding:40px">
       <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;color:var(--txt2);margin-bottom:8px">NO DRAFT DATA FOUND</div>
       <div>No rookie drafts found for this league. This may be a new league or drafts may still be pending.</div>
-      <div style="margin-top:8px;font-family:var(--mono);font-size:10px;color:var(--txt3)">Checked ${chain?.length||0} seasons back · ${rawDrafts?.length||0} total drafts found before filter</div>
+      <div style="margin-top:8px;font-family:var(--mono);font-size:10px;color:var(--txt3)">Checked ${LD?.chain?.length||0} seasons back · ${LD?.rawDraftCount||0} total drafts found before filter</div>
     </div>
   </div>`;
   return`
