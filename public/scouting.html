@@ -399,18 +399,37 @@ async function g(url){const r=await fetch(url);if(!r.ok)throw new Error(r.status
 // DRAFT_SLOTS[season][round][roster_id] = pick_no
 const DRAFT_SLOTS={};
 
+// Pick → Player map: what player was taken with a specific pick
+// Key: "season_round_slot" → {playerId, name, draftDate, draftedBy}
+const PICK_TO_PLAYER={};
+
 function buildDraftSlots(){
   // Build from ALL_DRAFTS — most reliable source (actual completed drafts)
   for(const draft of ALL_DRAFTS){
     const yr=String(draft.season||'');
+    const draftDate=draft.start_time?new Date(draft.start_time).toISOString().slice(0,10):null;
     if(!DRAFT_SLOTS[yr])DRAFT_SLOTS[yr]={};
     for(const pick of draft.picks||[]){
       const rd=String(pick.round||'');
-      const rid=String(pick.roster_id||pick.draft_slot||'');
       const slot=pick.pick_no||pick.draft_slot;
-      if(slot&&rd&&rid){
+      const rid=String(pick.roster_id||'');
+      if(slot&&rd){
+        // Slot lookup
         if(!DRAFT_SLOTS[yr][rd])DRAFT_SLOTS[yr][rd]={};
-        DRAFT_SLOTS[yr][rd][rid]=slot;
+        if(rid)DRAFT_SLOTS[yr][rd][rid]=slot;
+
+        // Pick→Player lookup
+        if(pick.player_id){
+          const p=PM[pick.player_id]||{};
+          const key=`${yr}_${rd}_${slot}`;
+          PICK_TO_PLAYER[key]={
+            playerId:pick.player_id,
+            name:p.name||pick.player_id,
+            pos:p.pos||'?',
+            draftDate,
+            slot,round:parseInt(rd),season:parseInt(yr)
+          };
+        }
       }
     }
   }
@@ -430,6 +449,16 @@ function buildDraftSlots(){
     }
   }
   console.log('Draft slots built:',Object.keys(DRAFT_SLOTS).map(yr=>`${yr}:${Object.values(DRAFT_SLOTS[yr]).reduce((s,r)=>s+Object.keys(r).length,0)}`).join(', '));
+}
+
+// Get current consensus value for a pick label using real historical data
+function pickConsensusVal(label){
+  if(!label||label==='?')return 0;
+  if(HIST_LOADED){
+    const v=getPickHistVal(label, todayStr());
+    if(v>0)return v;
+  }
+  return PV({season:parseInt(label),round:parseInt(label.match(/\d+/g)?.[1]||'1')},null);
 }
 
 // Round number to name
@@ -477,7 +506,7 @@ function PL(pk,leagueId){
   // Known slot: "2026 2.04"
   if(slot!=null)return`${yr} ${rd}.${String(slot).padStart(2,'0')}`;
 
-  // Unknown slot: "2026 2nd" — clean, no ??
+  // Unknown slot: show round name
   return`${yr} ${rdName(rd)}`;
 }
 
@@ -580,47 +609,49 @@ async function loadConsensus(){
 async function loadHistoricalValues(){
   if(HIST_LOADED)return;
   try{
-    const[hRes,idxRes]=await Promise.all([
-      fetch('/data/historical-values.json'),
-      fetch('/data/historical-index.json')
+    // Load compact picks file (small) + players file in parallel
+    const[picksRes,playersRes]=await Promise.all([
+      fetch('/data/historical-picks.json'),
+      fetch('/data/historical-players.json').catch(()=>null)
     ]);
-    if(!hRes.ok)throw new Error('Historical values not found');
-    HIST=await hRes.json();
-    const idx=idxRes.ok?await idxRes.json():null;
-    HIST_DATES=idx?.dates||[];
-    // Build fast player lookup: sleeper_id → sorted dates + values arrays
-    for(const[sid,p]of Object.entries(HIST.players||{})){
-      const entries=Object.entries(p.values||{}).sort((a,b)=>a[0].localeCompare(b[0]));
-      HIST_PLAYERS[sid]={
-        name:p.name,
-        dates:entries.map(e=>e[0]),
-        sf:entries.map(e=>e[1]?.vsf??null),
-        qb:entries.map(e=>e[1]?.v1qb??null)
-      };
+    if(!picksRes.ok)throw new Error('Historical picks not found');
+    const picksData=await picksRes.json();
+
+    // Build pick lookup: "2026 Early 1st" → {dates[], sf[], qb[]}
+    for(const[label,pk]of Object.entries(picksData.picks||{})){
+      HIST_PICKS[label]=pk; // already in compact format
+      // Also store normalized versions
+      HIST_PICKS[label.toLowerCase().trim()]=pk;
     }
-    // Build pick lookup: normalized label → dates + values
-    for(const[pid,pk]of Object.entries(HIST.picks||{})){
-      const label=(pk.label||pid).trim();
-      const entries=Object.entries(pk.values||{}).sort((a,b)=>a[0].localeCompare(b[0]));
-      HIST_PICKS[label]={
-        dates:entries.map(e=>e[0]),
-        sf:entries.map(e=>e[1]?.vsf??null),
-        qb:entries.map(e=>e[1]?.v1qb??null)
-      };
+
+    // Load player historical values if available
+    if(playersRes?.ok){
+      const playersData=await playersRes.json();
+      for(const[name,p]of Object.entries(playersData.players||{})){
+        // Key by normalized name for lookup
+        HIST_PLAYERS[norm(name)]=p;
+      }
     }
+
     HIST_LOADED=true;
-    console.log(`Historical values loaded: ${Object.keys(HIST_PLAYERS).length} players, ${Object.keys(HIST_PICKS).length} picks`);
+    console.log(`Historical loaded: ${Object.keys(HIST_PICKS).length} pick labels, ${Object.keys(HIST_PLAYERS).length} players`);
   }catch(e){
-    console.warn('Historical values not available:',e.message);
+    console.warn('Historical values:',e.message);
     HIST_LOADED=false;
   }
 }
 
-// Get player value at a specific date (or nearest date)
-function getHistVal(sleeperID, dateStr, isSF){
-  const p=HIST_PLAYERS[sleeperID];
-  if(!p||!p.dates.length)return null;
-  const vals=isSF?p.sf:p.qb;
+// Get player value at a specific date by name (binary search)
+function getHistVal(sleeperIDorName, dateStr, isSF){
+  // Try by sleeper ID first, then by normalized name
+  let p=HIST_PLAYERS[sleeperIDorName]||HIST_PLAYERS[norm(sleeperIDorName||'')];
+  // If not found by ID, try by player name from PM
+  if(!p&&PM[sleeperIDorName]){
+    p=HIST_PLAYERS[norm(PM[sleeperIDorName].name||'')];
+  }
+  if(!p||!p.dates||!p.dates.length)return null;
+  const vals=isSF?p.sf:p['1qb'];
+  if(!vals)return null;
   // Binary search for closest date
   let lo=0,hi=p.dates.length-1,best=0;
   while(lo<=hi){
@@ -632,20 +663,26 @@ function getHistVal(sleeperID, dateStr, isSF){
 }
 
 // Get pick value at a specific date
+// CSV format: "2026 Early 1st", "2026 Mid 2nd", "2026 Late 3rd"
 function getPickHistVal(label, dateStr){
-  // Try exact label first, then variations
-  const tryLabels=[label];
-  // If no tier in label, try all tiers
-  if(!label.includes('Early')&&!label.includes('Mid')&&!label.includes('Late')){
-    const parts=label.split(' ');
-    if(parts.length>=2){
-      tryLabels.push(`Early ${label}`,`Mid ${label}`,`Late ${label}`);
-    }
+  if(!label||!HIST_LOADED)return 0;
+  // Normalize label to CSV format
+  const normalized=normPickLabel(label);
+  const tryLabels=[label,normalized,label.toLowerCase()];
+  // If label has slot number (e.g. "2026 2.04"), convert to tier
+  const slotMatch=label.match(/(\d{4})\s+(\d+)\.(\d+)/);
+  if(slotMatch){
+    const yr=slotMatch[1],rd=parseInt(slotMatch[2]),slot=parseInt(slotMatch[3]);
+    const rdStr=rd===1?'1st':rd===2?'2nd':rd===3?'3rd':`${rd}th`;
+    const leagueSize=LD?.teams?.length||10;
+    const tier=slot<=Math.ceil(leagueSize/3)?'Early':slot<=Math.ceil(leagueSize*2/3)?'Mid':'Late';
+    tryLabels.push(`${yr} ${tier} ${rdStr}`);
   }
   for(const lbl of tryLabels){
-    const pk=HIST_PICKS[lbl];
-    if(!pk||!pk.dates.length)continue;
-    const vals=LD?.isSF?pk.sf:pk.qb;
+    const pk=HIST_PICKS[lbl]||HIST_PICKS[lbl?.toLowerCase()];
+    if(!pk||!pk.dates||!pk.dates.length)continue;
+    const vals=LD?.isSF?pk.sf:pk['1qb'];
+    if(!vals)continue;
     let lo=0,hi=pk.dates.length-1,best=0;
     while(lo<=hi){
       const mid=Math.floor((lo+hi)/2);
@@ -653,9 +690,27 @@ function getPickHistVal(label, dateStr){
       else hi=mid-1;
     }
     const v=vals[best];
-    if(v!=null)return v;
+    if(v!=null&&v>0)return v;
   }
   return 0;
+}
+
+// Convert pick label to CSV tier format
+function normPickLabel(label){
+  // "2026 2nd" → try to determine tier from context
+  // "2026 2.04" → "2026 Mid 2nd" (slot 4 of ~10)
+  const slotMatch=label.match(/(\d{4})\s+(\d+)\.(\d+)/);
+  if(slotMatch){
+    const yr=slotMatch[1],rd=parseInt(slotMatch[2]),slot=parseInt(slotMatch[3]);
+    const rdStr=rd===1?'1st':rd===2?'2nd':rd===3?'3rd':`${rd}th`;
+    const leagueSize=LD?.teams?.length||10;
+    const tier=slot<=Math.ceil(leagueSize/3)?'Early':slot<=Math.ceil(leagueSize*2/3)?'Mid':'Late';
+    return `${yr} ${tier} ${rdStr}`;
+  }
+  // "2026 2nd" → default to Mid
+  const roundMatch=label.match(/(\d{4})\s+(1st|2nd|3rd|4th)/);
+  if(roundMatch)return `${roundMatch[1]} Mid ${roundMatch[2]}`;
+  return label;
 }
 
 // Get current value for player using historical (today's date) or consensus fallback
@@ -750,10 +805,10 @@ async function runScout(username,leagueId){
   showLoad('INITIALIZING WAR ROOM',0);
 
   try{
-    upLoad('LOADING PLAYER DATA',12);
-    await Promise.all([loadConsensus(),loadPlayers()]);
-    // Load historical values in background — don't block UI
-    loadHistoricalValues().then(()=>console.log('Historical values ready')).catch(()=>{});
+    upLoad('LOADING PLAYER + HISTORICAL DATA',12);
+    // Load all three in parallel — historical values needed for draft grades
+    await Promise.all([loadConsensus(),loadPlayers(),loadHistoricalValues()]);
+    console.log('HIST_LOADED:',HIST_LOADED,'players:',Object.keys(HIST_PLAYERS).length);
 
     upLoad('FETCHING LEAGUE DATA',24);
     const[league,rosters,users]=await Promise.all([
@@ -798,10 +853,12 @@ async function runScout(username,leagueId){
 
     upLoad('PULLING TRADE HISTORY',50);
     // Follow league chain
-    // Use actual league season year (not hardcoded 2025)
+    // Use actual league season year
     const currentSeason=parseInt(league.season||new Date().getFullYear());
     const chain=[];let scanId=leagueId,yr=currentSeason;
-    for(let i=0;i<4;i++){  // max 4 seasons
+
+    // Build backward chain (previous seasons)
+    for(let i=0;i<4;i++){
       try{
         const lg=await g(`${API}/league/${scanId}`);
         chain.push({id:scanId,season:yr});
@@ -809,6 +866,69 @@ async function runScout(username,leagueId){
         else break;
       }catch(e){break;}
     }
+
+    // Find forward leagues (2026 rollover) using multiple strategies
+    const forwardLeagues=[];
+    const newestInChain=chain[0]; // most recent league we found
+
+    // Strategy 1: Check league's own next_league_id (set by Sleeper on rollover)
+    try{
+      const leagueDetails=await g(`${API}/league/${newestInChain.id}`);
+      if(leagueDetails.next_league_id&&leagueDetails.next_league_id!==newestInChain.id){
+        const nextSeason=newestInChain.season+1;
+        forwardLeagues.push({id:leagueDetails.next_league_id,season:nextSeason});
+        console.log('Found via next_league_id:',leagueDetails.next_league_id,'season:',nextSeason);
+      }
+    }catch(e){}
+
+    // Strategy 2: Check user's leagues for each upcoming season
+    if(meUser?.user_id&&forwardLeagues.length===0){
+      for(const nextYr of [currentSeason+1, currentSeason+2]){
+        try{
+          const nextLeagues=await g(`${API}/user/${meUser.user_id}/leagues/nfl/${nextYr}`);
+          for(const nl of (nextLeagues||[])){
+            if(nl.previous_league_id===newestInChain.id&&nl.settings?.type===2){
+              forwardLeagues.push({id:nl.league_id,season:nextYr});
+              console.log('Found via user leagues:',nl.league_id,'season:',nextYr,nl.name);
+            }
+          }
+          if(forwardLeagues.length>0)break;
+        }catch(e){}
+      }
+    }
+
+    // Strategy 3: Check ALL user's dynasty leagues for any season ahead
+    if(meUser?.user_id&&forwardLeagues.length===0){
+      try{
+        const allYears=[2026,2027];
+        for(const yr of allYears){
+          const yLeagues=await g(`${API}/user/${meUser.user_id}/leagues/nfl/${yr}`).catch(()=>[]);
+          for(const nl of (yLeagues||[])){
+            if(nl.settings?.type===2){
+              // Check if this league's chain connects back to ours
+              const nlDetails=await g(`${API}/league/${nl.league_id}`).catch(()=>null);
+              if(nlDetails?.previous_league_id===newestInChain.id||
+                 chain.some(c=>c.id===nlDetails?.previous_league_id)){
+                forwardLeagues.push({id:nl.league_id,season:yr});
+                console.log('Found via chain match:',nl.league_id,nl.name,'season:',yr);
+                break;
+              }
+            }
+          }
+          if(forwardLeagues.length>0)break;
+        }
+      }catch(e){console.warn('Strategy 3 failed:',e.message);}
+    }
+
+    // Add forward leagues to front of chain
+    for(const fl of forwardLeagues.reverse()){
+      if(!chain.find(c=>c.id===fl.id)){
+        chain.unshift(fl);
+      }
+    }
+
+    console.log('League chain:',chain.map(c=>`${c.season}:${c.id}`).join(' → '));
+    upLoad('SCANNING TRANSACTIONS',48);
     console.log('Chain:',chain.map(c=>`${c.season}:${c.id}`).join(', '));
     console.log('Active league ID:',leagueId);
 
@@ -880,8 +1000,9 @@ async function runScout(username,leagueId){
         return{team,rid,
           aP:adds.map(id=>PM[id]?.name||id),dP:drops.map(id=>PM[id]?.name||id),
           aPks:aPks.map(pk=>PL(pk,lgId)),dPks:dPks.map(pk=>PL(pk,lgId)),
-          aV:aVthen,dV:dVthen,   // values AT TIME OF TRADE (for grading)
-          aVnow,dVnow,            // current values (for display)
+          _rawAPks:aPks,_rawDPks:dPks,
+          aV:aVthen,dV:dVthen,
+          aVnow,dVnow,
           net:aVthen-dVthen};
       });
       const sorted=[...sides].sort((a,b)=>b.net-a.net);
@@ -1030,7 +1151,7 @@ function setMain(tab,btn){
   }
   else if(tab==='targets')el.innerHTML=buildTargets();
   if(tab==='warroom'&&ACTIVE_MGR)setTimeout(()=>selectMgr(ACTIVE_MGR),60);
-  if(tab==='warroom'&&WR_FILTER!=='all')setTimeout(()=>applyWRFilter(WR_FILTER),80);
+  // Filter applied inside buildWarRoom
 }
 
 // ═══════════════════════════════════════════════════
@@ -1040,7 +1161,11 @@ function buildWarRoom(){
   const{teams,tRec,waiverAct}=LD;
   const me=teams.find(t=>t.isMe);
 
-  const scored=teams.filter(t=>!t.isMe).map(t=>{
+  // When filter active, only show teams that match it
+  const visibleTeams=WR_FILTER==='all'?teams.filter(t=>!t.isMe):
+    teams.filter(t=>!t.isMe&&teamMatchesFilter(t,WR_FILTER));
+
+  const scored=visibleTeams.map(t=>{
     let sc=0,reasons=[];
     if(me){
       for(const pos of['QB','RB','WR','TE']){
@@ -1128,9 +1253,19 @@ function buildWarRoom(){
       ${contenders>0?`<div class="ib-chip"><strong>${contenders}</strong> CONTENDERS — WILL PAY FOR WIN-NOW TALENT</div>`:''}
     </div>
     <div class="wr-filter">
-      ${['all','TE','RB','WR','QB','picks','rebuild','contend'].map((f,i)=>{
-        const labels=['ALL','NEEDS TE','NEEDS RB','NEEDS WR','NEEDS QB','HAS PICKS','REBUILDERS','CONTENDERS'];
-        return`<button class="wf${WR_FILTER===f?' active':''}" onclick="setWRF('${f}')">${labels[i]}</button>`;
+      ${[
+        {f:'all',l:'ALL'},
+        {f:'TE',l:'NEEDS TE'},
+        {f:'RB',l:'NEEDS RB'},
+        {f:'WR',l:'NEEDS WR'},
+        {f:'QB',l:'NEEDS QB'},
+        {f:'picks',l:'HAS PICKS'},
+        {f:'rebuild',l:'REBUILDERS'},
+        {f:'contend',l:'CONTENDERS'},
+      ].map(({f,l})=>{
+        const cnt=f==='all'?teams.filter(t=>!t.isMe).length:
+          teams.filter(t=>!t.isMe&&teamMatchesFilter(t,f)).length;
+        return`<button class="wf${WR_FILTER===f?' active':''}" onclick="setWRF('${f}')">${l} ${f!=='all'?`(${cnt})`:''}</button>`;
       }).join('')}
       <button class="wf wf-right" onclick="setMain('warroom',document.querySelector('.mt-btn'))">↻ REFRESH</button>
     </div>
@@ -1153,34 +1288,22 @@ function buildWarRoom(){
 
 function setWRF(f){
   WR_FILTER=f;
-  // Re-render war room with filter applied
   const el=document.getElementById('content');
   el.innerHTML=buildWarRoom();
   if(ACTIVE_MGR)setTimeout(()=>selectMgr(ACTIVE_MGR),60);
-  // If a position filter is active, highlight matching managers
-  if(f!=='all'){
-    applyWRFilter(f);
-  }
 }
 
-function applyWRFilter(f){
-  if(f==='all')return;
-  const{teams}=LD;
-  document.querySelectorAll('.mgr-item').forEach(el=>{
-    const rid=el.id.replace('mi-','');
-    const team=teams.find(t=>String(t.roster_id)===String(rid));
-    if(!team){el.style.opacity='1';return;}
-    let show=true;
-    if(f==='TE')show=team.posGrades.TE==='weak';
-    else if(f==='RB')show=team.posGrades.RB==='weak';
-    else if(f==='WR')show=team.posGrades.WR==='weak';
-    else if(f==='QB')show=team.posGrades.QB==='weak';
-    else if(f==='picks')show=(LD.tRec[team.username]?.pR||0)-(LD.tRec[team.username]?.pG||0)>=2;
-    else if(f==='rebuild')show=team.win.w==='REBUILDING'||team.win.w==='DECLINING';
-    else if(f==='contend')show=team.win.w==='CONTENDING'||team.win.w==='PEAKING';
-    el.style.opacity=show?'1':'0.2';
-    el.style.pointerEvents=show?'auto':'none';
-  });
+function teamMatchesFilter(team, f){
+  if(f==='all')return true;
+  const tr=LD.tRec[team.username]||{pR:0,pG:0};
+  if(f==='TE')return team.posGrades.TE==='weak';
+  if(f==='RB')return team.posGrades.RB==='weak';
+  if(f==='WR')return team.posGrades.WR==='weak';
+  if(f==='QB')return team.posGrades.QB==='weak';
+  if(f==='picks')return(tr.pR-tr.pG)>=2;
+  if(f==='rebuild')return team.win.w==='REBUILDING'||team.win.w==='DECLINING';
+  if(f==='contend')return team.win.w==='CONTENDING'||team.win.w==='PEAKING';
+  return true;
 }
 
 function selectMgr(rid){
@@ -1690,6 +1813,7 @@ function buildTGTrades(){
 
 function setTradeSeason(s){
   TRADE_SEASON=s;
+  window.TRADES_SHOWN=6;
   renderTradeList();
 }
 
@@ -1705,14 +1829,32 @@ function renderTradeList(){
   // Sort most recent first: by season desc, week desc
   trades=[...trades].sort((a,b)=>(b.season||2025)-(a.season||2025)||((b.week||0)-(a.week||0)));
 
-  const html=trades.map(t=>{
+  const TRADES_PAGE_SIZE=6;
+  if(!window.TRADES_SHOWN)window.TRADES_SHOWN=TRADES_PAGE_SIZE;
+  const visibleTrades=trades.slice(0,window.TRADES_SHOWN);
+  const hasMore=trades.length>window.TRADES_SHOWN;
+
+  const html=visibleTrades.map(t=>{
     const[a,b]=t.sides||[];
     if(!a||!b)return'';
     const wA=a===t.winner;
     const ra=side=>[
       ...side.aP.map(nm=>`<span class="asset">${nm}</span>`),
-      ...side.aPks.map(pk=>`<span class="asset pick-asset">${pk}</span>`)
-    ].join('')||`<span style="font-family:var(--mono);font-size:10px;color:var(--txt3)">—</span>`;
+      ...side.aPks.map((pk,i)=>{
+        const rawPk=side._rawAPks?.[i];
+        const slot=rawPk?.pick_no;
+        const yr=String(rawPk?.season||rawPk?.year||'');
+        const rd=String(rawPk?.round||'');
+        const ptpKey=slot?`${yr}_${rd}_${slot}`:'';
+        const ptp=ptpKey?PICK_TO_PLAYER[ptpKey]:null;
+        const curPickVal=pickConsensusVal(pk);
+        if(ptp){
+          const playerCurVal=getCurVal(ptp.playerId,ptp.name,LD?.isSF);
+          return`<span class="asset pick-asset">${pk}→${ptp.name}${playerCurVal>0?` ${playerCurVal.toLocaleString()}`:''}`;
+        }
+        return`<span class="asset pick-asset">${pk}${curPickVal>0?` ${curPickVal.toLocaleString()}`:''}`;
+      })
+    ].join(' ')||`<span style="font-family:var(--mono);font-size:10px;color:var(--txt3)">—</span>`;font-size:10px;color:var(--txt3)">—</span>`;
 
     return`<div class="trade-card">
       <div class="tc-hd">
@@ -1725,57 +1867,30 @@ function renderTradeList(){
         <div class="tc-side ${wA?'w':'l'}">
           <strong>${a.team?.username||'?'} RECEIVES</strong>
           ${ra(a)}
-          <div class="tc-val-a" style="color:${wA?'var(--green)':'var(--red)'}">${a.aV.toLocaleString()}</div>
+          <div style="display:flex;gap:10px;margin-top:4px;flex-wrap:wrap">
+            <span style="font-family:var(--mono);font-size:10px;color:var(--txt3)">AT TRADE <span style="color:var(--txt)">${a.aV.toLocaleString()}</span></span>
+            <span style="font-family:var(--mono);font-size:10px;color:var(--txt3)">TODAY <span style="color:${a.aVnow>=a.aV?'var(--green)':'var(--red)'}">${a.aVnow.toLocaleString()}</span></span>
+          </div>
         </div>
         <div>
           <div class="tc-vs">VS</div>
           <div class="tc-pct" style="color:${t.pct>25?'var(--red)':'var(--gold)'}">±${t.pct}%</div>
         </div>
-        <div class="tc-side ${!wA?'w':'l'}">
+        <div class="tc-side ${!wA?'w':'l'}" style="text-align:right">
           <strong>${b.team?.username||'?'} RECEIVES</strong>
           ${ra(b)}
-          <div class="tc-val-b" style="color:${!wA?'var(--green)':'var(--red)'};text-align:right">${b.aV.toLocaleString()}</div>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-
-  const container=document.getElementById('tradeListContainer');
-  if(container)container.innerHTML=`<div class="trades-grid">${html||'<div class="empty">No trades found</div>'}</div>`;
-}
-
-function buildTGPlayers(){
-  const{gradedTrades}=LD;
-  const playerCount={};
-  for(const t of gradedTrades){
-    for(const s of t.sides||[]){
-      for(const nm of[...s.aP,...s.dP]){
-        if(!playerCount[nm])playerCount[nm]={name:nm,count:0,pos:'?'};
-        playerCount[nm].count++;
-        if(playerCount[nm].pos==='?'){
-          const p=Object.values(PM).find(x=>x.name===nm);
-          if(p?.pos)playerCount[nm].pos=p.pos;
-        }
-      }
-    }
-  }
-  const sorted=Object.values(playerCount).filter(p=>p.count>=2).sort((a,b)=>b.count-a.count);
-  const posColors={QB:'var(--teal)',RB:'var(--green)',WR:'var(--gold)',TE:'var(--red)'};
-
-  return`<div id="tg-players" class="sec-anchor">
-    <div class="sec-hd">PLAYERS</div>
-    <div class="sec-sub">EVERY PLAYER TRADED IN LEAGUE HISTORY · TRADED 2+ TIMES</div>
-    <div class="players-grid" style="margin-bottom:32px">
-      ${sorted.slice(0,60).map(p=>`<div class="player-card">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
-          <div class="pc-name">${p.name}</div>
-          <span style="font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 5px;border-radius:2px;background:rgba(255,255,255,0.06);color:${posColors[p.pos]||'var(--txt3)'}">${p.pos}</span>
-        </div>
-        <div class="pc-times">${p.count}</div>
-        <div class="pc-meta">TIMES TRADED</div>
+          <div style="display:flex;gap:10px;margin-top:4px;justify-content:flex-end;flex-wrap:wrap">
+            <span style="font-family:var(--mono);font-size:10px;color:var(--txt3)">AT TRADE <span style="color:var(--txt)">${b.aV.toLocaleString()}</span></span>
+            <span style="font-family:var(--mono);font-size:10px;color:var(--txt3)">TODAY <span style="color:${b.aVnow>=b.aV?'var(--green)':'var(--red)'}">${b.aVnow.toLocaleString()}</span></span>
+          </div>
+        </div</div>
       </div>`).join('')}
     </div>
   </div>`;
+  // Pagination + DOM update
+  const loadMoreBtn=hasMore?`<div style="text-align:center;padding:16px 0"><button onclick="window.TRADES_SHOWN+=6;renderTradeList()" style="padding:8px 24px;background:var(--s1);border:1px solid var(--bdr2);border-radius:6px;color:var(--teal);font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:2px;cursor:pointer">SHOW MORE (${trades.length-window.TRADES_SHOWN} remaining)</button></div>`:'';
+  const _tc=document.getElementById('tradeListContainer');
+  if(_tc)_tc.innerHTML=html+loadMoreBtn;
 }
 
 function buildTGRecords(){
