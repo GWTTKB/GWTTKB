@@ -629,7 +629,7 @@ async function loadHistoricalValues(){
       const playersData=await playersRes.json();
       for(const[name,p]of Object.entries(playersData.players||{})){
         // Key by normalized name for lookup
-        HIST_PLAYERS[norm(name)]=p;
+        HIST_PLAYERS[n(name)]=p;
       }
     }
 
@@ -644,10 +644,10 @@ async function loadHistoricalValues(){
 // Get player value at a specific date by name (binary search)
 function getHistVal(sleeperIDorName, dateStr, isSF){
   // Try by sleeper ID first, then by normalized name
-  let p=HIST_PLAYERS[sleeperIDorName]||HIST_PLAYERS[norm(sleeperIDorName||'')];
+  let p=HIST_PLAYERS[sleeperIDorName]||HIST_PLAYERS[n(sleeperIDorName||'')];
   // If not found by ID, try by player name from PM
   if(!p&&PM[sleeperIDorName]){
-    p=HIST_PLAYERS[norm(PM[sleeperIDorName].name||'')];
+    p=HIST_PLAYERS[n(PM[sleeperIDorName]?.name||'')];
   }
   if(!p||!p.dates||!p.dates.length)return null;
   const vals=isSF?p.sf:p['1qb'];
@@ -725,9 +725,13 @@ function getCurVal(sleeperId, playerName, isSF){
 
 // Load traded picks for exact slot resolution
 async function loadTradedPicksForChain(chain){
-  for(const{id:lgId}of chain){
+  // Also fetch from the most recent league specifically (most important for current picks)
+  const allIds=[...new Set(chain.map(c=>c.id))];
+  console.log('Fetching traded_picks for leagues:',allIds.join(', '));
+  for(const lgId of allIds){
     try{
       const picks=await g(`${API}/league/${lgId}/traded_picks`);
+      console.log('traded_picks for',lgId+':',picks?.length||0,'picks');
       for(const pk of picks||[]){
         if(pk.pick_no==null&&pk.pick_no!==0)continue;
         const yr=String(pk.season||'');
@@ -1041,7 +1045,9 @@ async function runScout(username,leagueId){
       .sort((a,b)=>b.score-a.score);
 
     upLoad('LOADING DRAFT DATA + PICK SLOTS',82);
+    // Load traded picks for ALL leagues in chain (including 2026 forward)
     await loadTradedPicksForChain(chain);
+    console.log('Chain for traded picks:',chain.map(c=>c.id).join(', '));
     // Fetch drafts
     ALL_DRAFTS=[];
     const rawDrafts=[];
@@ -1917,6 +1923,39 @@ function renderTradeList(){
   }
   const tc=document.getElementById('tradeListContainer');
   if(tc)tc.innerHTML=html;
+}
+
+function buildTGPlayers(){
+  const{gradedTrades}=LD;
+  const playerCount={};
+  for(const t of gradedTrades){
+    for(const s of t.sides||[]){
+      for(const nm of[...s.aP,...s.dP]){
+        if(!playerCount[nm])playerCount[nm]={name:nm,count:0,pos:'?'};
+        playerCount[nm].count++;
+        if(playerCount[nm].pos==='?'){
+          const p=Object.values(PM).find(x=>x.name===nm);
+          if(p?.pos)playerCount[nm].pos=p.pos;
+        }
+      }
+    }
+  }
+  const sorted=Object.values(playerCount).filter(p=>p.count>=2).sort((a,b)=>b.count-a.count);
+  const posColors={QB:'var(--teal)',RB:'var(--green)',WR:'var(--gold)',TE:'var(--red)'};
+  return`<div id="tg-players" class="sec-anchor">
+    <div class="sec-hd">PLAYERS</div>
+    <div class="sec-sub">EVERY PLAYER TRADED IN LEAGUE HISTORY · 2+ TIMES</div>
+    <div class="players-grid" style="margin-bottom:32px">
+      ${sorted.slice(0,60).map(p=>`<div class="player-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
+          <div class="pc-name">${p.name}</div>
+          <span style="font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 5px;border-radius:2px;background:rgba(255,255,255,0.06);color:${posColors[p.pos]||'var(--txt3)'}">${p.pos}</span>
+        </div>
+        <div class="pc-times">${p.count}</div>
+        <div class="pc-meta">TIMES TRADED</div>
+      </div>`).join('')}
+    </div>
+  </div>`;
 }
 
 function buildTGRecords(){
