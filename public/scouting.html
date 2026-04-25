@@ -1137,7 +1137,16 @@ function setMain(tab,btn){
   if(btn)btn.classList.add('active');
   const el=document.getElementById('content');
   if(tab==='warroom')el.innerHTML=buildWarRoom();
-  else if(tab==='trades'){el.innerHTML=buildTradeGrades();bindTradeEvents();setTimeout(renderTradeList,50);}
+  else if(tab==='trades'){
+    el.innerHTML=buildTradeGrades();
+    bindTradeEvents();
+    setTimeout(()=>{
+      if(LD&&LD.gradedTrades){
+        window.TRADES_SHOWN=6;
+        renderTradeList();
+      }
+    },100);
+  }
   else if(tab==='drafts'){
     try{el.innerHTML=buildDraftGrades();}
     catch(e){
@@ -1688,11 +1697,14 @@ function scrollToSec(id,btn){
 }
 
 function bindTradeEvents(){
-  const inp=document.getElementById('tradeSearch');
-  if(inp)inp.addEventListener('input',e=>{
-    TRADE_SEARCH=e.target.value.toLowerCase();
-    renderTradeList();
-  });
+  setTimeout(()=>{
+    const inp=document.getElementById('tradeSearch');
+    if(inp)inp.addEventListener('input',e=>{
+      TRADE_SEARCH=e.target.value.toLowerCase();
+      window.TRADES_SHOWN=6;
+      renderTradeList();
+    });
+  },150);
 }
 
 function buildTGRankings(){
@@ -1819,6 +1831,7 @@ function setTradeSeason(s){
 }
 
 function renderTradeList(){
+  if(!LD||!LD.gradedTrades){console.warn('renderTradeList: LD not ready');return;}
   const{gradedTrades}=LD;
   let trades=TRADE_SEASON==='all'?gradedTrades:gradedTrades.filter(t=>(t.season||2025)==TRADE_SEASON);
   if(TRADE_SEARCH){
