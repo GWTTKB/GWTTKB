@@ -1249,8 +1249,8 @@ function buildWarRoom(){
   <div class="wr-wrap">
     <div class="wr-intel-bar">
       <div class="ib-chip">LEAGUE AVG <strong>${tpt}</strong> TRADES/TEAM</div>
-      ${rebuilders>0?`<div class="ib-chip"><strong>${rebuilders}</strong> REBUILDERS — BUYER'S MARKET FOR PICKS</div>`:''}
-      ${contenders>0?`<div class="ib-chip"><strong>${contenders}</strong> CONTENDERS — WILL PAY FOR WIN-NOW TALENT</div>`:''}
+      ${rebuilders>0?'<div class="ib-chip"><strong>'+rebuilders+'</strong> REBUILDERS — BUYER\'S MARKET FOR PICKS</div>':''}
+      ${contenders>0?'<div class="ib-chip"><strong>'+contenders+'</strong> CONTENDERS — WILL PAY FOR WIN-NOW TALENT</div>':''}
     </div>
     <div class="wr-filter">
       ${[
@@ -1265,7 +1265,8 @@ function buildWarRoom(){
       ].map(({f,l})=>{
         const cnt=f==='all'?teams.filter(t=>!t.isMe).length:
           teams.filter(t=>!t.isMe&&teamMatchesFilter(t,f)).length;
-        return`<button class="wf${WR_FILTER===f?' active':''}" onclick="setWRF('${f}')">${l} ${f!=='all'?`(${cnt})`:''}</button>`;
+        const cntStr=f!=='all'?'('+cnt+')':'';
+        return`<button class="wf${WR_FILTER===f?' active':''}" onclick="setWRF('${f}')">${l} ${cntStr}</button>`;
       }).join('')}
       <button class="wf wf-right" onclick="setMain('warroom',document.querySelector('.mt-btn'))">↻ REFRESH</button>
     </div>
@@ -1826,71 +1827,83 @@ function renderTradeList(){
       t.sides?.some(s=>s.team?.username?.toLowerCase().includes(TRADE_SEARCH))
     );
   }
-  // Sort most recent first: by season desc, week desc
   trades=[...trades].sort((a,b)=>(b.season||2025)-(a.season||2025)||((b.week||0)-(a.week||0)));
-
-  const TRADES_PAGE_SIZE=6;
-  if(!window.TRADES_SHOWN)window.TRADES_SHOWN=TRADES_PAGE_SIZE;
-  const visibleTrades=trades.slice(0,window.TRADES_SHOWN);
+  if(!window.TRADES_SHOWN)window.TRADES_SHOWN=6;
+  const visible=trades.slice(0,window.TRADES_SHOWN);
   const hasMore=trades.length>window.TRADES_SHOWN;
 
-  const html=visibleTrades.map(t=>{
+  let html='<div class="trades-grid">';
+  for(const t of visible){
     const[a,b]=t.sides||[];
-    if(!a||!b)return'';
+    if(!a||!b)continue;
     const wA=a===t.winner;
-    const ra=side=>[
-      ...side.aP.map(nm=>`<span class="asset">${nm}</span>`),
-      ...side.aPks.map((pk,i)=>{
+
+    function renderAssets(side){
+      let out='';
+      for(const nm of side.aP||[])out+='<span class="asset">'+nm+'</span>';
+      for(let i=0;i<(side.aPks||[]).length;i++){
+        const pk=side.aPks[i];
         const rawPk=side._rawAPks?.[i];
         const slot=rawPk?.pick_no;
         const yr=String(rawPk?.season||rawPk?.year||'');
         const rd=String(rawPk?.round||'');
-        const ptpKey=slot?`${yr}_${rd}_${slot}`:'';
+        const ptpKey=slot?yr+'_'+rd+'_'+slot:'';
         const ptp=ptpKey?PICK_TO_PLAYER[ptpKey]:null;
         const curPickVal=pickConsensusVal(pk);
         if(ptp){
-          const playerCurVal=getCurVal(ptp.playerId,ptp.name,LD?.isSF);
-          return`<span class="asset pick-asset">${pk}→${ptp.name}${playerCurVal>0?` ${playerCurVal.toLocaleString()}`:''}`;
+          const pv=getCurVal(ptp.playerId,ptp.name,LD?.isSF);
+          out+='<span class="asset pick-asset">'+pk+' → '+ptp.name+(pv>0?' '+pv.toLocaleString():'')+'</span>';
+        }else{
+          out+='<span class="asset pick-asset">'+pk+(curPickVal>0?' '+curPickVal.toLocaleString():'')+'</span>';
         }
-        return`<span class="asset pick-asset">${pk}${curPickVal>0?` ${curPickVal.toLocaleString()}`:''}`;
-      })
-    ].join(' ')||`<span style="font-family:var(--mono);font-size:10px;color:var(--txt3)">—</span>`;
+      }
+      return out||'<span style="font-family:var(--mono);font-size:10px;color:var(--txt3)">—</span>';
+    }
 
-    return`<div class="trade-card">
-      <div class="tc-hd">
-        <div class="tc-date">${t.season||2025} WK ${t.week||'?'}</div>
-        <span class="tc-winner" style="background:${wA?'rgba(0,230,118,0.1)':'rgba(255,61,87,0.1)'};color:${wA?'var(--green)':'var(--red)'};border:1px solid ${wA?'rgba(0,230,118,0.2)':'rgba(255,61,87,0.2)'};border-radius:3px;padding:1px 6px">${t.winner?.team?.username||'?'} +${Math.round(t.diff/1000*10)/10}k</span>
-        <div class="tc-moved">${Math.round(t.totalMoved/1000*10)/10}k MOVED</div>
-        <span class="tc-grade tg-${t.grade}">${t.grade}</span>
-      </div>
-      <div class="tc-body">
-        <div class="tc-side ${wA?'w':'l'}">
-          <strong>${a.team?.username||'?'} RECEIVES</strong>
-          ${ra(a)}
-          <div style="display:flex;gap:10px;margin-top:4px;flex-wrap:wrap">
-            <span style="font-family:var(--mono);font-size:10px;color:var(--txt3)">AT TRADE <span style="color:var(--txt)">${a.aV.toLocaleString()}</span></span>
-            <span style="font-family:var(--mono);font-size:10px;color:var(--txt3)">TODAY <span style="color:${a.aVnow>=a.aV?'var(--green)':'var(--red)'}">${a.aVnow.toLocaleString()}</span></span>
-          </div>
-        </div>
-        <div>
-          <div class="tc-vs">VS</div>
-          <div class="tc-pct" style="color:${t.pct>25?'var(--red)':'var(--gold)'}">±${t.pct}%</div>
-        </div>
-        <div class="tc-side ${!wA?'w':'l'}" style="text-align:right">
-          <strong>${b.team?.username||'?'} RECEIVES</strong>
-          ${ra(b)}
-          <div style="display:flex;gap:10px;margin-top:4px;justify-content:flex-end;flex-wrap:wrap">
-            <span style="font-family:var(--mono);font-size:10px;color:var(--txt3)">AT TRADE <span style="color:var(--txt)">${b.aV.toLocaleString()}</span></span>
-            <span style="font-family:var(--mono);font-size:10px;color:var(--txt3)">TODAY <span style="color:${b.aVnow>=b.aV?'var(--green)':'var(--red)'}">${b.aVnow.toLocaleString()}</span></span>
-          </div>
-        </div></div>
-      </div>`).join('')}
-    </div>
-  </div>`;
-  // Pagination + DOM update
-  const loadMoreBtn=hasMore?`<div style="text-align:center;padding:16px 0"><button onclick="window.TRADES_SHOWN+=6;renderTradeList()" style="padding:8px 24px;background:var(--s1);border:1px solid var(--bdr2);border-radius:6px;color:var(--teal);font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:2px;cursor:pointer">SHOW MORE (${trades.length-window.TRADES_SHOWN} remaining)</button></div>`:'';
-  const _tc=document.getElementById('tradeListContainer');
-  if(_tc)_tc.innerHTML=html+loadMoreBtn;
+    const gradeColor=t.grade==='A'?'var(--green)':t.grade==='B'?'var(--teal)':t.grade==='C'?'var(--gold)':t.grade==='D'?'var(--orange)':'var(--red)';
+    const winnerBg=wA?'rgba(0,230,118,0.1)':'rgba(255,61,87,0.1)';
+    const winnerColor=wA?'var(--green)':'var(--red)';
+    const winnerBdr=wA?'rgba(0,230,118,0.2)':'rgba(255,61,87,0.2)';
+
+    html+='<div class="trade-card">';
+    html+='<div class="tc-hd">';
+    html+='<div class="tc-date">'+(t.season||2025)+' WK '+(t.week||'?')+'</div>';
+    html+='<span style="background:'+winnerBg+';color:'+winnerColor+';border:1px solid '+winnerBdr+';border-radius:3px;padding:1px 6px;font-family:var(--mono);font-size:10px">'+(t.winner?.team?.username||'?')+' +'+Math.round(t.diff/1000*10)/10+'k</span>';
+    html+='<div class="tc-moved">'+Math.round(t.totalMoved/1000*10)/10+'k MOVED</div>';
+    html+='<span class="tc-grade tg-'+t.grade+'">'+t.grade+'</span>';
+    html+='</div>';
+
+    html+='<div class="tc-body">';
+    // Side A
+    html+='<div class="tc-side '+(wA?'w':'l')+'">';
+    html+='<strong>'+(a.team?.username||'?')+' RECEIVES</strong>';
+    html+=renderAssets(a);
+    html+='<div style="display:flex;gap:10px;margin-top:4px;flex-wrap:wrap">';
+    html+='<span style="font-family:var(--mono);font-size:10px;color:var(--txt3)">AT TRADE <span style="color:var(--txt)">'+a.aV.toLocaleString()+'</span></span>';
+    html+='<span style="font-family:var(--mono);font-size:10px;color:var(--txt3)">TODAY <span style="color:'+(a.aVnow>=a.aV?'var(--green)':'var(--red)')+'">'+a.aVnow.toLocaleString()+'</span></span>';
+    html+='</div></div>';
+    // VS
+    html+='<div>';
+    html+='<div class="tc-vs">VS</div>';
+    html+='<div class="tc-pct" style="color:'+(t.pct>25?'var(--red)':'var(--gold)')+'">±'+t.pct+'%</div>';
+    html+='</div>';
+    // Side B
+    html+='<div class="tc-side '+(wA?'l':'w')+'" style="text-align:right">';
+    html+='<strong>'+(b.team?.username||'?')+' RECEIVES</strong>';
+    html+=renderAssets(b);
+    html+='<div style="display:flex;gap:10px;margin-top:4px;justify-content:flex-end;flex-wrap:wrap">';
+    html+='<span style="font-family:var(--mono);font-size:10px;color:var(--txt3)">AT TRADE <span style="color:var(--txt)">'+b.aV.toLocaleString()+'</span></span>';
+    html+='<span style="font-family:var(--mono);font-size:10px;color:var(--txt3)">TODAY <span style="color:'+(b.aVnow>=b.aV?'var(--green)':'var(--red)')+'">'+b.aVnow.toLocaleString()+'</span></span>';
+    html+='</div></div>';
+    html+='</div></div>';
+  }
+  html+='</div>';
+
+  if(hasMore){
+    html+='<div style="text-align:center;padding:16px 0"><button onclick="window.TRADES_SHOWN+=6;renderTradeList()" style="padding:8px 24px;background:var(--s1);border:1px solid var(--bdr2);border-radius:6px;color:var(--teal);font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:2px;cursor:pointer">SHOW MORE ('+(trades.length-window.TRADES_SHOWN)+' remaining)</button></div>';
+  }
+  const tc=document.getElementById('tradeListContainer');
+  if(tc)tc.innerHTML=html;
 }
 
 function buildTGRecords(){
