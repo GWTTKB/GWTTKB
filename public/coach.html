@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Coach — GWTTKB Dynasty AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;600;700;800&family=Barlow:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#05080e;--s1:#090e18;--s2:#0d1420;--s3:#131d2e;
+  --teal:#00d4ff;--green:#00e676;--gold:#ffb700;--red:#ff3d57;--purple:#9b6dff;
+  --txt:#e8f0fa;--txt2:#8ba4c0;--txt3:#4d6a8a;
+  --bdr:rgba(0,212,255,0.10);--bdr2:rgba(0,212,255,0.22);
+  --mono:'JetBrains Mono',monospace;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--txt);font-family:'Barlow',sans-serif;display:flex;flex-direction:column;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--s1);}::-webkit-scrollbar-thumb{background:var(--s3);border-radius:2px;}
+
+/* NAV */
+.nav{height:52px;display:flex;align-items:center;padding:0 20px;background:rgba(5,8,14,0.97);backdrop-filter:blur(20px);border-bottom:1px solid var(--bdr);gap:14px;flex-shrink:0;}
+.nav-logo{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:4px;color:var(--teal);text-decoration:none;}
+.nav-links{display:flex;gap:18px;list-style:none;}
+.nav-links a{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--txt3);text-decoration:none;transition:color 0.15s;}
+.nav-links a:hover,.nav-links a.active{color:var(--teal);}
+.nav-spacer{flex:1;}
+.q-counter{font-family:var(--mono);font-size:11px;color:var(--txt3);padding:4px 10px;border:1px solid var(--bdr);border-radius:4px;}
+.q-counter span{color:var(--teal);}
+
+/* ONBOARDING */
+.onboard{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;position:relative;overflow:hidden;}
+.onboard::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(0,212,255,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.015) 1px,transparent 1px);background-size:48px 48px;}
+.onboard::after{content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:600px;height:400px;background:radial-gradient(ellipse,rgba(155,109,255,0.06),transparent 65%);pointer-events:none;}
+.coach-logo{font-size:48px;margin-bottom:12px;position:relative;z-index:1;}
+.coach-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(32px,5vw,56px);letter-spacing:3px;text-align:center;margin-bottom:6px;position:relative;z-index:1;}
+.coach-title span{color:var(--teal);}
+.coach-sub{font-size:14px;color:var(--txt3);text-align:center;max-width:440px;line-height:1.6;margin-bottom:28px;position:relative;z-index:1;}
+.onboard-form{width:100%;max-width:480px;position:relative;z-index:1;}
+.ob-step{display:flex;flex-direction:column;gap:10px;}
+.ob-label{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--teal);text-transform:uppercase;margin-bottom:2px;}
+.ob-input{width:100%;padding:13px 16px;background:var(--s1);border:1px solid var(--bdr2);border-radius:10px;color:var(--txt);font-family:'Barlow',sans-serif;font-size:15px;outline:none;transition:border-color 0.15s;}
+.ob-input:focus{border-color:var(--teal);}
+.ob-input::placeholder{color:var(--txt3);}
+.ob-btn{padding:13px;background:var(--teal);color:#000;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:3px;border:none;border-radius:10px;cursor:pointer;transition:background 0.15s;width:100%;}
+.ob-btn:hover{background:#00f0ff;}
+.ob-btn:disabled{background:var(--s3);color:var(--txt3);cursor:not-allowed;}
+.ob-hint{font-family:var(--mono);font-size:10px;color:var(--txt3);text-align:center;}
+.league-list{display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto;}
+.league-item{display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--s1);border:1px solid var(--bdr);border-radius:8px;cursor:pointer;transition:all 0.15s;}
+.league-item:hover{border-color:var(--teal);background:rgba(0,212,255,0.04);}
+.li-name{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--txt);flex:1;}
+.li-meta{font-family:var(--mono);font-size:10px;color:var(--txt3);}
+.li-badge{padding:2px 7px;border-radius:3px;font-family:var(--mono);font-size:9px;font-weight:600;}
+.li-sf{background:rgba(0,212,255,0.1);color:var(--teal);border:1px solid rgba(0,212,255,0.2);}
+.li-qb{background:rgba(155,109,255,0.1);color:var(--purple);border:1px solid rgba(155,109,255,0.2);}
+.loading-bar-wrap{width:100%;height:2px;background:var(--s3);border-radius:2px;overflow:hidden;margin-bottom:8px;}
+.loading-bar{height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--purple));border-radius:2px;transition:width 0.4s ease;}
+.loading-step{font-family:var(--mono);font-size:10px;color:var(--teal);letter-spacing:2px;text-align:center;}
+
+/* CHAT INTERFACE */
+.chat-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.context-bar{padding:8px 20px;background:var(--s1);border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:10px;flex-wrap:wrap;flex-shrink:0;}
+.cb-name{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;}
+.cb-badge{padding:2px 8px;border-radius:3px;font-family:var(--mono);font-size:9px;font-weight:600;}
+.cb-t{background:rgba(0,212,255,0.1);color:var(--teal);border:1px solid rgba(0,212,255,0.2);}
+.cb-g{background:rgba(0,230,118,0.1);color:var(--green);border:1px solid rgba(0,230,118,0.2);}
+.cb-p{background:rgba(155,109,255,0.1);color:var(--purple);border:1px solid rgba(155,109,255,0.2);}
+.cb-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.cb-reset{font-family:var(--mono);font-size:10px;color:var(--txt3);cursor:pointer;border:1px solid var(--bdr);padding:3px 8px;border-radius:3px;transition:all 0.12s;}
+.cb-reset:hover{color:var(--teal);border-color:var(--teal);}
+
+/* MESSAGES */
+.messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px;}
+.msg{display:flex;gap:12px;max-width:820px;}
+.msg.user{flex-direction:row-reverse;align-self:flex-end;}
+.msg-avatar{width:34px;height:34px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;border:1px solid var(--bdr);}
+.msg.coach .msg-avatar{background:rgba(155,109,255,0.12);border-color:rgba(155,109,255,0.3);}
+.msg.user .msg-avatar{background:rgba(0,212,255,0.1);border-color:rgba(0,212,255,0.25);}
+.msg-bubble{padding:12px 16px;border-radius:12px;font-size:14px;line-height:1.65;max-width:680px;}
+.msg.coach .msg-bubble{background:var(--s1);border:1px solid var(--bdr);border-radius:4px 12px 12px 12px;}
+.msg.user .msg-bubble{background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.15);border-radius:12px 4px 12px 12px;color:var(--txt);}
+.msg-bubble p{margin-bottom:8px;}
+.msg-bubble p:last-child{margin-bottom:0;}
+.msg-bubble strong{color:var(--txt);font-weight:700;}
+.msg-bubble em{color:var(--teal);font-style:normal;}
+.typing{display:flex;gap:4px;align-items:center;padding:14px 16px;}
+.typing span{width:6px;height:6px;border-radius:50%;background:var(--txt3);animation:bounce 1.4s infinite;}
+.typing span:nth-child(2){animation-delay:0.2s;}
+.typing span:nth-child(3){animation-delay:0.4s;}
+@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+
+/* SUGGESTED PROMPTS */
+.suggested{display:flex;gap:8px;padding:12px 20px;border-top:1px solid var(--bdr);flex-wrap:wrap;flex-shrink:0;}
+.sug-btn{padding:7px 14px;background:var(--s1);border:1px solid var(--bdr);border-radius:20px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;color:var(--txt2);cursor:pointer;transition:all 0.15s;white-space:nowrap;}
+.sug-btn:hover{border-color:var(--teal);color:var(--teal);background:rgba(0,212,255,0.04);}
+.sug-btn:disabled{opacity:0.4;cursor:not-allowed;}
+
+/* INPUT */
+.input-area{padding:12px 20px 16px;border-top:1px solid var(--bdr);flex-shrink:0;}
+.input-wrap{display:flex;gap:10px;background:var(--s1);border:1px solid var(--bdr2);border-radius:12px;padding:4px 4px 4px 16px;transition:border-color 0.15s;}
+.input-wrap:focus-within{border-color:var(--teal);}
+.chat-input{flex:1;background:none;border:none;color:var(--txt);font-family:'Barlow',sans-serif;font-size:14px;outline:none;padding:8px 0;resize:none;min-height:36px;max-height:120px;}
+.chat-input::placeholder{color:var(--txt3);}
+.send-btn{padding:8px 16px;background:var(--teal);color:#000;border:none;border-radius:9px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;cursor:pointer;transition:all 0.15s;align-self:flex-end;flex-shrink:0;}
+.send-btn:hover{background:#00f0ff;}
+.send-btn:disabled{background:var(--s3);color:var(--txt3);cursor:not-allowed;}
+
+/* LIMIT MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:500;padding:20px;}
+.modal{background:var(--s2);border:1px solid var(--bdr2);border-radius:16px;padding:32px;max-width:460px;width:100%;position:relative;overflow:hidden;}
+.modal::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--teal),var(--purple));}
+.modal-icon{font-size:36px;margin-bottom:12px;text-align:center;}
+.modal-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;text-align:center;margin-bottom:8px;}
+.modal-sub{font-size:13px;color:var(--txt2);text-align:center;line-height:1.6;margin-bottom:24px;}
+.modal-email{width:100%;padding:12px 16px;background:var(--s1);border:1px solid var(--bdr2);border-radius:8px;color:var(--txt);font-family:'Barlow',sans-serif;font-size:14px;outline:none;margin-bottom:10px;}
+.modal-email:focus{border-color:var(--teal);}
+.modal-email::placeholder{color:var(--txt3);}
+.modal-btn{width:100%;padding:12px;background:var(--teal);color:#000;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:3px;border:none;border-radius:8px;cursor:pointer;margin-bottom:10px;}
+.modal-skip{width:100%;padding:8px;background:transparent;color:var(--txt3);font-family:var(--mono);font-size:11px;border:none;cursor:pointer;text-decoration:underline;}
+.modal-perks{display:flex;flex-direction:column;gap:6px;margin-bottom:20px;}
+.perk{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--txt2);}
+.perk::before{content:'✓';color:var(--green);font-weight:700;flex-shrink:0;}
+
+@media(max-width:768px){.nav-links{display:none;}.messages{padding:12px;}.input-area{padding:8px 12px 12px;}}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="nav-logo">GWTTKB</a>
+  <ul class="nav-links">
+    <li><a href="/rankings.html">Rankings</a></li>
+    <li><a href="/trade.html">Trade Calc</a></li>
+    <li><a href="/stats.html">Stats</a></li>
+    <li><a href="/injuries.html">Injuries</a></li>
+    <li><a href="/scouting.html">GM Scout</a></li>
+    <li><a href="/coach.html" class="active">The Coach</a></li>
+  </ul>
+  <div class="nav-spacer"></div>
+  <div class="q-counter" id="qCounter">Questions: <span id="qUsed">0</span>/3 today</div>
+</nav>
+
+<!-- ONBOARDING -->
+<div class="onboard" id="onboardScreen">
+  <div class="coach-logo">🏆</div>
+  <h1 class="coach-title">THE <span>COACH</span></h1>
+  <p class="coach-sub">Dynasty AI that knows your league, your opponents, and six years of player value history. Built to help you win a championship — not just answer questions.</p>
+  <div class="onboard-form">
+    <!-- Step 1: Username -->
+    <div class="ob-step" id="step1">
+      <div class="ob-label">Your Sleeper Username</div>
+      <input class="ob-input" id="obUsername" type="text" placeholder="Enter username..." autocomplete="off">
+      <button class="ob-btn" id="obBtn1" onclick="lookupUser()">CONNECT SLEEPER →</button>
+      <div class="ob-hint">No account needed · Free during beta</div>
+    </div>
+    <!-- Step 2: League picker -->
+    <div class="ob-step" id="step2" style="display:none">
+      <div class="ob-label" id="step2Label">Select Your League</div>
+      <div class="league-list" id="leagueList"></div>
+    </div>
+    <!-- Step 3: Loading -->
+    <div class="ob-step" id="step3" style="display:none">
+      <div class="loading-bar-wrap"><div class="loading-bar" id="obLoadBar"></div></div>
+      <div class="loading-step" id="obLoadStep">CONNECTING...</div>
+    </div>
+  </div>
+</div>
+
+<!-- CHAT -->
+<div class="chat-wrap" id="chatWrap" style="display:none">
+  <div class="context-bar" id="contextBar"></div>
+  <div class="messages" id="messages"></div>
+  <div class="suggested" id="suggested">
+    <button class="sug-btn" onclick="sendSuggested(this)">Grade my roster</button>
+    <button class="sug-btn" onclick="sendSuggested(this)">Based on what's moving in the market right now and my roster construction, what is the single highest-leverage move I can make this week?</button>
+    <button class="sug-btn" onclick="sendSuggested(this)">Walk me through every manager in my league — who has capital I want, who needs what I have, and what's the exact trade structure I should be pitching right now?</button>
+  </div>
+  <div class="input-area">
+    <div class="input-wrap">
+      <textarea class="chat-input" id="chatInput" placeholder="Ask The Coach anything about your dynasty league..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+      <button class="send-btn" id="sendBtn" onclick="sendMessage()">SEND</button>
+    </div>
+  </div>
+</div>
+
+<!-- LIMIT MODAL -->
+<div class="modal-overlay" id="limitModal" style="display:none">
+  <div class="modal">
+    <div class="modal-icon">🏆</div>
+    <div class="modal-title">YOU'RE LOCKED IN</div>
+    <div class="modal-sub">You've used your 3 free questions for today. Drop your email to get 5 more — on us. No credit card, no BS. Just more wins.</div>
+    <div class="modal-perks">
+      <div class="perk">5 bonus questions today</div>
+      <div class="perk">Early access to paid features</div>
+      <div class="perk">Weekly dynasty intel drops</div>
+    </div>
+    <input class="modal-email" id="modalEmail" type="email" placeholder="your@email.com">
+    <button class="modal-btn" onclick="submitEmail()">GET 5 MORE QUESTIONS →</button>
+    <button class="modal-skip" onclick="closeModal()">No thanks, I'm good with 3</button>
+  </div>
+</div>
+
+<script>
+const API_URL='https://api.sleeper.app/v1';
+const S=ms=>new Promise(r=>setTimeout(r,ms));
+const n=s=>String(s).toLowerCase().replace(/[^a-z0-9]/g,'');
+async function gFetch(url){const r=await fetch(url);if(!r.ok)throw new Error(r.status);return r.json();}
+
+// ── STATE ──
+let CTX={
+  username:'', userId:'', league:null, isSF:false,
+  myRoster:null, myTeam:null, allTeams:[],
+  gradedTrades:[], tRec:{}, waiverAct:{},
+  consensusTop:[], gwttkbTop:[], picks:{},
+  coaching:{}, dynasty:{}, trending:[],
+  trendingAdds:[], trendingDrops:[],
+  draftHistory:{}, contractKnowledge:{},
+  isContractLeague:false, contractData:{},
+  nflStats:{}, sfVals:{}, qbVals:{},
+  playerNames:{}, playerPos:{}, chain:[]
+};
+let MESSAGES=[];
+let LOADING=false;
+
+// ── QUESTION COUNTER ──
+function getQuestions(){
+  const d=localStorage.getItem('coach_date');
+  const today=new Date().toDateString();
+  if(d!==today){localStorage.setItem('coach_date',today);localStorage.setItem('coach_q','0');}
+  return parseInt(localStorage.getItem('coach_q')||'0');
+}
+function addQuestion(){
+  const q=getQuestions()+1;
+  localStorage.setItem('coach_q',String(q));
+  updateQCounter();
+  return q;
+}
+function updateQCounter(){
+  const q=getQuestions();
+  const bonus=parseInt(localStorage.getItem('coach_bonus')||'0');
+  const limit=3+bonus;
+  document.getElementById('qUsed').textContent=q;
+  document.getElementById('qCounter').innerHTML='Questions: <span id="qUsed">'+q+'</span>/'+limit+' today';
+}
+function canAsk(){
+  const q=getQuestions();
+  const bonus=parseInt(localStorage.getItem('coach_bonus')||'0');
+  return q<(3+bonus);
+}
+
+// ── ONBOARDING ──
+async function lookupUser(){
+  const username=document.getElementById('obUsername').value.trim();
+  if(!username)return;
+  document.getElementById('obBtn1').disabled=true;
+  document.getElementById('obBtn1').textContent='LOOKING UP...';
+  try{
+    const user=await gFetch(`${API_URL}/user/${username}`);
+    if(!user?.user_id)throw new Error('User not found');
+    CTX.username=user.display_name||user.username;
+    CTX.userId=user.user_id;
+    // Get leagues
+    const leagues=await gFetch(`${API_URL}/user/${user.user_id}/leagues/nfl/2026`)
+      .catch(()=>gFetch(`${API_URL}/user/${user.user_id}/leagues/nfl/2025`));
+    const dynasty=(leagues||[]).filter(l=>l.settings?.type===2);
+    if(!dynasty.length)throw new Error('No dynasty leagues found for this username.');
+    if(dynasty.length===1){
+      await selectLeague(dynasty[0]);
+    }else{
+      showLeaguePicker(dynasty);
+    }
+  }catch(e){
+    alert(e.message);
+    document.getElementById('obBtn1').disabled=false;
+    document.getElementById('obBtn1').textContent='CONNECT SLEEPER →';
+  }
+}
+
+function showLeaguePicker(leagues){
+  document.getElementById('step1').style.display='none';
+  document.getElementById('step2').style.display='flex';
+  document.getElementById('step2Label').textContent='SELECT YOUR LEAGUE — @'+CTX.username;
+  const list=document.getElementById('leagueList');
+  list.innerHTML=leagues.map(l=>{
+    const sf=(l.roster_positions||[]).includes('SUPER_FLEX');
+    return`<div class="league-item" onclick="selectLeague(${JSON.stringify(l).replace(/"/g,'&quot;')})">
+      <div><div class="li-name">${l.name||'League'}</div><div class="li-meta">${l.total_rosters||12} teams · ${l.season}</div></div>
+      <span class="li-badge ${sf?'li-sf':'li-qb'}">${sf?'SF':'1QB'}</span>
+    </div>`;
+  }).join('');
+}
+
+async function selectLeague(league){
+  document.getElementById('step2').style.display='none';
+  document.getElementById('step3').style.display='flex';
+  CTX.league=league;
+  CTX.isSF=(league.roster_positions||[]).includes('SUPER_FLEX');
+  await loadAllContext();
+}
+
+function setLoad(pct,step){
+  document.getElementById('obLoadBar').style.width=pct+'%';
+  document.getElementById('obLoadStep').textContent=step;
+}
+
+async function loadAllContext(){
+  try{
+    setLoad(8,'LOADING DYNASTY VALUES...');
+    await loadDynastyData();
+
+    setLoad(20,'FETCHING LEAGUE ROSTERS...');
+    const[rosters,users]=await Promise.all([
+      gFetch(`${API_URL}/league/${CTX.league.league_id}/rosters`),
+      gFetch(`${API_URL}/league/${CTX.league.league_id}/users`)
+    ]);
+    const userMap={};
+    for(const u of users)userMap[u.user_id]=u;
+
+    // Build teams
+    CTX.allTeams=rosters.map(r=>{
+      const u=userMap[r.owner_id]||{};
+      const isMe=r.owner_id===CTX.userId;
+      const players=(r.players||[]).map(id=>{
+        const pval=CTX.isSF?(CTX.sfVals[id]||0):(CTX.qbVals[id]||0);
+        return{id,name:CTX.playerNames[id]||id,pos:CTX.playerPos[id]||'?',value:pval};
+      }).filter(p=>['QB','RB','WR','TE'].includes(p.pos)).sort((a,b)=>b.value-a.value);
+      const total=players.reduce((s,p)=>s+p.value,0);
+      if(isMe){CTX.myRoster=players;CTX.myTeam={username:u.display_name||u.username,total,roster_id:r.roster_id};}
+      return{roster_id:r.roster_id,owner_id:r.owner_id,isMe,
+        username:u.display_name||u.username||'Unknown',
+        players,total,wins:r.settings?.wins||0,losses:r.settings?.losses||0};
+    }).sort((a,b)=>b.total-a.total);
+
+    setLoad(38,'PULLING TRADE HISTORY...');
+    // Get league chain
+    const chain=[{id:CTX.league.league_id,season:parseInt(CTX.league.season||2026)}];
+    try{
+      const lg=await gFetch(`${API_URL}/league/${CTX.league.league_id}`);
+      if(lg.previous_league_id&&lg.previous_league_id!==CTX.league.league_id){
+        chain.push({id:lg.previous_league_id,season:chain[0].season-1});
+        const lg2=await gFetch(`${API_URL}/league/${lg.previous_league_id}`).catch(()=>null);
+        if(lg2?.previous_league_id&&lg2.previous_league_id!==lg.previous_league_id){
+          chain.push({id:lg2.previous_league_id,season:chain[0].season-2});
+        }
+      }
+    }catch(e){}
+    CTX.chain=chain;
+
+    // Fetch trades
+    const allTrades=[];
+    for(const{id:lgId,season}of chain){
+      for(let wk=1;wk<=22;wk++){
+        let txns;
+        try{txns=await gFetch(`${API_URL}/league/${lgId}/transactions/${wk}`);}
+        catch(e){break;}
+        if(!txns?.length)break;
+        for(const t of txns){
+          if(t.type==='trade'&&t.status==='complete')allTrades.push({...t,week:wk,season});
+        }
+        await S(30);
+      }
+    }
+    CTX.allTrades=allTrades;
+
+    setLoad(60,'ANALYZING MANAGERS...');
+    // Build trade records
+    const tRec={};
+    for(const t of allTrades){
+      for(const[playerId,rid]of Object.entries(t.adds||{})){
+        const team=CTX.allTeams.find(tm=>tm.roster_id===rid);
+        if(!team)continue;
+        const un=team.username;
+        if(!tRec[un])tRec[un]={trades:0,posFlow:{QB:0,RB:0,WR:0,TE:0},partners:{}};
+        tRec[un].trades++;
+        const pos=CTX.playerPos[playerId];
+        if(pos&&tRec[un].posFlow[pos]!=null)tRec[un].posFlow[pos]++;
+      }
+    }
+    CTX.tRec=tRec;
+
+    setLoad(72,'LOADING TRENDING PLAYERS...');
+    try{
+      const trending=await gFetch('https://api.sleeper.app/v1/players/nfl/trending/add?lookback_hours=48&limit=25');
+      CTX.trending=(trending||[]).map(p=>({
+        id:p.player_id,
+        name:CTX.playerNames[p.player_id]||p.player_id,
+        adds:p.count
+      })).filter(p=>p.name!==p.id);
+    }catch(e){}
+
+    setLoad(78,'LOADING COACHING STAFF + PHASE 2 DATA...');
+    try{
+      const[coachRes,dkRes,draftRes,contractRes]=await Promise.all([
+        fetch('/data/coaching-staff.json'),
+        fetch('/data/dynasty-knowledge.json'),
+        fetch('/data/nfl-draft-history.json'),
+        fetch('/data/contract-knowledge.json')
+      ]);
+      CTX.coaching=coachRes.ok?(await coachRes.json()).teams:{};
+      CTX.dynasty=dkRes.ok?await dkRes.json():{};
+      CTX.draftHistory=draftRes.ok?await draftRes.json():{};
+      CTX.contractKnowledge=contractRes.ok?await contractRes.json():{};
+    }catch(e){console.warn('Phase 2 data:',e);}
+
+    setLoad(86,'CHECKING CONTRACT LEAGUE...');
+    // Check if this is a contract league and load contract data
+    try{
+      const isContractLeague=(CTX.league?.settings?.taxi_slots>0)||
+        CTX.allTeams.some(t=>t.players?.some(p=>p.contract_years));
+      CTX.isContractLeague=isContractLeague;
+      if(isContractLeague){
+        // Pull contract values from rosters
+        const rosters=await gFetch(`${API_URL}/league/${CTX.league.league_id}/rosters`);
+        CTX.contractData={};
+        for(const r of rosters||[]){
+          for(const[pid,meta]of Object.entries(r.player_map||{})){
+            if(meta?.contract_years||meta?.years_exp){
+              CTX.contractData[pid]={
+                years:meta.contract_years||0,
+                value:meta.contract_value||0
+              };
+            }
+          }
+        }
+        console.log('Contract data loaded:',Object.keys(CTX.contractData).length,'players');
+      }
+    }catch(e){}
+
+    setLoad(92,'LOADING LIVE MARKET DATA...');
+    // Live market — what's being added/dropped across Sleeper right now
+    try{
+      const[addTrend,dropTrend]=await Promise.all([
+        gFetch('https://api.sleeper.app/v1/players/nfl/trending/add?lookback_hours=48&limit=30'),
+        gFetch('https://api.sleeper.app/v1/players/nfl/trending/drop?lookback_hours=48&limit=15')
+      ]);
+      CTX.trendingAdds=(addTrend||[]).map(p=>({
+        id:p.player_id,
+        name:CTX.playerNames[p.player_id]||p.player_id,
+        adds:p.count,
+        pos:CTX.playerPos[p.player_id]||'?'
+      })).filter(p=>p.name!==p.id&&['QB','RB','WR','TE'].includes(p.pos));
+      CTX.trendingDrops=(dropTrend||[]).map(p=>({
+        id:p.player_id,
+        name:CTX.playerNames[p.player_id]||p.player_id,
+        drops:p.count,
+        pos:CTX.playerPos[p.player_id]||'?'
+      })).filter(p=>p.name!==p.id&&['QB','RB','WR','TE'].includes(p.pos));
+      CTX.trending=CTX.trendingAdds; // backward compat
+    }catch(e){}
+
+    setLoad(100,'READY');
+    await S(400);
+
+    // Start chat
+    startChat();
+
+  }catch(e){
+    console.error(e);
+    document.getElementById('obLoadStep').textContent='ERROR: '+e.message;
+  }
+}
+
+async function loadDynastyData(){
+  // Load consensus + GWTTKB + historical
+  CTX.sfVals={};CTX.qbVals={};CTX.playerNames={};CTX.playerPos={};
+
+  try{
+    const[cRes,gRes,hRes,pkRes]=await Promise.all([
+      fetch('/data/consensus.json'),
+      fetch('/data/leland-rankings.json'),
+      fetch('/data/historical-players.json').catch(()=>null),
+      fetch('/data/historical-picks.json').catch(()=>null)
+    ]);
+
+    // Consensus
+    if(cRes.ok){
+      const c=await cRes.json();
+      const sfp=c.formats?.sf_ppr?.players||c.players||[];
+      const qp=c.formats?.qb1_ppr?.players||[];
+      for(const p of sfp){
+        CTX.sfVals[n(p.name)]=p.value;
+        if(p.id){CTX.sfVals[p.id]=p.value;CTX.playerNames[p.id]=p.name;CTX.playerPos[p.id]=p.pos||p.position;}
+        CTX.consensusTop.push({name:p.name,sf:p.value,pos:p.pos||p.position,id:p.id});
+      }
+      for(const p of qp)CTX.qbVals[n(p.name)]=p.value;
+      CTX.consensusTop=CTX.consensusTop.slice(0,150);
+    }
+
+    // GWTTKB
+    if(gRes.ok){
+      const g=await gRes.json();
+      const sfp=g.formats?.sf_ppr||[];
+      CTX.gwttkbTop=sfp.slice(0,100).map(p=>({name:p.name,value:p.value,rank:p.rank}));
+    }
+
+    // Historical picks
+    if(pkRes?.ok){
+      const pk=await pkRes.json();
+      CTX.picks=pk.picks||{};
+    }
+
+    // Sleeper player map for names/positions
+    try{
+      const sp=await gFetch(`${API_URL}/players/nfl`);
+      for(const[id,p]of Object.entries(sp)){
+        if(!p?.full_name||!['QB','RB','WR','TE'].includes(p.position))continue;
+        CTX.playerNames[id]=p.full_name;
+        CTX.playerPos[id]=p.position;
+        if(!CTX.sfVals[id])CTX.sfVals[id]=CTX.sfVals[n(p.full_name)]||0;
+        if(!CTX.qbVals[id])CTX.qbVals[id]=CTX.qbVals[n(p.full_name)]||0;
+      }
+    }catch(e){}
+
+  }catch(e){console.warn('Dynasty data:',e);}
+}
+
+// ── SYSTEM PROMPT BUILDER ──
+function buildSystemPrompt(){
+  const me=CTX.myTeam;
+  const myRoster=CTX.myRoster||[];
+
+  // Top 60 consensus (compact)
+  const top60=CTX.consensusTop.slice(0,60).map((p,i)=>`${i+1}.${p.name}(${p.pos})${CTX.isSF?p.sf:(CTX.qbVals[n(p.name)]||p.sf)}`).join(', ');
+
+  // GWTTKB top 40
+  const gwttkbSummary=CTX.gwttkbTop.slice(0,40).map((p,i)=>`${i+1}.${p.name}:${p.value}`).join(', ');
+
+  // My roster
+  const myRosterStr=myRoster.slice(0,20).map(p=>`${p.name}(${p.pos},${p.value})`).join(', ');
+
+  // All teams (compact)
+  const teamsStr=CTX.allTeams.map(t=>`${t.username}${t.isMe?' [YOU]':''}:${t.wins}W-${t.losses}L val=${t.total} top=${t.players.slice(0,4).map(p=>p.name+' '+p.value).join('/')}`).join(' | ');
+
+  // Manager tendencies
+  const tendStr=Object.entries(CTX.tRec).map(([un,r])=>{
+    const flows=Object.entries(r.posFlow||{}).filter(([,v])=>Math.abs(v)>=2).map(([pos,v])=>v>0?`+${pos}`:pos+v).join(',');
+    return`${un}:${r.trades}trades${flows?' flow:'+flows:''}`;
+  }).join(' | ');
+
+  // Recent trades (last 12)
+  const recentTrades=CTX.allTrades.slice(-12).map(t=>{
+    const sides=(t.roster_ids||[]).map(rid=>{
+      const team=CTX.allTeams.find(tm=>tm.roster_id===rid);
+      const adds=Object.entries(t.adds||{}).filter(([,r])=>r===rid).map(([id])=>CTX.playerNames[id]||id);
+      const picks=(t.draft_picks||[]).filter(pk=>pk.owner_id===rid).map(pk=>`${pk.season||'?'} ${pk.round||'?'}rd`);
+      return`${team?.username||'?'} got [${[...adds,...picks].join(',')}]`;
+    });
+    return`WK${t.week||'?'} ${sides.join(' / ')}`;
+  }).join(' | ');
+
+  // Trending adds + drops
+  const trendAdds=(CTX.trendingAdds||CTX.trending||[]).slice(0,12).map(p=>`${p.name}(${p.pos},+${p.adds}adds/48hr)`).join(', ');
+  const trendDrops=(CTX.trendingDrops||[]).slice(0,8).map(p=>`${p.name}(${p.pos},-${p.drops}drops/48hr)`).join(', ');
+
+  // Breakout signals
+  const signals=CTX.dynasty?.breakout_signals?
+    Object.entries(CTX.dynasty.breakout_signals).map(([pos,sigs])=>`${pos.toUpperCase()}: ${sigs.join('; ')}`).join(' | '):'';
+
+  // College breakout profiles
+  const collegeProfiles=CTX.draftHistory?.college_breakout_profiles?
+    Object.entries(CTX.draftHistory.college_breakout_profiles).map(([pos,prof])=>
+      `${pos}: Elite profile=${prof.elite_profile?.slice(0,80)} | Breakout timing=${prof.breakout_timing}`
+    ).join(' || '):''
+
+  // 2025 draft class context
+  const draft2025=(CTX.draftHistory?.drafts?.['2025']?.round1||[]).slice(0,20)
+    .map(p=>`${p.pick}.${p.player}(${p.pos},${p.team})`).join(', ');
+
+  // Contract league context
+  const contractCtx=CTX.isContractLeague?
+    `THIS IS A CONTRACT LEAGUE. ${CTX.contractKnowledge?.formats?.salary_cap?.strategy||''}`:
+    'Standard dynasty (no salary cap).';
+
+  // Coaching staff context (key fantasy-relevant matchups)
+  const coachCtx=Object.entries(CTX.coaching||{}).slice(0,10)
+    .map(([team,c])=>`${team}:${c.hc}/${c.oc}(${c.scheme})`).join(', ');
+
+  return `You are The Coach — the most analytically deep dynasty fantasy football advisor ever built. You work for GWTTKB (Guys Who Think They Know Ball). Your one goal is to help this manager win a championship.
+
+PERSONALITY:
+Sharp, confident, chill. You're not a hype machine and you're not a corporate AI. You're a trusted advisor who has studied dynasty football deeper than anyone — 6 years of daily values, every trade in this league, every manager's tendencies, college breakout profiles, NFL scheme context. You synthesize all of it.
+
+You call it how it is. If a player is bad, you say so — even if the manager loves them. If a trade offer is trash, you say that. When someone pushes back and they're wrong, you don't fold — you hold your ground, explain your reasoning, and respect them enough to tell them the truth. If they have a good point, acknowledge it.
+
+You're never cheesy. Never say "great question!" or "I love that!" Just answer. You think around the box — you find angles the manager hasn't considered. You're not just answering what they asked, you're thinking about what they should be asking.
+
+WHAT YOU KNOW:
+- 6 years of daily dynasty values for 530+ players and 36 pick tiers (Apr 2020 → Apr 2026)
+- Community consensus from real Sleeper startup ADP — updated daily. This is the market.
+- GWTTKB proprietary rankings — one sharp analyst's view. Use as reference, not gospel.
+- Every single trade in this league across 3 seasons — who won, by how much, and why
+- All opponent rosters valued out, plus trade tendencies (who they buy/sell, who they've never traded with)
+- NFL coaching staff + scheme for all 32 teams — scheme affects dynasty value massively
+- College breakout profiles for every position — what college stats actually predict NFL value
+- 2025 NFL Draft class full round 1 breakdown
+- NFL Draft history 2022-2025 — context for every player's draft capital
+- Contract league strategy if applicable
+- Real-time Sleeper market data — what's being added/dropped across thousands of leagues RIGHT NOW
+- Dynasty format expertise: SF, 1QB, TEP, contract/salary cap, IDP
+- Negotiation framework: always think about what the OTHER manager wants, not just what you want
+
+YOU ARE NOT:
+- A stats recapper. Don't list numbers without insight.
+- A yes-man. If the manager is wrong, tell them.
+- Overly cautious. Make real recommendations.
+- Generic. Reference specific players, specific trades, specific opponents from their actual league.
+
+FORMAT: ${CTX.isSF?'SUPERFLEX PPR — QBs worth 30-40% more. Top QBs are #1-5 overall assets. Never roster zero at QB.':'1QB PPR — RB scarcity drives top values. Elite WRs dominant. QBs secondary but still valuable.'}
+CONTRACT LEAGUE: ${contractCtx}
+LEAGUE: ${CTX.league?.name||'Dynasty League'} | ${CTX.allTeams.length} teams | Season ${CTX.league?.season||2026}
+
+CONSENSUS RANKINGS TOP 60 (name/pos/value — this is the market):
+${top60}
+
+GWTTKB RANKINGS TOP 40 (one analyst's view — reference only):
+${gwttkbSummary}
+
+${me?`THIS MANAGER (@${me.username}): ${me.wins}W-${me.losses}L | Dynasty value: ${(me.total||0).toLocaleString()} | Rank: #${CTX.allTeams.findIndex(t=>t.isMe)+1} of ${CTX.allTeams.length}
+THEIR FULL ROSTER (name/pos/value): ${myRosterStr}`:'USER ROSTER: Not loaded'}
+
+ALL LEAGUE MANAGERS (name: W-L, value, top 4 players):
+${teamsStr}
+
+MANAGER TRADE TENDENCIES (who does what):
+${tendStr||'Insufficient trade history'}
+
+RECENT LEAGUE TRADES (last 12, most recent first):
+${recentTrades||'No trade history loaded'}
+
+LIVE SLEEPER MARKET — TRENDING ADDS (48hrs):
+${trendAdds||'No trending data'}
+
+LIVE SLEEPER MARKET — TRENDING DROPS (48hrs):
+${trendDrops||'No trending data'}
+
+NFL COACHING STAFF (team: HC/OC/scheme):
+${coachCtx}
+
+2025 NFL DRAFT TOP 20 PICKS:
+${draft2025}
+
+COLLEGE BREAKOUT PROFILES (what college stats predict NFL dynasty value):
+${collegeProfiles}
+
+DYNASTY WINDOW BREAKOUT SIGNALS:
+${signals}
+
+MISVALUE DETECTION — ALWAYS THINK ABOUT THIS:
+- Is a player producing well but their consensus value NOT increasing? Could be a sneaky buy.
+- Is a player's value rising but their actual stats declining? Sell high signal.
+- Trend drops are often overreactions — was the injury minor? Is the role still there?
+- Trend adds are often hype — does the production back it up?
+
+NFL SCHEME CONTEXT (affects dynasty value):
+- Shanahan system (SF, MIA, DEN): RBs rotate but get high-quality touches. WRs thrive in motion schemes.
+- Reid system (KC): TEs and slot WRs disproportionately targeted. Always one breakout TE.
+- Air Raid / spread (JAX, WAS): Pass catchers get volume. QBs can look great in system.
+- Physical run (LAC, PIT, BAL): Committee RBs limit dynasty value. Avoid RBs here unless clear bell cow.
+- McVay system (LAR, MIN, GB, CIN): WR1 gets huge target share. High efficiency offense = consistent dynasty production.
+
+KEY BEHAVIORS:
+- Always tie analysis to this specific league and this specific manager's situation
+- When asked about a trade, give a definitive verdict — who won, by how much
+- When a player the manager likes is actually bad — tell them. Be kind but be honest.
+- When someone pushes back — don't apologize. Engage their argument, explain yours.
+- Think about what the OTHER manager wants. The best trades help both sides feel good.
+- Reference specific opponents by name from the tendencies data above
+- Use the trending data: "Chase has been added in X leagues in 48 hours — here's what that signal means"
+- Find the angle no one is thinking about. That's the job.
+- If someone mentions a player's college stats, you know what they mean for dynasty value
+- Draft capital matters: a 1.01 pick has different upside ceiling than a 1.10 even at same dynasty value`;
+}
+
+// ── CHAT ──
+function startChat(){
+  document.getElementById('onboardScreen').style.display='none';
+  document.getElementById('chatWrap').style.display='flex';
+  updateQCounter();
+
+  // Context bar
+  const me=CTX.myTeam;
+  const sf=CTX.isSF;
+  document.getElementById('contextBar').innerHTML=`
+    <div class="cb-name">@${CTX.username}</div>
+    <span class="cb-badge cb-t">${CTX.league?.name||'League'}</span>
+    <span class="cb-badge ${sf?'cb-t':'cb-p'}">${sf?'SF PPR':'1QB PPR'}</span>
+    <span class="cb-badge cb-g">${CTX.allTeams.length} TEAMS</span>
+    ${me?`<span class="cb-badge cb-g">${me.wins}W-${me.losses}L · ${me.total.toLocaleString()} VAL</span>`:''}
+    <div class="cb-right">
+      <span class="cb-reset" onclick="resetChat()">↻ New League</span>
+    </div>`;
+
+  // Opening message
+  const opener=`${CTX.myRoster?.length?`Alright @${CTX.username} — I've got your full league loaded. ${CTX.allTeams.length} managers, ${CTX.allTrades.length} trades pulled across ${CTX.chain?.length||1} seasons, all rosters valued out.\n\nYour squad is sitting at ${CTX.myTeam?.total?.toLocaleString()||'?'} in dynasty value. ${CTX.myTeam?'That puts you '+(CTX.allTeams.findIndex(t=>t.isMe)+1)+' of '+CTX.allTeams.length+' in the league.':''}\n\nWhat do you want to work on?`:'Hey — I\'m loaded up. What do you want to dig into?'}`;
+  addMessage('coach',opener);
+}
+
+function addMessage(role,content){
+  MESSAGES.push({role:role==='coach'?'assistant':'user',content});
+  renderMessages();
+}
+
+function renderMessages(){
+  const el=document.getElementById('messages');
+  el.innerHTML=MESSAGES.map(m=>{
+    const isCoach=m.role==='assistant';
+    const formatted=m.content
+      .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g,'<em>$1</em>')
+      .split('\n\n').map(p=>`<p>${p.replace(/\n/g,'<br>')}</p>`).join('');
+    return`<div class="msg ${isCoach?'coach':'user'}">
+      <div class="msg-avatar">${isCoach?'🏆':'👤'}</div>
+      <div class="msg-bubble">${formatted}</div>
+    </div>`;
+  }).join('');
+  el.scrollTop=el.scrollHeight;
+}
+
+function showTyping(){
+  const el=document.getElementById('messages');
+  const div=document.createElement('div');
+  div.className='msg coach';div.id='typingMsg';
+  div.innerHTML='<div class="msg-avatar">🏆</div><div class="msg-bubble"><div class="typing"><span></span><span></span><span></span></div></div>';
+  el.appendChild(div);
+  el.scrollTop=el.scrollHeight;
+}
+
+function hideTyping(){
+  const el=document.getElementById('typingMsg');
+  if(el)el.remove();
+}
+
+async function sendMessage(text){
+  if(LOADING)return;
+  const input=document.getElementById('chatInput');
+  const msg=text||input.value.trim();
+  if(!msg)return;
+  if(!canAsk()){showLimitModal();return;}
+
+  input.value='';
+  autoResize(input);
+  addMessage('user',msg);
+  LOADING=true;
+  document.getElementById('sendBtn').disabled=true;
+  document.querySelectorAll('.sug-btn').forEach(b=>b.disabled=true);
+  showTyping();
+
+  const q=addQuestion();
+
+  try{
+    const systemPrompt=buildSystemPrompt();
+    const response=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:2048,
+        system:systemPrompt,
+        messages:MESSAGES.map(m=>({role:m.role,content:m.content}))
+      })
+    });
+
+    if(!response.ok){
+      const err=await response.json().catch(()=>({error:{message:'API error'}}));
+      throw new Error(err.error?.message||'API error '+response.status);
+    }
+
+    const data=await response.json();
+    const reply=data.content?.map(b=>b.type==='text'?b.text:'').join('')||'No response received.';
+    hideTyping();
+    addMessage('coach',reply);
+
+  }catch(e){
+    hideTyping();
+    addMessage('coach','Hit a snag on my end — try again. If it keeps happening, refresh the page. Error: '+e.message);
+  }finally{
+    LOADING=false;
+    document.getElementById('sendBtn').disabled=false;
+    document.querySelectorAll('.sug-btn').forEach(b=>b.disabled=false);
+    updateQCounter();
+    if(!canAsk())showLimitModal();
+  }
+}
+
+function sendSuggested(btn){sendMessage(btn.textContent);}
+
+function handleKey(e){
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}
+}
+
+function autoResize(el){
+  el.style.height='auto';
+  el.style.height=Math.min(el.scrollHeight,120)+'px';
+}
+
+function resetChat(){
+  CTX={username:'',userId:'',league:null,isSF:false,myRoster:null,myTeam:null,
+    allTeams:[],gradedTrades:[],tRec:{},waiverAct:{},consensusTop:[],gwttkbTop:[],
+    picks:{},coaching:{},dynasty:{},trending:[],trendingAdds:[],trendingDrops:[],
+    draftHistory:{},contractKnowledge:{},isContractLeague:false,contractData:{},
+    nflStats:{},sfVals:{},qbVals:{},playerNames:{},playerPos:{},chain:[]};
+  MESSAGES=[];
+  document.getElementById('chatWrap').style.display='none';
+  document.getElementById('onboardScreen').style.display='flex';
+  document.getElementById('step1').style.display='flex';
+  document.getElementById('step2').style.display='none';
+  document.getElementById('step3').style.display='none';
+  document.getElementById('obBtn1').disabled=false;
+  document.getElementById('obBtn1').textContent='CONNECT SLEEPER →';
+  document.getElementById('obUsername').value='';
+}
+
+// ── LIMIT MODAL ──
+function showLimitModal(){
+  document.getElementById('limitModal').style.display='flex';
+}
+function closeModal(){
+  document.getElementById('limitModal').style.display='none';
+}
+function submitEmail(){
+  const email=document.getElementById('modalEmail').value.trim();
+  if(!email||!email.includes('@')){alert('Enter a valid email');return;}
+  // Store email + give bonus questions
+  localStorage.setItem('coach_email',email);
+  localStorage.setItem('coach_bonus','5');
+  closeModal();
+  updateQCounter();
+  addMessage('coach','Welcome to the list. You\'ve got 5 more questions loaded. Let\'s get back to work — what do you want to tackle?');
+}
+
+// Init
+updateQCounter();
+document.getElementById('obUsername').addEventListener('keydown',e=>{
+  if(e.key==='Enter')lookupUser();
+});
+</script>
+</body>
+</html>
