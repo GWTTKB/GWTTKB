@@ -381,6 +381,24 @@ const API='https://api.sleeper.app/v1';
 const S=ms=>new Promise(r=>setTimeout(r,ms));
 let LD=null,PM={},CSF={},C1QB={};
 let ACTIVE_MGR=null,EXPANDED_TRADE_MGR=null;
+let SCOUT_TOP10=new Set();
+
+// ── GWTTKB PREMIUM FORMULA ──
+function scoutPremium(value, name){
+  if(SCOUT_TOP10.has(name))return 1.60;
+  if(value>=8000)return 1.45;
+  if(value>=6000)return 1.30;
+  if(value>=4000)return 1.10;
+  if(value>=2000)return 1.02;
+  return 1.0;
+}
+function scoutAdjVal(assets){
+  if(!assets||!assets.length)return 0;
+  const sorted=[...assets].sort((a,b)=>b.value-a.value);
+  const top=sorted[0];
+  const rest=sorted.slice(1);
+  return Math.round(top.value*scoutPremium(top.value,top.name)+rest.reduce((s,a)=>s+a.value,0));
+}
 // Historical values
 let HIST=null;        // full historical JSON
 let HIST_DATES=[];    // sorted date strings
@@ -632,6 +650,11 @@ async function loadHistoricalValues(){
         HIST_PLAYERS[n(name)]=p;
       }
     }
+
+    // Build top 10 for premium formula
+    const sorted10=[...Object.entries(CSF)].filter(([k])=>k.length>5).sort((a,b)=>b[1]-a[1]).slice(0,10);
+    SCOUT_TOP10=new Set(sorted10.map(([k])=>k));
+    console.log('Top 10 set:',SCOUT_TOP10.size,'players');
 
     HIST_LOADED=true;
     console.log(`Historical loaded: ${Object.keys(HIST_PICKS).length} pick labels, ${Object.keys(HIST_PLAYERS).length} players`);
@@ -1001,13 +1024,26 @@ async function runScout(username,leagueId){
         const dVthen=dropVals.reduce((s,v)=>s+v.then,0)+dPks.reduce((s,pk)=>s+PV(pk,tradeDateStr),0);
         const dVnow=dropVals.reduce((s,v)=>s+v.now,0)+dPks.reduce((s,pk)=>s+PVcurrent(pk),0);
 
+        // Build asset arrays for premium formula
+        const aAssets=[
+          ...adds.map(id=>({name:PM[id]?.name||id,value:addVals[adds.indexOf(id)]?.then||0})),
+          ...aPks.map((pk,i)=>({name:PL(pk,lgId),value:PV(pk,tradeDateStr)}))
+        ];
+        const dAssets=[
+          ...drops.map(id=>({name:PM[id]?.name||id,value:dropVals[drops.indexOf(id)]?.then||0})),
+          ...dPks.map((pk,i)=>({name:PL(pk,lgId),value:PV(pk,tradeDateStr)}))
+        ];
+        const aVadj=scoutAdjVal(aAssets);
+        const dVadj=scoutAdjVal(dAssets);
+
         return{team,rid,
           aP:adds.map(id=>PM[id]?.name||id),dP:drops.map(id=>PM[id]?.name||id),
           aPks:aPks.map(pk=>PL(pk,lgId)),dPks:dPks.map(pk=>PL(pk,lgId)),
           _rawAPks:aPks,_rawDPks:dPks,
-          aV:aVthen,dV:dVthen,
-          aVnow,dVnow,
-          net:aVthen-dVthen};
+          aV:aVthen,dV:dVthen,       // raw historical values
+          aVadj,dVadj,               // premium-adjusted values
+          aVnow,dVnow,               // current values
+          net:aVadj-dVadj};          // grade using premium-adjusted
       });
       const sorted=[...sides].sort((a,b)=>b.net-a.net);
       const winner=sorted[0],loser=sorted[1];
