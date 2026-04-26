@@ -217,6 +217,7 @@ let CTX={
   trendingAdds:[], trendingDrops:[],
   draftHistory:{}, contractKnowledge:{},
   isContractLeague:false, contractData:{},
+  nflContracts:{},
   nflStats:{}, sfVals:{}, qbVals:{},
   playerNames:{}, playerPos:{}, chain:[]
 };
@@ -261,8 +262,9 @@ async function lookupUser(){
     CTX.username=user.display_name||user.username;
     CTX.userId=user.user_id;
     // Get leagues
-    const leagues=await gFetch(`${API_URL}/user/${user.user_id}/leagues/nfl/2026`)
-      .catch(()=>gFetch(`${API_URL}/user/${user.user_id}/leagues/nfl/2025`));
+    const currentYear=new Date().getFullYear();
+    const leagues=await gFetch(`${API_URL}/user/${user.user_id}/leagues/nfl/${currentYear}`)
+      .catch(()=>gFetch(`${API_URL}/user/${user.user_id}/leagues/nfl/${currentYear-1}`));
     const dynasty=(leagues||[]).filter(l=>l.settings?.type===2);
     if(!dynasty.length)throw new Error('No dynasty leagues found for this username.');
     if(dynasty.length===1){
@@ -388,6 +390,33 @@ async function loadAllContext(){
         adds:p.count
       })).filter(p=>p.name!==p.id);
     }catch(e){}
+
+    setLoad(75,'LOADING NFL PLAYER CONTRACTS...');
+    // Pull NFL player contracts from Sleeper player data
+    // Sleeper stores years_exp, injury_status, and team for all players
+    // For actual NFL contracts we'll use a known contract data source
+    try{
+      const nflPlayers=await gFetch(`${API_URL}/players/nfl`);
+      CTX.nflContracts={};
+      for(const[id,p]of Object.entries(nflPlayers)){
+        if(!p?.full_name||!['QB','RB','WR','TE'].includes(p.position))continue;
+        CTX.nflContracts[id]={
+          name:p.full_name,
+          pos:p.position,
+          team:p.team||'FA',
+          age:p.age||0,
+          years_exp:p.years_exp||0,
+          status:p.status||'Active',
+          injury_status:p.injury_status||null,
+          // Contract year estimate based on draft year + rookie deal length
+          // Rookies get 4yr deals (5yr for 1st rounders)
+          est_contract_year: p.years_exp<=0?'R':
+            p.years_exp<=3?`Y${p.years_exp+1} of rookie`:
+            p.years_exp<=4?'Final yr rookie':'Veteran deal'
+        };
+      }
+      console.log('NFL player data loaded:',Object.keys(CTX.nflContracts).length,'players');
+    }catch(e){console.warn('NFL contracts:',e);}
 
     setLoad(78,'LOADING COACHING STAFF + PHASE 2 DATA...');
     try{
@@ -557,6 +586,24 @@ function buildSystemPrompt(){
   const signals=CTX.dynasty?.breakout_signals?
     Object.entries(CTX.dynasty.breakout_signals).map(([pos,sigs])=>`${pos.toUpperCase()}: ${sigs.join('; ')}`).join(' | '):'';
 
+  // NFL player contract context for my roster
+  const myRosterContracts=(CTX.myRoster||[]).slice(0,20).map(p=>{
+    const c=Object.values(CTX.nflContracts||{}).find(x=>x.name===p.name);
+    if(!c)return null;
+    const rookieVal=p.value>5000?'franchise':p.value>3000?'solid':'depth';
+    return`${p.name}(${c.team},${c.age}yo,${c.years_exp}yrsexp,${c.est_contract_year},${rookieVal})`;
+  }).filter(Boolean).join(', ');
+
+  // League-wide contract/age context
+  const leagueAgeContext=CTX.allTeams.map(t=>{
+    const avgAge=(t.players||[]).filter(p=>p.age>0).reduce((s,p,_,a)=>s+p.age/a.length,0)||0;
+    const rookies=(t.players||[]).filter(p=>{
+      const c=Object.values(CTX.nflContracts||{}).find(x=>x.name===p.name);
+      return c&&c.years_exp<=1;
+    }).length;
+    return`${t.username}:avgAge=${avgAge.toFixed(1)},rookies=${rookies}`;
+  }).join(' | ');
+
   // College breakout profiles
   const collegeProfiles=CTX.draftHistory?.college_breakout_profiles?
     Object.entries(CTX.draftHistory.college_breakout_profiles).map(([pos,prof])=>
@@ -705,10 +752,7 @@ function renderMessages(){
   const el=document.getElementById('messages');
   el.innerHTML=MESSAGES.map(m=>{
     const isCoach=m.role==='assistant';
-    const formatted=m.content
-      .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
-      .replace(/\*(.*?)\*/g,'<em>$1</em>')
-      .split('\n\n').map(p=>`<p>${p.replace(/\n/g,'<br>')}</p>`).join('');
+    const formatted=formatMsg(m.content);
     return`<div class="msg ${isCoach?'coach':'user'}">
       <div class="msg-avatar">${isCoach?'🏆':'👤'}</div>
       <div class="msg-bubble">${formatted}</div>
@@ -729,6 +773,13 @@ function showTyping(){
 function hideTyping(){
   const el=document.getElementById('typingMsg');
   if(el)el.remove();
+}
+
+function formatMsg(text){
+  return text
+    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g,'<em>$1</em>')
+    .split('\n\n').map(p=>'<p>'+p.replace(/\n/g,'<br>')+'</p>').join('');
 }
 
 async function sendMessage(text){
@@ -755,7 +806,8 @@ async function sendMessage(text){
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         model:'claude-sonnet-4-5',
-        max_tokens:2048,
+        max_tokens:1024,
+        stream:true,
         system:systemPrompt,
         messages:MESSAGES.map(m=>({role:m.role,content:m.content}))
       })
@@ -766,10 +818,58 @@ async function sendMessage(text){
       throw new Error(err.error?.message||'API error '+response.status);
     }
 
-    const data=await response.json();
-    const reply=data.content?.map(b=>b.type==='text'?b.text:'').join('')||'No response received.';
+    // Stream the response
     hideTyping();
-    addMessage('coach',reply);
+    const msgId='msg_'+Date.now();
+    MESSAGES.push({role:'assistant',content:''});
+    const msgIndex=MESSAGES.length-1;
+
+    // Add empty coach message to DOM
+    const el=document.getElementById('messages');
+    const div=document.createElement('div');
+    div.className='msg coach';
+    div.id=msgId;
+    div.innerHTML='<div class="msg-avatar">🏆</div><div class="msg-bubble" id="bubble_'+msgId+'"></div>';
+    el.appendChild(div);
+    el.scrollTop=el.scrollHeight;
+
+    // Read stream
+    const reader=response.body.getReader();
+    const decoder=new TextDecoder();
+    let fullText='';
+    let buffer='';
+
+    while(true){
+      const{done,value}=await reader.read();
+      if(done)break;
+      buffer+=decoder.decode(value,{stream:true});
+      const lines=buffer.split(String.fromCharCode(10));
+      buffer=lines.pop()||'';
+      for(const line of lines){
+        if(!line.startsWith('data: '))continue;
+        const data=line.slice(6).trim();
+        if(data==='[DONE]')break;
+        try{
+          const parsed=JSON.parse(data);
+          const delta=parsed.delta?.text||
+            parsed.choices?.[0]?.delta?.content||'';
+          if(delta){
+            fullText+=delta;
+            MESSAGES[msgIndex].content=fullText;
+            const bubble=document.getElementById('bubble_'+msgId);
+            if(bubble){
+              const formatted=formatMsg(fullText);
+              bubble.innerHTML=formatted;
+              el.scrollTop=el.scrollHeight;
+            }
+          }
+        }catch(e){}
+      }
+    }
+
+    // Final render
+    if(!fullText)fullText='No response received.';
+    MESSAGES[msgIndex].content=fullText;
 
   }catch(e){
     hideTyping();
@@ -799,7 +899,7 @@ function resetChat(){
     allTeams:[],gradedTrades:[],tRec:{},waiverAct:{},consensusTop:[],gwttkbTop:[],
     picks:{},coaching:{},dynasty:{},trending:[],trendingAdds:[],trendingDrops:[],
     draftHistory:{},contractKnowledge:{},isContractLeague:false,contractData:{},
-    nflStats:{},sfVals:{},qbVals:{},playerNames:{},playerPos:{},chain:[]};
+    nflContracts:{},nflStats:{},sfVals:{},qbVals:{},playerNames:{},playerPos:{},chain:[]};
   MESSAGES=[];
   document.getElementById('chatWrap').style.display='none';
   document.getElementById('onboardScreen').style.display='flex';
