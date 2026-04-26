@@ -311,7 +311,27 @@ body{background:var(--bg);color:var(--txt);font-family:'Barlow',sans-serif;overf
 <script>
 // ── STATE ──
 let FORMAT = 'sf_ppr';
-let PLAYERS = {}; // normalized name → player data
+let PLAYERS = {};
+let TOP_TEN_NAMES = new Set(); // updated after data loads
+
+// ── GWTTKB PREMIUM TRADE VALUE FORMULA ──
+function premiumMultiplier(value, playerName) {
+  if (TOP_TEN_NAMES.has(playerName)) return 1.60;
+  if (value >= 8000) return 1.45;
+  if (value >= 6000) return 1.30;
+  if (value >= 4000) return 1.10;
+  if (value >= 2000) return 1.02;
+  return 1.0;
+}
+
+function adjustedSideValue(assets) {
+  if (!assets || !assets.length) return 0;
+  const sorted = [...assets].sort((a, b) => b.value - a.value);
+  const top = sorted[0];
+  const rest = sorted.slice(1);
+  const topAdj = top.value * premiumMultiplier(top.value, top.name);
+  return Math.round(topAdj + rest.reduce((s, a) => s + a.value, 0));
+} // normalized name → player data
 let PICKS = [];   // pick objects
 let SIDES = { A: [], B: [] }; // arrays of asset objects
 
@@ -324,6 +344,15 @@ async function loadData() {
     ]);
     const gData = await gRes.json();
     const cData = await cRes.json();
+
+    // Build top 10 set for premium formula
+    function buildTop10(fmt) {
+      const fmtKey = fmt === 'sf_ppr' ? 'sf_ppr' : 'qb1_ppr';
+      const players = cData?.formats?.[fmtKey]?.players || [];
+      const sorted = [...players].sort((a, b) => b.value - a.value);
+      TOP_TEN_NAMES = new Set(sorted.slice(0, 10).map(p => p.name));
+    }
+    buildTop10(FORMAT);
 
     // Build player lookup from GWTTKB rankings (primary)
     function buildLookup(fmt) {
@@ -516,8 +545,15 @@ function renderSide(side) {
 
 // ── VERDICT ──
 function updateVerdict() {
-  const tA = SIDES.A.reduce((s,a) => s+a.value, 0);
-  const tB = SIDES.B.reduce((s,a) => s+a.value, 0);
+  // Raw totals
+  const rawA = SIDES.A.reduce((s,a) => s+a.value, 0);
+  const rawB = SIDES.B.reduce((s,a) => s+a.value, 0);
+  // Premium-adjusted totals (GWTTKB formula — top asset gets multiplier)
+  const tA = adjustedSideValue(SIDES.A);
+  const tB = adjustedSideValue(SIDES.B);
+  // Top assets
+  const topA = [...SIDES.A].sort((a,b)=>b.value-a.value)[0];
+  const topB = [...SIDES.B].sort((a,b)=>b.value-a.value)[0];
   const card = document.getElementById('verdictCard');
   const empty = document.getElementById('verdictEmpty');
   const result = document.getElementById('verdictResult');
@@ -553,12 +589,17 @@ function updateVerdict() {
   else if (pct <= 50) { grade = 'D';  gradeMod = ''; }
   else                { grade = 'F';  gradeMod = ''; }
 
+  const multA = topA ? premiumMultiplier(topA.value, topA.name) : 1;
+  const multB = topB ? premiumMultiplier(topB.value, topB.name) : 1;
+
   document.getElementById('vTeamA').textContent = tA.toLocaleString();
   document.getElementById('vTeamA').className = `verdict-team ${tA >= tB ? 'winner' : 'loser'}`;
-  document.getElementById('vValA').textContent = `Side A total`;
+  document.getElementById('vValA').textContent = topA && multA > 1 ?
+    `${topA.name} ×${multA} premium · raw ${rawA.toLocaleString()}` : `Side A total`;
   document.getElementById('vTeamB').textContent = tB.toLocaleString();
   document.getElementById('vTeamB').className = `verdict-team ${tB >= tA ? 'winner' : 'loser'}`;
-  document.getElementById('vValB').textContent = `Side B total`;
+  document.getElementById('vValB').textContent = topB && multB > 1 ?
+    `${topB.name} ×${multB} premium · raw ${rawB.toLocaleString()}` : `Side B total`;
 
   const gradeEl = document.getElementById('gradeCircle');
   gradeEl.className = `grade-circle grade-${grade}`;
