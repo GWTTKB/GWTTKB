@@ -218,6 +218,9 @@ let CTX={
   draftHistory:{}, contractKnowledge:{},
   isContractLeague:false, contractData:{},
   nflContracts:{},
+  nflContractData:{},
+  contractCredit:'',
+  teamContext:{},
   nflStats:{}, sfVals:{}, qbVals:{},
   playerNames:{}, playerPos:{}, chain:[]
 };
@@ -420,16 +423,18 @@ async function loadAllContext(){
 
     setLoad(78,'LOADING COACHING STAFF + PHASE 2 DATA...');
     try{
-      const[coachRes,dkRes,draftRes,contractRes]=await Promise.all([
+      const[coachRes,dkRes,draftRes,contractRes,teamCtxRes]=await Promise.all([
         fetch('/data/coaching-staff.json'),
         fetch('/data/dynasty-knowledge.json'),
         fetch('/data/nfl-draft-history.json'),
-        fetch('/data/contract-knowledge.json')
+        fetch('/data/contract-knowledge.json'),
+        fetch('/data/nfl-team-context.json')
       ]);
       CTX.coaching=coachRes.ok?(await coachRes.json()).teams:{};
       CTX.dynasty=dkRes.ok?await dkRes.json():{};
       CTX.draftHistory=draftRes.ok?await draftRes.json():{};
       CTX.contractKnowledge=contractRes.ok?await contractRes.json():{};
+      CTX.teamContext=teamCtxRes.ok?(await teamCtxRes.json()).teams:{};
     }catch(e){console.warn('Phase 2 data:',e);}
 
     setLoad(86,'CHECKING CONTRACT LEAGUE...');
@@ -495,11 +500,12 @@ async function loadDynastyData(){
   CTX.sfVals={};CTX.qbVals={};CTX.playerNames={};CTX.playerPos={};
 
   try{
-    const[cRes,gRes,hRes,pkRes]=await Promise.all([
+    const[cRes,gRes,hRes,pkRes,contractsRes]=await Promise.all([
       fetch('/data/consensus.json'),
       fetch('/data/leland-rankings.json'),
       fetch('/data/historical-players.json').catch(()=>null),
-      fetch('/data/historical-picks.json').catch(()=>null)
+      fetch('/data/historical-picks.json').catch(()=>null),
+      fetch('/data/nfl-contracts.json').catch(()=>null)
     ]);
 
     // Consensus
@@ -586,13 +592,21 @@ function buildSystemPrompt(){
   const signals=CTX.dynasty?.breakout_signals?
     Object.entries(CTX.dynasty.breakout_signals).map(([pos,sigs])=>`${pos.toUpperCase()}: ${sigs.join('; ')}`).join(' | '):'';
 
-  // NFL player contract context for my roster
+  // NFL contract data for my roster (from OTC via nflverse)
   const myRosterContracts=(CTX.myRoster||[]).slice(0,20).map(p=>{
-    const c=Object.values(CTX.nflContracts||{}).find(x=>x.name===p.name);
+    const c=CTX.nflContractData?.[p.name]||CTX.nflContractData?.[p.name?.toLowerCase()];
     if(!c)return null;
-    const rookieVal=p.value>5000?'franchise':p.value>3000?'solid':'depth';
-    return`${p.name}(${c.team},${c.age}yo,${c.years_exp}yrsexp,${c.est_contract_year},${rookieVal})`;
-  }).filter(Boolean).join(', ');
+    return`${p.name}(${c.team},$${c.apy}M/yr,${c.years_remaining}yrs_left,${c.status},guaranteed:$${c.guaranteed}M)`;
+  }).filter(Boolean).join(' | ');
+
+  // Top expiring contracts league-wide (dynasty sell signals)
+  const expiringContracts=Object.values(CTX.nflContractData||{})
+    .filter((c,i,a)=>i===a.findIndex(x=>x.name===c.name)) // dedupe
+    .filter(c=>c.status==='expiring'&&['QB','RB','WR','TE'].includes(c.pos))
+    .sort((a,b)=>b.apy-a.apy)
+    .slice(0,15)
+    .map(c=>`${c.name}(${c.pos},${c.team},$${c.apy}M/yr)`)
+    .join(', ');
 
   // League-wide contract/age context
   const leagueAgeContext=CTX.allTeams.map(t=>{
@@ -684,6 +698,15 @@ ${trendDrops||'No trending data'}
 NFL COACHING STAFF (team: HC/OC/scheme):
 ${coachCtx}
 
+NFL TEAM CONTEXT (2026 current situations — depth charts, scheme, dynasty notes):
+\${Object.entries(CTX.teamContext||{}).slice(0,32).map(([team,data])=>{
+  const cur=data['2026']||data['2025']||{};
+  return team+': QB='+( cur.qb||'?')+' WR1='+(cur.wr1||'?')+' RB1='+(cur.rb1||'?')+' TE1='+(cur.te1||'?')+' | '+(cur.notes||'').slice(0,120);
+}).join(' || ')}
+
+HISTORICAL TEAM CONTEXT (when asked about specific years, full detail available):
+\${Object.keys(CTX.teamContext||{}).length} teams loaded with 2020-2026 depth charts and notes.
+
 2025 NFL DRAFT TOP 20 PICKS:
 ${draft2025}
 
@@ -730,6 +753,9 @@ KEY BEHAVIORS:
 - Reference specific opponents by name from the tendencies data above
 - Use the trending data: "Chase has been added in X leagues in 48 hours — here's what that signal means"
 - Find the angle no one is thinking about. That's the job.
+- Use contract data to spot dynasty angles: expiring contracts = sell urgency, long deals = stability, $30M+ QBs are locked in
+- When contract data is available, cite it: "per OverTheCap data" — adds credibility
+- A player on a 1-year deal entering free agency is a dynasty sell signal regardless of current performance
 - If someone mentions a player's college stats, you know what they mean for dynasty value
 - Draft capital matters: a 1.01 pick has different upside ceiling than a 1.10 even at same dynasty value`;
 }
@@ -914,7 +940,10 @@ function resetChat(){
     allTeams:[],gradedTrades:[],tRec:{},waiverAct:{},consensusTop:[],gwttkbTop:[],
     picks:{},coaching:{},dynasty:{},trending:[],trendingAdds:[],trendingDrops:[],
     draftHistory:{},contractKnowledge:{},isContractLeague:false,contractData:{},
-    nflContracts:{},nflStats:{},sfVals:{},qbVals:{},playerNames:{},playerPos:{},chain:[]};
+    nflContracts:{},
+  nflContractData:{},
+  contractCredit:'',
+  teamContext:{},nflStats:{},sfVals:{},qbVals:{},playerNames:{},playerPos:{},chain:[]};
   MESSAGES=[];
   document.getElementById('chatWrap').style.display='none';
   document.getElementById('onboardScreen').style.display='flex';
