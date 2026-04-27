@@ -219,6 +219,7 @@ let CTX={
   isContractLeague:false, contractData:{},
   nflContracts:{},
   nflContractData:{},
+  crossLeague:{},
   contractCredit:'',
   teamContext:{},
   nflStats:{}, sfVals:{}, qbVals:{},
@@ -384,10 +385,93 @@ async function loadAllContext(){
     }
     CTX.tRec=tRec;
 
-    setLoad(72,'LOADING TRENDING PLAYERS...');
+    setLoad(68,'LOADING CROSS-LEAGUE INTEL...');
+    // Load cross-league data for every opponent
+    CTX.crossLeague={};
     try{
-      const trending=await gFetch('https://api.sleeper.app/v1/players/nfl/trending/add?lookback_hours=48&limit=25');
-      CTX.trending=(trending||[]).map(p=>({
+      const opponents=CTX.allTeams.filter(t=>!t.isMe&&t.owner_id);
+      const currentYr=parseInt(CTX.league?.season||2026);
+
+      await Promise.all(opponents.map(async opp=>{
+        try{
+          const oppLeagues=await gFetch(`${API_URL}/user/${opp.owner_id}/leagues/nfl/${currentYr}`)
+            .catch(()=>[]);
+          const dynastyLeagues=(oppLeagues||[]).filter(l=>
+            l.settings?.type===2&&l.league_id!==CTX.league.league_id
+          );
+
+          const profile={
+            username:opp.username,
+            other_leagues:dynastyLeagues.map(l=>({
+              name:l.name,id:l.league_id,
+              sf:(l.roster_positions||[]).includes('SUPER_FLEX')
+            })),
+            rosters:[],
+            fav_players:[],
+            team_fandom:{},
+            draft_patterns:[]
+          };
+
+          // Load their rosters in other leagues
+          await Promise.all(dynastyLeagues.slice(0,4).map(async lg=>{
+            try{
+              const roster=await gFetch(`${API_URL}/league/${lg.league_id}/rosters`);
+              const myRoster=(roster||[]).find(r=>r.owner_id===opp.owner_id);
+              if(myRoster?.players){
+                const players=myRoster.players.map(id=>({
+                  id,name:CTX.playerNames[id]||id,
+                  pos:CTX.playerPos[id]||'?',
+                  value:CTX.isSF?(CTX.sfVals[id]||0):(CTX.qbVals[id]||0)
+                })).filter(p=>['QB','RB','WR','TE'].includes(p.pos)&&p.value>0)
+                  .sort((a,b)=>b.value-a.value);
+                profile.rosters.push({league:lg.name,players:players.slice(0,8)});
+
+                // Track player ownership across leagues
+                for(const p of players){
+                  if(!profile.fav_players.find(x=>x.name===p.name)){
+                    profile.fav_players.push({...p,leagues:1});
+                  }else{
+                    profile.fav_players.find(x=>x.name===p.name).leagues++;
+                  }
+                }
+
+                // Team fandom detection
+                const nflTeams={};
+                for(const p of players){
+                  const pData=CTX.nflContracts?.[p.id]||Object.values(CTX.nflContracts||{}).find(x=>x.name===p.name);
+                  const team=pData?.team||'';
+                  if(team)nflTeams[team]=(nflTeams[team]||0)+1;
+                }
+                for(const[team,cnt]of Object.entries(nflTeams)){
+                  profile.team_fandom[team]=(profile.team_fandom[team]||0)+cnt;
+                }
+              }
+            }catch(e){}
+          }));
+
+          // Sort fav players by league count
+          profile.fav_players.sort((a,b)=>b.leagues-a.leagues||b.value-a.value);
+
+          // Find team fandom (3+ players from same NFL team)
+          profile.team_fandom_flags=Object.entries(profile.team_fandom)
+            .filter(([,cnt])=>cnt>=3)
+            .sort((a,b)=>b[1]-a[1])
+            .map(([team,cnt])=>({team,count:cnt}));
+
+          CTX.crossLeague[opp.username]=profile;
+        }catch(e){console.warn('Cross-league failed for',opp.username,e.message);}
+      }));
+
+      console.log('Cross-league loaded for:',Object.keys(CTX.crossLeague).join(', '));
+    }catch(e){console.warn('Cross-league error:',e);}
+
+    setLoad(76,'LOADING TRENDING PLAYERS...');
+    try{
+      const[addTrendR,dropTrendR]=await Promise.all([
+        gFetch('https://api.sleeper.app/v1/players/nfl/trending/add?lookback_hours=48&limit=25'),
+        gFetch('https://api.sleeper.app/v1/players/nfl/trending/drop?lookback_hours=48&limit=15').catch(()=>[])
+      ]);
+      CTX.trending=(addTrendR||[]).map(p=>({
         id:p.player_id,
         name:CTX.playerNames[p.player_id]||p.player_id,
         adds:p.count
@@ -683,6 +767,14 @@ THEIR FULL ROSTER (name/pos/value): ${myRosterStr}`:'USER ROSTER: Not loaded'}
 ALL LEAGUE MANAGERS (name: W-L, value, top 4 players):
 ${teamsStr}
 
+CROSS-LEAGUE INTEL ON OPPONENTS (what they own in OTHER leagues — not just BYX):
+\${Object.entries(CTX.crossLeague||{}).map(([un,p])=>{
+  const topOwned=p.fav_players?.slice(0,5).map(x=>x.name+'('+x.leagues+'leagues)').join(',');
+  const fandom=p.team_fandom_flags?.slice(0,2).map(x=>x.team+'('+x.count+'players)').join(',');
+  const otherLeagues=p.other_leagues?.length||0;
+  return un+': '+otherLeagues+' other leagues | owns across leagues: '+topOwned+(fandom?' | NFL fandom: '+fandom:'');
+}).join(' || ')||'Cross-league data loading...'}
+
 MANAGER TRADE TENDENCIES (who does what):
 ${tendStr||'Insufficient trade history'}
 
@@ -942,6 +1034,7 @@ function resetChat(){
     draftHistory:{},contractKnowledge:{},isContractLeague:false,contractData:{},
     nflContracts:{},
   nflContractData:{},
+  crossLeague:{},
   contractCredit:'',
   teamContext:{},nflStats:{},sfVals:{},qbVals:{},playerNames:{},playerPos:{},chain:[]};
   MESSAGES=[];
