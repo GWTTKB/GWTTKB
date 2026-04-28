@@ -477,7 +477,7 @@ async function main() {
   try {
     console.log('\nFetching NFL contracts from nflverse/OTC...');
     const contractsUrl = 'https://github.com/nflverse/nflverse-data/releases/download/contracts/contracts.csv';
-    const cRes = await fetch(contractsUrl);
+    const cRes = await fetch(contractsUrl, { redirect:'follow', headers:{'User-Agent':'GWTTKB/1.0'} });
     if (cRes.ok) {
       const csv = await cRes.text();
       const lines = csv.split('\n').filter(l => l.trim());
@@ -595,7 +595,7 @@ async function buildNFLStats() {
     try {
       console.log(`  Fetching season stats ${yr}...`);
       const url = `${BASE}/player_stats/player_stats_${yr}.csv`;
-      const res = await fetch(url);
+      const res = await fetch(url, { redirect:'follow', headers:{'User-Agent':'GWTTKB/1.0'} });
       if (!res.ok) { console.warn(`    Skipped ${yr}: ${res.status}`); continue; }
       const csv = await res.text();
       const rows = parseCSV(csv);
@@ -658,7 +658,7 @@ async function buildNFLStats() {
     for (const yr of YEARS) {
       try {
         const url = `${BASE}/nextgen_stats/nextgen_stats_${statType}_${yr}.csv`;
-        const res = await fetch(url);
+        const res = await fetch(url, { redirect:'follow', headers:{'User-Agent':'GWTTKB/1.0'} });
         if (!res.ok) continue;
         const csv = await res.text();
         const rows = parseCSV(csv);
@@ -701,7 +701,7 @@ async function buildNFLStats() {
     for (const yr of YEARS) {
       try {
         const url = `${BASE}/pfr_advstats/advstats_season_${statType}_${yr}.csv`;
-        const res = await fetch(url);
+        const res = await fetch(url, { redirect:'follow', headers:{'User-Agent':'GWTTKB/1.0'} });
         if (!res.ok) continue;
         const csv = await res.text();
         const rows = parseCSV(csv);
@@ -809,6 +809,13 @@ function normNameStats(s) { return (s||'').toLowerCase().replace(/[^a-z]/g,''); 
 // ── MAIN EXECUTION ──
 async function buildAll() {
   await main();
-  try { await buildNFLStats(); } catch(e) { console.warn('NFL stats build failed:', e.message); }
+  console.log('\n--- Starting NFL Stats Build ---');
+  try {
+    await buildNFLStats();
+    console.log('--- NFL Stats Build Complete ---');
+  } catch(e) {
+    console.error('NFL stats build FAILED:', e.message);
+    console.error(e.stack);
+  }
 }
 buildAll().catch(console.error);
