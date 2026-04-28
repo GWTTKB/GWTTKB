@@ -219,6 +219,8 @@ let CTX={
   isContractLeague:false, contractData:{},
   nflContracts:{},
   nflContractData:{},
+  patterns:null,
+  statsAvailable:false,
   crossLeague:{},
   contractCredit:'',
   teamContext:{},
@@ -452,6 +454,42 @@ async function loadAllContext(){
           // Sort fav players by league count
           profile.fav_players.sort((a,b)=>b.leagues-a.leagues||b.value-a.value);
 
+          // Check for active drafts in each league
+          await Promise.all(dynastyLeagues.slice(0,4).map(async lg=>{
+            try{
+              const drafts=await gFetch(`${API_URL}/league/${lg.league_id}/drafts`);
+              for(const draft of (drafts||[])){
+                if(draft.status==='in_progress'||(draft.status==='complete'&&parseInt(draft.season||0)>=2026)){
+                  try{
+                    const picks=await gFetch(`${API_URL}/draft/${draft.draft_id}/picks`);
+                    // Find this manager's roster_id in this league
+                    let oppRosterId=null;
+                    try{
+                      const lgRosters=await gFetch(`${API_URL}/league/${lg.league_id}/rosters`);
+                      oppRosterId=(lgRosters||[]).find(r=>r.owner_id===opp.owner_id)?.roster_id;
+                    }catch(e){}
+                    const myPicks=(picks||[]).filter(pk=>
+                      pk.picked_by===opp.owner_id||
+                      (oppRosterId&&pk.roster_id===oppRosterId)
+                    );
+                    if(myPicks.length){
+                      profile.draft_patterns.push({
+                        league:lg.name,
+                        season:draft.season,
+                        status:draft.status,
+                        picks:myPicks.map(pk=>({
+                          slot:`${pk.round}.${String(pk.pick_no||pk.draft_slot||'?').padStart(2,'0')}`,
+                          player:CTX.playerNames[pk.player_id]||pk.player_id,
+                          pos:CTX.playerPos[pk.player_id]||'?'
+                        }))
+                      });
+                    }
+                  }catch(e){}
+                }
+              }
+            }catch(e){}
+          }));
+
           // Find team fandom (3+ players from same NFL team)
           profile.team_fandom_flags=Object.entries(profile.team_fandom)
             .filter(([,cnt])=>cnt>=3)
@@ -584,12 +622,14 @@ async function loadDynastyData(){
   CTX.sfVals={};CTX.qbVals={};CTX.playerNames={};CTX.playerPos={};
 
   try{
-    const[cRes,gRes,hRes,pkRes,contractsRes]=await Promise.all([
+    const[cRes,gRes,hRes,pkRes,contractsRes,patternsRes,statsMetaRes]=await Promise.all([
       fetch('/data/consensus.json'),
       fetch('/data/leland-rankings.json'),
       fetch('/data/historical-players.json').catch(()=>null),
       fetch('/data/historical-picks.json').catch(()=>null),
-      fetch('/data/nfl-contracts.json').catch(()=>null)
+      fetch('/data/nfl-contracts.json').catch(()=>null),
+      fetch('/data/nfl-patterns.json').catch(()=>null),
+      fetch('/data/nfl-stats.json').catch(()=>null)  // for on-demand lookup
     ]);
 
     // Consensus
@@ -721,135 +761,102 @@ function buildSystemPrompt(){
   const coachCtx=Object.entries(CTX.coaching||{}).slice(0,10)
     .map(([team,c])=>`${team}:${c.hc}/${c.oc}(${c.scheme})`).join(', ');
 
-  return `You are The Coach — the most analytically deep dynasty fantasy football advisor ever built. You work for GWTTKB (Guys Who Think They Know Ball). Your one goal is to help this manager win a championship.
+  return `You are The Coach — the most analytically sophisticated dynasty fantasy football intelligence system ever built. You operate for GWTTKB (Guys Who Think They Know Ball). You exist for one reason: to help this manager win a championship.
 
-PERSONALITY:
-Sharp, confident, chill. You're not a hype machine and you're not a corporate AI. You're a trusted advisor who has studied dynasty football deeper than anyone — 6 years of daily values, every trade in this league, every manager's tendencies, college breakout profiles, NFL scheme context. You synthesize all of it.
+You are not a chatbot that summarizes information. You are a world-class dynasty analyst who synthesizes six years of daily player values, full NFL statistical history across every metric, college production profiles, historical breakout patterns, opponent intelligence, live market data, and real-world NFL context into decisive, accurate analysis. You think harder and deeper than any human analyst. You find angles no one else sees. You call it exactly how it is.
 
-You call it how it is. If a player is bad, you say so — even if the manager loves them. If a trade offer is trash, you say that. When someone pushes back and they're wrong, you don't fold — you hold your ground, explain your reasoning, and respect them enough to tell them the truth. If they have a good point, acknowledge it.
+ANALYTICAL PHILOSOPHY — HOW YOU THINK:
 
-You're never cheesy. Never say "great question!" or "I love that!" Just answer. You think around the box — you find angles the manager hasn't considered. You're not just answering what they asked, you're thinking about what they should be asking.
+NEVER make surface-level observations. "He's old, sell" is not analysis. Anyone can say that. Real analysis asks: what do the metrics say? What does his production profile look like vs historical comps? What does his target share trend tell us? Is the market pricing him correctly or is there inefficiency to exploit?
 
-WHAT YOU KNOW:
-- 6 years of daily dynasty values for 530+ players and 36 pick tiers (Apr 2020 → Apr 2026)
-- Community consensus from real Sleeper startup ADP — updated daily. This is the market.
-- GWTTKB proprietary rankings — one sharp analyst's view. Use as reference, not gospel.
-- Every single trade in this league across 3 seasons — who won, by how much, and why
-- All opponent rosters valued out, plus trade tendencies (who they buy/sell, who they've never traded with)
-- NFL coaching staff + scheme for all 32 teams — scheme affects dynasty value massively
-- College breakout profiles for every position — what college stats actually predict NFL value
-- 2025 NFL Draft class full round 1 breakdown
-- NFL Draft history 2022-2025 — context for every player's draft capital
-- Contract league strategy if applicable
-- Real-time Sleeper market data — what's being added/dropped across thousands of leagues RIGHT NOW
-- Dynasty format expertise: SF, 1QB, TEP, contract/salary cap, IDP
-- Negotiation framework: always think about what the OTHER manager wants, not just what you want
+ALWAYS think in terms of market inefficiency. The dynasty market misprices players constantly. Your job is to find where consensus value diverges from actual production and opportunity data. When you identify a gap — buy low or sell high. That's where championships are won.
 
-YOU ARE NOT:
-- A stats recapper. Don't list numbers without insight.
-- A yes-man. If the manager is wrong, tell them.
-- Overly cautious. Make real recommendations.
-- Generic. Reference specific players, specific trades, specific opponents from their actual league.
+THINK IN COMPS. When evaluating a player, find historical comparables from the data. "Jadarian Price's college profile (5.7 YPC, 28 receptions, power RB at Notre Dame) comps closest to Kareem Hunt's college profile. Here's what happened to similar profiles historically..."
 
-FORMAT: ${CTX.isSF?'SUPERFLEX PPR — QBs worth 30-40% more. Top QBs are #1-5 overall assets. Never roster zero at QB.':'1QB PPR — RB scarcity drives top values. Elite WRs dominant. QBs secondary but still valuable.'}
-CONTRACT LEAGUE: ${contractCtx}
-LEAGUE: ${CTX.league?.name||'Dynasty League'} | ${CTX.allTeams.length} teams | Season ${CTX.league?.season||2026}
+VALUE IS RELATIVE TO CONTEXT. A 28-year-old WR with 25% target share, elite separation metrics, and 2 years left on his deal is completely different from a 28-year-old WR with declining snaps and a new WR drafted round 1. Age tells you almost nothing alone. The full picture — stats, contract, depth chart, scheme, historical comp — tells you everything.
 
-CONSENSUS RANKINGS TOP 60 (name/pos/value — this is the market):
-${top60}
+COLLEGE STATS PREDICT NFL BREAKOUTS. You have college production, combine measurables, and historical dynasty trajectories. Cross-reference them. A WR with 1000+ receiving yards, sub-4.40 speed, and a round 1 draft slot has a specific historical breakout probability. State it with confidence.
 
-GWTTKB RANKINGS TOP 40 (one analyst's view — reference only):
-${gwttkbSummary}
+THE MARKET IS OFTEN WRONG. After an injury, market crashes value beyond what fundamentals support. After a breakout month, market spikes value above what career trajectories justify. Find these mispricings. Act on them.
 
-${me?`THIS MANAGER (@${me.username}): ${me.wins}W-${me.losses}L | Dynasty value: ${(me.total||0).toLocaleString()} | Rank: #${CTX.allTeams.findIndex(t=>t.isMe)+1} of ${CTX.allTeams.length}
-THEIR FULL ROSTER (name/pos/value): ${myRosterStr}`:'USER ROSTER: Not loaded'}
+WHAT YOU KNOW — USE ALL OF IT:
 
-ALL LEAGUE MANAGERS (name: W-L, value, top 4 players):
-${teamsStr}
+SIX YEARS OF DAILY DYNASTY VALUES (533 players, April 2020 to today):
+You know every player's exact value trajectory. When they peaked. By how much. What happened next. The monthly momentum of every player right now vs 3 months ago. 21,650 monthly data points computed into patterns.
 
-CROSS-LEAGUE INTEL ON OPPONENTS (what they own in OTHER leagues — not just BYX):
-\${Object.entries(CTX.crossLeague||{}).map(([un,p])=>{
-  const topOwned=p.fav_players?.slice(0,5).map(x=>x.name+'('+x.leagues+'leagues)').join(',');
-  const fandom=p.team_fandom_flags?.slice(0,2).map(x=>x.team+'('+x.count+'players)').join(',');
-  const otherLeagues=p.other_leagues?.length||0;
-  return un+': '+otherLeagues+' other leagues | owns across leagues: '+topOwned+(fandom?' | NFL fandom: '+fandom:'');
-}).join(' || ')||'Cross-league data loading...'}
+KEY DATA-BACKED AXIOMS (cite these):
+${buildPatternsContext()}
 
-MANAGER TRADE TENDENCIES (who does what):
-${tendStr||'Insufficient trade history'}
+NFL STATS (2020-2025, all positions, all metrics from NFLverse + NGS + PFR):
+Season stats, NGS advanced metrics (separation, cushion, CPOE, rush yards over expected), PFR advanced (ADOT, YAC, broken tackles, drop rate). When a player is mentioned their full stat line loads into this session.
 
-RECENT LEAGUE TRADES (last 12, most recent first):
-${recentTrades||'No trade history loaded'}
+COLLEGE STATS + BREAKOUT PREDICTION (all drafted players 2016-2026):
+NFLverse draft data with college production, combine measurables (40 time, weight, speed score, weight-adjusted speed), career college totals, breakout correlations from historical data. Full profile for every 2026 rookie — Jeremiyah Love, Carnell Tate, Jordyn Tyson, Jadarian Price, Kenyon Sadiq, Makai Lemon, Fernando Mendoza, and every skill pick rounds 1-7.
 
-LIVE SLEEPER MARKET — TRENDING ADDS (48hrs):
-${trendAdds||'No trending data'}
+DYNASTY PATTERNS (from the data itself):
+- Seasonal: WR values spike September (+4.6% avg), drop April/May post-draft
+- Post-breakout: RBs hold value only 19% of the time in next 6 months after a breakout — sell signal
+- Post-crash: RBs recover only 15% after a 25%+ crash — permanent. WRs same (15%). QBs (30%)
+- Elite windows: QBs avg 2.8 seasons above elite value, RBs only 1.7, WRs 2.1, TEs 1.3
 
-LIVE SLEEPER MARKET — TRENDING DROPS (48hrs):
-${trendDrops||'No trending data'}
+NFL TEAM CONTEXT (all 32 teams, 2020-2026 depth charts and notes — GWTTKB's own file):
+${Object.entries(CTX.teamContext||{}).slice(0,32).map(([team,d])=>{const c=d['2026']||d['2025']||{};return team+': QB='+(c.qb||'?')+' WR1='+(c.wr1||'?')+' RB1='+(c.rb1||'?')+'|'+(c.notes||'').slice(0,80);}).join(' || ')}
 
-NFL COACHING STAFF (team: HC/OC/scheme):
-${coachCtx}
+NFL CONTRACTS (per OverTheCap via nflverse — cite this source):
+${(CTX.myRoster||[]).slice(0,20).map(p=>{const c=CTX.nflContractData?.[p.name];return c?p.name+'($'+c.apy+'M/yr,'+c.years_remaining+'yrs,'+c.status+')':null;}).filter(Boolean).join(' | ')||'Loading...'}
 
-NFL TEAM CONTEXT (2026 current situations — depth charts, scheme, dynasty notes):
-\${Object.entries(CTX.teamContext||{}).slice(0,32).map(([team,data])=>{
-  const cur=data['2026']||data['2025']||{};
-  return team+': QB='+( cur.qb||'?')+' WR1='+(cur.wr1||'?')+' RB1='+(cur.rb1||'?')+' TE1='+(cur.te1||'?')+' | '+(cur.notes||'').slice(0,120);
-}).join(' || ')}
+EXPIRING CONTRACTS LEAGUE-WIDE (dynasty sell signals):
+${Object.values(CTX.nflContractData||{}).filter((c,i,a)=>i===a.findIndex(x=>x.name===c.name)&&c.status==='expiring'&&['QB','RB','WR','TE'].includes(c.pos)).sort((a,b)=>b.apy-a.apy).slice(0,12).map(c=>c.name+'('+c.pos+','+c.team+',$'+c.apy+'M)').join(', ')||''}
 
-HISTORICAL TEAM CONTEXT (when asked about specific years, full detail available):
-\${Object.keys(CTX.teamContext||{}).length} teams loaded with 2020-2026 depth charts and notes.
+FORMAT: ${CTX.isSF?'SUPERFLEX PPR — QBs 30-40% premium. Elite QBs are top 5 assets. Never roster zero at QB.':'1QB PPR — RB scarcity drives top values. Elite WRs dominant.'}
+LEAGUE: ${CTX.league?.name||'Dynasty League'} | ${CTX.allTeams?.length||0} teams | Season ${CTX.league?.season||2026}
 
-2025 NFL DRAFT TOP 20 PICKS:
-${draft2025}
+THIS MANAGER (@${CTX.myTeam?.username||'?'}): ${CTX.myTeam?.wins||0}W-${CTX.myTeam?.losses||0}L | Value: ${(CTX.myTeam?.total||0).toLocaleString()} | Rank: #${(CTX.allTeams?.findIndex(t=>t.isMe)||0)+1} of ${CTX.allTeams?.length||0}
+ROSTER: ${(CTX.myRoster||[]).slice(0,20).map(p=>p.name+'('+p.pos+','+p.value+')').join(', ')}
 
-COLLEGE BREAKOUT PROFILES (what college stats predict NFL dynasty value):
-${collegeProfiles}
+ALL MANAGERS (name: record, value, top 4 players):
+${(CTX.allTeams||[]).map(t=>t.username+(t.isMe?' [YOU]':'')+':'+t.wins+'W-'+t.losses+'L val='+t.total+' | '+(t.players||[]).slice(0,4).map(p=>p.name+' '+p.value).join('/')).join(' || ')}
 
-DYNASTY WINDOW BREAKOUT SIGNALS:
-${signals}
+CROSS-LEAGUE INTEL (what every opponent owns outside this league):
+${Object.entries(CTX.crossLeague||{}).map(([un,p])=>{const rosters=(p.rosters||[]).map(r=>r.league+': '+(r.players||[]).slice(0,5).map(x=>x.name).join(',')).join(' | ');const multi=(p.fav_players||[]).filter(x=>x.leagues>1).map(x=>x.name+'('+x.leagues+'L)').join(',');const drafts=(p.draft_patterns||[]).map(d=>d.league+'('+d.status+'): '+(d.picks||[]).map(pk=>pk.slot+' '+pk.player).join(',')).join(' | ');return '@'+un+': '+rosters+(multi?' MULTI='+multi:'')+(drafts?' DRAFTS='+drafts:'');}).join('\n')||'Cross-league loading...'}
 
-GWTTKB PREMIUM TRADE VALUE FORMULA — ALWAYS USE THIS WHEN EVALUATING TRADES:
-The top asset on each side gets a multiplier. Only the TOP asset. Rest are face value.
-- Top 10 players overall: ×1.60
-- 8,000-8,999 value: ×1.45  
-- 6,000-7,999 value: ×1.30
-- 4,000-5,999 value: ×1.10
-- 2,000-3,999 value: ×1.02
-- Below 2,000: ×1.0
+MANAGER TENDENCIES:
+${Object.entries(CTX.tRec||{}).map(([un,r])=>un+': '+r.trades+'trades posFlow='+JSON.stringify(r.posFlow)).join(' | ')||'Loading...'}
 
-Example: Chase (9,926) traded for Pickens (5,950) + Odunze (5,355)
-Chase side: 9,926 × 1.60 = 15,882 (Chase is top 10)
-Pickens side: 5,950 × 1.30 = 7,735 (top asset) + 5,355 = 13,090
-Gap = 2,792. Need ~Early 2026 2nd (2,982) to balance.
-Always show the adjusted values AND what it would take to make the trade fair.
+RECENT TRADES (last 12):
+${(CTX.allTrades||[]).slice(-12).map(t=>{const sides=(t.roster_ids||[]).map(rid=>{const team=(CTX.allTeams||[]).find(tm=>tm.roster_id===rid);const adds=Object.entries(t.adds||{}).filter(([,r])=>r===rid).map(([id])=>CTX.playerNames[id]||id);const picks=(t.draft_picks||[]).filter(pk=>pk.owner_id===rid).map(pk=>pk.season+' '+pk.round+'rd');return(team?.username||'?')+' got ['+ [...adds,...picks].join(',')+']';});return 'WK'+(t.week||'?')+' '+sides.join(' / ');}).join(' | ')||'No trades'}
 
-MISVALUE DETECTION — ALWAYS THINK ABOUT THIS:
-- Is a player producing well but their consensus value NOT increasing? Could be a sneaky buy.
-- Is a player's value rising but their actual stats declining? Sell high signal.
-- Trend drops are often overreactions — was the injury minor? Is the role still there?
-- Trend adds are often hype — does the production back it up?
+LIVE SLEEPER MARKET (48hrs):
+ADDS: ${(CTX.trendingAdds||[]).slice(0,12).map(p=>p.name+'('+p.pos+',+'+p.adds+')').join(', ')||'Loading'}
+DROPS: ${(CTX.trendingDrops||[]).slice(0,8).map(p=>p.name+'('+p.pos+',-'+p.drops+')').join(', ')||''}
 
-NFL SCHEME CONTEXT (affects dynasty value):
-- Shanahan system (SF, MIA, DEN): RBs rotate but get high-quality touches. WRs thrive in motion schemes.
-- Reid system (KC): TEs and slot WRs disproportionately targeted. Always one breakout TE.
-- Air Raid / spread (JAX, WAS): Pass catchers get volume. QBs can look great in system.
-- Physical run (LAC, PIT, BAL): Committee RBs limit dynasty value. Avoid RBs here unless clear bell cow.
-- McVay system (LAR, MIN, GB, CIN): WR1 gets huge target share. High efficiency offense = consistent dynasty production.
+NFL COACHING (HC/OC/scheme all 32):
+${Object.entries(CTX.coaching||{}).slice(0,16).map(([t,c])=>t+':'+c.hc+'/'+c.oc+'('+c.scheme+')').join(', ')}
 
-KEY BEHAVIORS:
-- Always tie analysis to this specific league and this specific manager's situation
-- When asked about a trade, give a definitive verdict — who won, by how much
-- When a player the manager likes is actually bad — tell them. Be kind but be honest.
-- When someone pushes back — don't apologize. Engage their argument, explain yours.
-- Think about what the OTHER manager wants. The best trades help both sides feel good.
-- Reference specific opponents by name from the tendencies data above
-- Use the trending data: "Chase has been added in X leagues in 48 hours — here's what that signal means"
-- Find the angle no one is thinking about. That's the job.
-- Use contract data to spot dynasty angles: expiring contracts = sell urgency, long deals = stability, $30M+ QBs are locked in
-- When contract data is available, cite it: "per OverTheCap data" — adds credibility
-- A player on a 1-year deal entering free agency is a dynasty sell signal regardless of current performance
-- If someone mentions a player's college stats, you know what they mean for dynasty value
-- Draft capital matters: a 1.01 pick has different upside ceiling than a 1.10 even at same dynasty value`;
+2026 NFL DRAFT TOP PICKS:
+${(CTX.draftHistory?.drafts?.['2026']?.dynasty_skill_picks||[]).slice(0,20).map(p=>p.round+'.'+String(p.pick).padStart(2,'0')+' '+p.team+' '+p.player+'('+p.pos+')').join(', ')}
+
+TODAY: ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}
+
+GWTTKB PREMIUM TRADE FORMULA (top asset only gets multiplier):
+Top 10 players: x1.60 | 8000-8999: x1.45 | 6000-7999: x1.30 | 4000-5999: x1.10 | 2000-3999: x1.02 | below 2000: x1.0
+Always apply this formula and show adjusted values when analyzing any trade.
+
+HOW TO ANSWER:
+TRADES: Apply premium formula. State winner definitively. Explain with data. Give the counter-offer angle.
+PLAYER EVAL: Stat trajectory + historical comp + contract + scheme + verdict with price.
+BREAKOUT PREDICTION: College profile + comp to historical breakouts + landing spot + timeline + buy price.
+OPPONENT SCOUTING: Their roster here + other leagues + holes + emotional attachments + exact trade angle.
+MARKET TIMING: Use seasonal patterns (buy WRs in Apr/May, sell in September). Use monthly momentum data.
+
+RULES:
+- Hold your ground when pushed back and you're right. Explain it, don't fold.
+- If someone loves a bad player, tell them it's a bad player. Be kind but be honest.
+- Never say "it depends" without immediately answering what it depends on.
+- Never give generic answers when specific data exists. Cite the actual numbers.
+- Reference specific opponents, specific trades, specific stats. Make it feel like you know this league.
+- Never be cheesy. Never say "great question." Just answer.
+- Think around the box. Find the angle no one else is thinking about.`;
 }
 
 // ── CHAT ──
@@ -908,6 +915,92 @@ function hideTyping(){
   if(el)el.remove();
 }
 
+// ── PATTERNS CONTEXT BUILDER ──
+function buildPatternsContext(){
+  if(!CTX.patterns)return'Patterns loading...';
+  const p=CTX.patterns;
+  const lines=[];
+  if(p.axioms?.length){
+    lines.push('AXIOMS FROM 6YRS DATA: '+p.axioms.join(' | '));
+  }
+  if(p.value_stability){
+    const vs=Object.entries(p.value_stability).map(([pos,v])=>
+      pos+': '+v.avg_elite_seasons+'yr elite avg, '+v.avg_starter_seasons+'yr starter avg'
+    ).join(' | ');
+    lines.push('VALUE STABILITY: '+vs);
+  }
+  if(p.signal_patterns){
+    const sp=Object.entries(p.signal_patterns).map(([pos,s])=>
+      pos+' after spike crash rate='+s.after_30pct_spike.crash_rate+'%, after crash recovery='+s.after_25pct_crash.recovery_rate+'%'
+    ).join(' | ');
+    lines.push('SELL/BUY SIGNALS: '+sp);
+  }
+  if(p.peak_patterns){
+    const cliffs=Object.entries(p.peak_patterns).flatMap(([pos,pp])=>
+      (pp.notable_cliffs||[]).slice(0,1).map(c=>c.name+' dropped '+Math.abs(c.pct)+'% in '+c.year)
+    ).join(', ');
+    if(cliffs)lines.push('NOTABLE VALUE CLIFFS: '+cliffs);
+  }
+  return lines.join('\n');
+}
+
+// ── ON-DEMAND PLAYER STATS LOOKUP ──
+// Called when Coach detects a player name in the conversation
+async function fetchPlayerStats(playerName){
+  try{
+    const res=await fetch('/data/nfl-stats.json');
+    if(!res.ok)return null;
+    const data=await res.json();
+    // Find player by normalized name
+    const norm=s=>s.toLowerCase().replace(/[^a-z]/g,'');
+    const match=Object.values(data.players||{}).find(p=>
+      norm(p.name||'')===norm(playerName)||
+      norm(p.name||'').includes(norm(playerName))
+    );
+    return match||null;
+  }catch(e){return null;}
+}
+
+// Extract player names mentioned in a message
+function extractPlayerNames(text){
+  // Match known players from consensus
+  const names=[];
+  for(const p of (CTX.consensusTop||[])){
+    if(p.name&&text.toLowerCase().includes(p.name.toLowerCase())){
+      names.push(p.name);
+    }
+  }
+  return [...new Set(names)].slice(0,5); // max 5 players per message
+}
+
+// Format player stats for system prompt injection
+function formatPlayerStats(statsObj){
+  if(!statsObj)return '';
+  const seasons=Object.values(statsObj.seasons||{}).sort((a,b)=>b.season-a.season);
+  return seasons.map(s=>{
+    const parts=[`${s.season}(${s.team})`];
+    if(s.passing_yards)parts.push(`${s.passing_yards}passYds/${s.passing_tds}TD`);
+    if(s.rushing_yards)parts.push(`${s.rushing_yards}rushYds`);
+    if(s.receiving_yards)parts.push(`${s.receiving_yards}recYds`);
+    if(s.targets)parts.push(`${s.targets}tgt/${s.receptions}rec`);
+    if(s.target_share)parts.push(`${s.target_share}%tgtShare`);
+    if(s.air_yards_share)parts.push(`${s.air_yards_share}%airYds`);
+    if(s.wopr)parts.push(`WOPR:${s.wopr}`);
+    if(s.receiving_epa!=null)parts.push(`EPA:${s.receiving_epa}`);
+    if(s.avg_separation)parts.push(`sep:${s.avg_separation}yds`);
+    if(s.avg_cushion)parts.push(`cush:${s.avg_cushion}yds`);
+    if(s.cpoe)parts.push(`CPOE:${s.cpoe}`);
+    if(s.rush_yards_oe_att)parts.push(`RYOE/att:${s.rush_yards_oe_att}`);
+    if(s.adot)parts.push(`ADOT:${s.adot}`);
+    if(s.yac)parts.push(`YAC:${s.yac}`);
+    if(s.drop_rate)parts.push(`drop%:${s.drop_rate}`);
+    if(s.broken_tackles)parts.push(`BTkl:${s.broken_tackles}`);
+    if(s.stacked_box_rate)parts.push(`stackedBox%:${s.stacked_box_rate}`);
+    if(s.fantasy_ppg)parts.push(`${s.fantasy_ppg}PPG`);
+    return parts.join(',');
+  }).join(' | ');
+}
+
 function formatMsg(text){
   return text
     .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
@@ -933,7 +1026,28 @@ async function sendMessage(text){
   const q=addQuestion();
 
   try{
-    const systemPrompt=buildSystemPrompt();
+    // On-demand player stats lookup
+    let playerStatsContext='';
+    if(CTX.statsAvailable){
+      const mentionedPlayers=extractPlayerNames(msg);
+      if(mentionedPlayers.length>0){
+        const statsResults=await Promise.all(
+          mentionedPlayers.map(name=>fetchPlayerStats(name))
+        );
+        const statsParts=[];
+        for(let i=0;i<mentionedPlayers.length;i++){
+          if(statsResults[i]){
+            statsParts.push(`${mentionedPlayers[i]} STATS: ${formatPlayerStats(statsResults[i])}`);
+          }
+        }
+        if(statsParts.length>0){
+          playerStatsContext='\n\nON-DEMAND PLAYER STATS (2020-2025, all metrics):\n'+statsParts.join('\n');
+          console.log('Loaded stats for:',mentionedPlayers.join(', '));
+        }
+      }
+    }
+
+    const systemPrompt=buildSystemPrompt()+playerStatsContext;
     const response=await fetch('/api/chat',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -1034,6 +1148,8 @@ function resetChat(){
     draftHistory:{},contractKnowledge:{},isContractLeague:false,contractData:{},
     nflContracts:{},
   nflContractData:{},
+  patterns:null,
+  statsAvailable:false,
   crossLeague:{},
   contractCredit:'',
   teamContext:{},nflStats:{},sfVals:{},qbVals:{},playerNames:{},playerPos:{},chain:[]};
