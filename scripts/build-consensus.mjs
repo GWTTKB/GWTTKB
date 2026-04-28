@@ -577,13 +577,13 @@ async function main() {
   console.log(`1QB Top 5: ${players1QB.slice(0,5).map(p=>`${p.name}(${p.value})`).join(', ')}`);
 }
 
-main().catch(e => { console.error('FATAL:', e); process.exit(1); });
+// main() called via buildAll below
 
 // ── NFL STATS BUILD ──
 // Pulls from NFLverse (season stats + NGS + PFR) for all players 2020-2025
 // Writes public/data/nfl-stats.json
 
-export async function buildNFLStats() {
+async function buildNFLStats() {
   console.log('\n=== Building NFL Stats Database ===');
 
   const YEARS = [2020, 2021, 2022, 2023, 2024, 2025];
