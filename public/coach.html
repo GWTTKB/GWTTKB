@@ -799,8 +799,11 @@ DYNASTY PATTERNS (from the data itself):
 - Post-crash: RBs recover only 15% after a 25%+ crash — permanent. WRs same (15%). QBs (30%)
 - Elite windows: QBs avg 2.8 seasons above elite value, RBs only 1.7, WRs 2.1, TEs 1.3
 
-NFL TEAM CONTEXT (all 32 teams, 2020-2026 depth charts and notes — GWTTKB's own file):
-${Object.entries(CTX.teamContext||{}).slice(0,32).map(([team,d])=>{const c=d['2026']||d['2025']||{};return team+': QB='+(c.qb||'?')+' WR1='+(c.wr1||'?')+' RB1='+(c.rb1||'?')+'|'+(c.notes||'').slice(0,80);}).join(' || ')}
+NFL TEAM CONTEXT — 2026 CURRENT (this is the current state going INTO the 2026 season — always use this for player/team questions):
+${Object.entries(CTX.teamContext||{}).slice(0,32).map(([team,d])=>{const c=d['2026']||{};if(!c.qb&&!c.wr1)return null;return '['+team+' 2026] QB='+(c.qb||'?')+' WR1='+(c.wr1||'?')+' WR2='+(c.wr2||'')+' RB1='+(c.rb1||'?')+' TE1='+(c.te1||'')+' | '+(c.notes||'').slice(0,120)+(c.analyst_notes?' ANALYST:'+c.analyst_notes.slice(0,80):'');}).filter(Boolean).join(' || ')}
+
+NFL TEAM CONTEXT — 2025 SEASON RESULTS (historical — use only for trajectory/performance analysis, NOT for current team situations):
+${Object.entries(CTX.teamContext||{}).slice(0,32).map(([team,d])=>{const yr=d['2025']||{};if(!yr.qb)return null;return '['+team+' 2025] QB='+(yr.qb||'?')+' WR1='+(yr.wr1||'?')+' RB1='+(yr.rb1||'?')+' | '+(yr.notes||'').slice(0,80);}).filter(Boolean).join(' || ')}
 
 NFL CONTRACTS (per OverTheCap via nflverse — cite this source):
 ${(CTX.myRoster||[]).slice(0,20).map(p=>{const c=CTX.nflContractData?.[p.name];return c?p.name+'($'+c.apy+'M/yr,'+c.years_remaining+'yrs,'+c.status+')':null;}).filter(Boolean).join(' | ')||'Loading...'}
