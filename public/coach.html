@@ -332,7 +332,7 @@ async function loadAllContext(){
       const players=(r.players||[]).map(id=>{
         const pval=CTX.isSF?(CTX.sfVals[id]||0):(CTX.qbVals[id]||0);
         return{id,name:CTX.playerNames[id]||id,pos:CTX.playerPos[id]||'?',value:pval};
-      }).filter(p=>['QB','RB','WR','TE'].includes(p.pos)).sort((a,b)=>b.value-a.value);
+      }).filter(p=>['QB','RB','WR','TE'].includes(p.pos)&&p.name!==p.id).sort((a,b)=>b.value-a.value);
       const total=players.reduce((s,p)=>s+p.value,0);
       if(isMe){CTX.myRoster=players;CTX.myTeam={username:u.display_name||u.username,total,roster_id:r.roster_id};}
       return{roster_id:r.roster_id,owner_id:r.owner_id,isMe,
@@ -394,8 +394,10 @@ async function loadAllContext(){
       const opponents=CTX.allTeams.filter(t=>!t.isMe&&t.owner_id);
       const currentYr=parseInt(CTX.league?.season||2026);
 
-      await Promise.all(opponents.map(async opp=>{
+      // Load cross-league data sequentially to avoid Sleeper rate limits
+    for(const opp of opponents){
         try{
+          await S(200); // rate limit buffer between managers
           const oppLeagues=await gFetch(`${API_URL}/user/${opp.owner_id}/leagues/nfl/${currentYr}`)
             .catch(()=>[]);
           const dynastyLeagues=(oppLeagues||[]).filter(l=>
@@ -424,7 +426,7 @@ async function loadAllContext(){
                   id,name:CTX.playerNames[id]||id,
                   pos:CTX.playerPos[id]||'?',
                   value:CTX.isSF?(CTX.sfVals[id]||0):(CTX.qbVals[id]||0)
-                })).filter(p=>['QB','RB','WR','TE'].includes(p.pos)&&p.value>0)
+                })).filter(p=>['QB','RB','WR','TE'].includes(p.pos)&&p.name!==p.id)
                   .sort((a,b)=>b.value-a.value);
                 profile.rosters.push({league:lg.name,players:players.slice(0,8)});
 
@@ -498,7 +500,7 @@ async function loadAllContext(){
 
           CTX.crossLeague[opp.username]=profile;
         }catch(e){console.warn('Cross-league failed for',opp.username,e.message);}
-      }));
+      }
 
       console.log('Cross-league loaded for:',Object.keys(CTX.crossLeague).join(', '));
     }catch(e){console.warn('Cross-league error:',e);}
@@ -839,10 +841,14 @@ FORMAT: ${CTX.isSF?'SUPERFLEX PPR — QBs 30-40% premium. Elite QBs are top 5 as
 LEAGUE: ${CTX.league?.name||'Dynasty League'} | ${CTX.allTeams?.length||0} teams | Season ${CTX.league?.season||2026}
 
 THIS MANAGER (@${CTX.myTeam?.username||'?'}): ${CTX.myTeam?.wins||0}W-${CTX.myTeam?.losses||0}L | Value: ${(CTX.myTeam?.total||0).toLocaleString()} | Rank: #${(CTX.allTeams?.findIndex(t=>t.isMe)||0)+1} of ${CTX.allTeams?.length||0}
-ROSTER: ${(CTX.myRoster||[]).slice(0,20).map(p=>p.name+'('+p.pos+','+p.value+')').join(', ')}
+
+⚠️ DYNASTY ROSTER (players THIS MANAGER owns in BYX Dynasty — NOT the same as NFL team rosters):
+${(CTX.myRoster||[]).slice(0,25).map(p=>p.name+'('+p.pos+',val='+p.value+')').join(' | ')}
+
+IMPORTANT: If a player is NOT in the above roster list, they are NOT owned by this manager in BYX Dynasty. That does NOT mean they are a free agent in the NFL — they have an NFL team which you can find in the team context data above. Never confuse dynasty league ownership with NFL team assignment.
 
 ALL MANAGERS (name: record, value, top 4 players):
-${(CTX.allTeams||[]).map(t=>t.username+(t.isMe?' [YOU]':'')+':'+t.wins+'W-'+t.losses+'L val='+t.total+' | '+(t.players||[]).slice(0,4).map(p=>p.name+' '+p.value).join('/')).join(' || ')}
+${(CTX.allTeams||[]).map(t=>t.username+(t.isMe?' [YOU]':'')+':'+t.wins+'W-'+t.losses+'L val='+t.total+' | '+(t.players||[]).slice(0,20).map(p=>p.name+'('+p.pos+','+p.value+')').join(', ')).join('\n')}
 
 CROSS-LEAGUE INTEL (what every opponent owns outside this league):
 ${Object.entries(CTX.crossLeague||{}).map(([un,p])=>{const rosters=(p.rosters||[]).map(r=>r.league+': '+(r.players||[]).slice(0,5).map(x=>x.name).join(',')).join(' | ');const multi=(p.fav_players||[]).filter(x=>x.leagues>1).map(x=>x.name+'('+x.leagues+'L)').join(',');const drafts=(p.draft_patterns||[]).map(d=>d.league+'('+d.status+'): '+(d.picks||[]).map(pk=>pk.slot+' '+pk.player).join(',')).join(' | ');return '@'+un+': '+rosters+(multi?' MULTI='+multi:'')+(drafts?' DRAFTS='+drafts:'');}).join('\n')||'Cross-league loading...'}
@@ -883,7 +889,10 @@ RULES:
 - Never give generic answers when specific data exists. Cite the actual numbers.
 - Reference specific opponents, specific trades, specific stats. Make it feel like you know this league.
 - Never be cheesy. Never say "great question." Just answer.
-- Think around the box. Find the angle no one else is thinking about.`;
+- Think around the box. Find the angle no one else is thinking about.
+- If a player appears on any dynasty roster they ARE owned — even if their dynasty value shows as 0 or unknown. Value=0 means the consensus data doesn't have them ranked, NOT that they don't exist or are a free agent in the NFL.
+- CRITICAL DISTINCTION: Dynasty roster ownership (the DYNASTY ROSTER list above) is completely separate from NFL team assignment (the team context data). A player not on this manager's dynasty roster still has an NFL team. Never confuse the two.
+- CRITICAL: If asked who is on this manager's dynasty team, always refer to the DYNASTY ROSTER list in this prompt. Do not say a player is unrostered or a free agent based on NFL status.`;
 }
 
 // ── CHAT ──
