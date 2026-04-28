@@ -329,9 +329,18 @@ async function loadAllContext(){
     CTX.allTeams=rosters.map(r=>{
       const u=userMap[r.owner_id]||{};
       const isMe=r.owner_id===CTX.userId;
-      const players=(r.players||[]).map(id=>{
+      // Include active roster + IR + Taxi squad
+      const allRosterIds=[
+        ...(r.players||[]),
+        ...(r.reserve||[]),   // IR players
+        ...(r.taxi||[])       // Taxi squad
+      ];
+      const players=allRosterIds.map(id=>{
         const pval=CTX.isSF?(CTX.sfVals[id]||0):(CTX.qbVals[id]||0);
-        return{id,name:CTX.playerNames[id]||id,pos:CTX.playerPos[id]||'?',value:pval};
+        const onIR=(r.reserve||[]).includes(id);
+        const onTaxi=(r.taxi||[]).includes(id);
+        return{id,name:CTX.playerNames[id]||id,pos:CTX.playerPos[id]||'?',value:pval,
+               slot:onIR?'IR':onTaxi?'Taxi':'Active'};
       }).filter(p=>['QB','RB','WR','TE'].includes(p.pos)&&p.name!==p.id).sort((a,b)=>b.value-a.value);
       const total=players.reduce((s,p)=>s+p.value,0);
       if(isMe){CTX.myRoster=players;CTX.myTeam={username:u.display_name||u.username,total,roster_id:r.roster_id};}
@@ -848,9 +857,13 @@ ${(CTX.myRoster||[]).slice(0,25).map(p=>p.name+'('+p.pos+',val='+p.value+')').jo
 IMPORTANT: If a player is NOT in the above roster list, they are NOT owned by this manager in BYX Dynasty. That does NOT mean they are a free agent in the NFL — they have an NFL team which you can find in the team context data above. Never confuse dynasty league ownership with NFL team assignment.
 
 ALL MANAGERS (name: record, value, top 4 players):
-${(CTX.allTeams||[]).map(t=>t.username+(t.isMe?' [YOU]':'')+':'+t.wins+'W-'+t.losses+'L val='+t.total+' | '+(t.players||[]).slice(0,20).map(p=>p.name+'('+p.pos+','+p.value+')').join(', ')).join('\n')}
+${(CTX.allTeams||[]).map(t=>{
+  const roster=(t.players||[]).slice(0,25).map(p=>p.name+'('+p.pos+(p.slot&&p.slot!=='Active'?','+p.slot:'')+')').join(', ');
+  return t.username+(t.isMe?' [YOU]':'')+' [BYX DYNASTY ROSTER ONLY]: '+t.wins+'W-'+t.losses+'L val='+t.total+' | '+roster;
+}).join('\n')}
 
-CROSS-LEAGUE INTEL (what every opponent owns outside this league):
+CROSS-LEAGUE INTEL — OTHER LEAGUES ONLY (NOT BYX Dynasty — these are separate leagues this manager plays in):
+⚠️ Do NOT mix cross-league rosters with BYX Dynasty rosters above. Each manager's BYX roster is in ALL MANAGERS above.
 ${Object.entries(CTX.crossLeague||{}).map(([un,p])=>{const rosters=(p.rosters||[]).map(r=>r.league+': '+(r.players||[]).slice(0,5).map(x=>x.name).join(',')).join(' | ');const multi=(p.fav_players||[]).filter(x=>x.leagues>1).map(x=>x.name+'('+x.leagues+'L)').join(',');const drafts=(p.draft_patterns||[]).map(d=>d.league+'('+d.status+'): '+(d.picks||[]).map(pk=>pk.slot+' '+pk.player).join(',')).join(' | ');return '@'+un+': '+rosters+(multi?' MULTI='+multi:'')+(drafts?' DRAFTS='+drafts:'');}).join('\n')||'Cross-league loading...'}
 
 MANAGER TENDENCIES:
