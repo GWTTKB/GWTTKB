@@ -1,5 +1,5 @@
 {
-  "generated": "2026-04-28T02:40:43.534Z",
+  "generated": "2026-04-28T03:00:49.022Z",
   "version": "5.2",
   "engine": "Real Startup ADP (SF + 1QB split) + FPAR + Trade Signal",
   "date": "2026-04-28",
@@ -356,7 +356,7 @@
           "components": {
             "adp_value": 7249,
             "fpar_value": 0,
-            "trade_value": 6647,
+            "trade_value": 6669,
             "source": "adp_only"
           }
         },
@@ -375,7 +375,7 @@
           "components": {
             "adp_value": 7225,
             "fpar_value": 0,
-            "trade_value": 6355,
+            "trade_value": 6647,
             "source": "adp_only"
           }
         },
@@ -394,7 +394,7 @@
           "components": {
             "adp_value": 6908,
             "fpar_value": 0,
-            "trade_value": 6669,
+            "trade_value": 6355,
             "source": "adp_only"
           }
         },
@@ -413,7 +413,7 @@
           "components": {
             "adp_value": 6811,
             "fpar_value": 0,
-            "trade_value": 6177,
+            "trade_value": 6266,
             "source": "adp_only"
           }
         },
@@ -432,7 +432,7 @@
           "components": {
             "adp_value": 6714,
             "fpar_value": 0,
-            "trade_value": 6266,
+            "trade_value": 6177,
             "source": "adp_only"
           }
         },
@@ -470,7 +470,7 @@
           "components": {
             "adp_value": 6592,
             "fpar_value": 0,
-            "trade_value": 6043,
+            "trade_value": 6065,
             "source": "adp_only"
           }
         },
@@ -489,7 +489,7 @@
           "components": {
             "adp_value": 6568,
             "fpar_value": 0,
-            "trade_value": 6065,
+            "trade_value": 6043,
             "source": "adp_only"
           }
         },
@@ -774,7 +774,7 @@
           "components": {
             "adp_value": 5935,
             "fpar_value": 0,
-            "trade_value": 5237,
+            "trade_value": 5460,
             "source": "adp_only"
           }
         },
@@ -793,7 +793,7 @@
           "components": {
             "adp_value": 5692,
             "fpar_value": 0,
-            "trade_value": 5460,
+            "trade_value": 5237,
             "source": "adp_only"
           }
         },
@@ -964,7 +964,7 @@
           "components": {
             "adp_value": 5235,
             "fpar_value": 0,
-            "trade_value": 4800,
+            "trade_value": 4816,
             "source": "adp_only"
           }
         },
@@ -983,7 +983,7 @@
           "components": {
             "adp_value": 5217,
             "fpar_value": 0,
-            "trade_value": 4816,
+            "trade_value": 4800,
             "source": "adp_only"
           }
         },
@@ -1154,7 +1154,7 @@
           "components": {
             "adp_value": 5079,
             "fpar_value": 0,
-            "trade_value": 4663,
+            "trade_value": 4673,
             "source": "adp_only"
           }
         },
@@ -1173,7 +1173,7 @@
           "components": {
             "adp_value": 5069,
             "fpar_value": 0,
-            "trade_value": 4654,
+            "trade_value": 4663,
             "source": "adp_only"
           }
         },
@@ -1192,7 +1192,7 @@
           "components": {
             "adp_value": 5059,
             "fpar_value": 0,
-            "trade_value": 4646,
+            "trade_value": 4654,
             "source": "adp_only"
           }
         },
@@ -1211,7 +1211,7 @@
           "components": {
             "adp_value": 5050,
             "fpar_value": 0,
-            "trade_value": 4673,
+            "trade_value": 4646,
             "source": "adp_only"
           }
         },
@@ -1268,7 +1268,7 @@
           "components": {
             "adp_value": 5007,
             "fpar_value": 0,
-            "trade_value": 4563,
+            "trade_value": 4606,
             "source": "adp_only"
           }
         },
@@ -1287,7 +1287,7 @@
           "components": {
             "adp_value": 4984,
             "fpar_value": 0,
-            "trade_value": 4606,
+            "trade_value": 4585,
             "source": "adp_only"
           }
         },
@@ -1306,7 +1306,7 @@
           "components": {
             "adp_value": 4960,
             "fpar_value": 0,
-            "trade_value": 4585,
+            "trade_value": 4563,
             "source": "adp_only"
           }
         },
@@ -1515,7 +1515,7 @@
           "components": {
             "adp_value": 4727,
             "fpar_value": 0,
-            "trade_value": 4341,
+            "trade_value": 4349,
             "source": "adp_only"
           }
         },
@@ -1534,7 +1534,7 @@
           "components": {
             "adp_value": 4719,
             "fpar_value": 0,
-            "trade_value": 4349,
+            "trade_value": 4341,
             "source": "adp_only"
           }
         },
@@ -1762,7 +1762,7 @@
           "components": {
             "adp_value": 4386,
             "fpar_value": 0,
-            "trade_value": 3995,
+            "trade_value": 4035,
             "source": "adp_only"
           }
         },
@@ -1781,7 +1781,7 @@
           "components": {
             "adp_value": 4342,
             "fpar_value": 0,
-            "trade_value": 4035,
+            "trade_value": 3995,
             "source": "adp_only"
           }
         },
@@ -1895,7 +1895,7 @@
           "components": {
             "adp_value": 4120,
             "fpar_value": 0,
-            "trade_value": 3760,
+            "trade_value": 3790,
             "source": "adp_only"
           }
         },
@@ -1914,7 +1914,7 @@
           "components": {
             "adp_value": 4087,
             "fpar_value": 0,
-            "trade_value": 3790,
+            "trade_value": 3760,
             "source": "adp_only"
           }
         },
@@ -1933,7 +1933,7 @@
           "components": {
             "adp_value": 4060,
             "fpar_value": 0,
-            "trade_value": 3709,
+            "trade_value": 3735,
             "source": "adp_only"
           }
         },
@@ -1952,7 +1952,7 @@
           "components": {
             "adp_value": 4032,
             "fpar_value": 0,
-            "trade_value": 3735,
+            "trade_value": 3709,
             "source": "adp_only"
           }
         },
@@ -2218,7 +2218,7 @@
           "components": {
             "adp_value": 3680,
             "fpar_value": 0,
-            "trade_value": 3364,
+            "trade_value": 3386,
             "source": "adp_only"
           }
         },
@@ -2237,7 +2237,7 @@
           "components": {
             "adp_value": 3657,
             "fpar_value": 0,
-            "trade_value": 3386,
+            "trade_value": 3364,
             "source": "adp_only"
           }
         },
@@ -2294,7 +2294,7 @@
           "components": {
             "adp_value": 3590,
             "fpar_value": 0,
-            "trade_value": 3281,
+            "trade_value": 3303,
             "source": "adp_only"
           }
         },
@@ -2313,7 +2313,7 @@
           "components": {
             "adp_value": 3566,
             "fpar_value": 0,
-            "trade_value": 3303,
+            "trade_value": 3281,
             "source": "adp_only"
           }
         },
@@ -2541,7 +2541,7 @@
           "components": {
             "adp_value": 3318,
             "fpar_value": 0,
-            "trade_value": 3026,
+            "trade_value": 3053,
             "source": "adp_only"
           }
         },
@@ -2560,7 +2560,7 @@
           "components": {
             "adp_value": 3308,
             "fpar_value": 0,
-            "trade_value": 3053,
+            "trade_value": 3043,
             "source": "adp_only"
           }
         },
@@ -2579,7 +2579,7 @@
           "components": {
             "adp_value": 3299,
             "fpar_value": 0,
-            "trade_value": 3017,
+            "trade_value": 3035,
             "source": "adp_only"
           }
         },
@@ -2598,7 +2598,7 @@
           "components": {
             "adp_value": 3289,
             "fpar_value": 0,
-            "trade_value": 3043,
+            "trade_value": 3026,
             "source": "adp_only"
           }
         },
@@ -2617,7 +2617,7 @@
           "components": {
             "adp_value": 3279,
             "fpar_value": 0,
-            "trade_value": 3035,
+            "trade_value": 3017,
             "source": "adp_only"
           }
         },
@@ -2807,7 +2807,7 @@
           "components": {
             "adp_value": 3168,
             "fpar_value": 0,
-            "trade_value": 2904,
+            "trade_value": 2915,
             "source": "adp_only"
           }
         },
@@ -2826,7 +2826,7 @@
           "components": {
             "adp_value": 3156,
             "fpar_value": 0,
-            "trade_value": 2915,
+            "trade_value": 2904,
             "source": "adp_only"
           }
         },
@@ -2883,7 +2883,7 @@
           "components": {
             "adp_value": 3121,
             "fpar_value": 0,
-            "trade_value": 2850,
+            "trade_value": 2871,
             "source": "adp_only"
           }
         },
@@ -2902,7 +2902,7 @@
           "components": {
             "adp_value": 3110,
             "fpar_value": 0,
-            "trade_value": 2871,
+            "trade_value": 2861,
             "source": "adp_only"
           }
         },
@@ -2921,7 +2921,7 @@
           "components": {
             "adp_value": 3098,
             "fpar_value": 0,
-            "trade_value": 2839,
+            "trade_value": 2850,
             "source": "adp_only"
           }
         },
@@ -2940,7 +2940,7 @@
           "components": {
             "adp_value": 3086,
             "fpar_value": 0,
-            "trade_value": 2861,
+            "trade_value": 2839,
             "source": "adp_only"
           }
         },
@@ -3073,7 +3073,7 @@
           "components": {
             "adp_value": 3008,
             "fpar_value": 0,
-            "trade_value": 2760,
+            "trade_value": 2767,
             "source": "adp_only"
           }
         },
@@ -3092,7 +3092,7 @@
           "components": {
             "adp_value": 3000,
             "fpar_value": 0,
-            "trade_value": 2767,
+            "trade_value": 2760,
             "source": "adp_only"
           }
         },
@@ -3301,7 +3301,7 @@
           "components": {
             "adp_value": 2908,
             "fpar_value": 0,
-            "trade_value": 2610,
+            "trade_value": 2675,
             "source": "adp_only"
           }
         },
@@ -3339,7 +3339,7 @@
           "components": {
             "adp_value": 2890,
             "fpar_value": 0,
-            "trade_value": 2675,
+            "trade_value": 2659,
             "source": "adp_only"
           }
         },
@@ -3377,7 +3377,7 @@
           "components": {
             "adp_value": 2872,
             "fpar_value": 0,
-            "trade_value": 2659,
+            "trade_value": 2642,
             "source": "adp_only"
           }
         },
@@ -3396,7 +3396,7 @@
           "components": {
             "adp_value": 2864,
             "fpar_value": 0,
-            "trade_value": 2642,
+            "trade_value": 2635,
             "source": "adp_only"
           }
         },
@@ -3415,7 +3415,7 @@
           "components": {
             "adp_value": 2855,
             "fpar_value": 0,
-            "trade_value": 2635,
+            "trade_value": 2627,
             "source": "adp_only"
           }
         },
@@ -3434,7 +3434,7 @@
           "components": {
             "adp_value": 2846,
             "fpar_value": 0,
-            "trade_value": 2627,
+            "trade_value": 2618,
             "source": "adp_only"
           }
         },
@@ -3453,7 +3453,7 @@
           "components": {
             "adp_value": 2837,
             "fpar_value": 0,
-            "trade_value": 2618,
+            "trade_value": 2610,
             "source": "adp_only"
           }
         },
@@ -3491,7 +3491,7 @@
           "components": {
             "adp_value": 2818,
             "fpar_value": 0,
-            "trade_value": 2568,
+            "trade_value": 2593,
             "source": "adp_only"
           }
         },
@@ -3510,7 +3510,7 @@
           "components": {
             "adp_value": 2809,
             "fpar_value": 0,
-            "trade_value": 2593,
+            "trade_value": 2584,
             "source": "adp_only"
           }
         },
@@ -3529,7 +3529,7 @@
           "components": {
             "adp_value": 2800,
             "fpar_value": 0,
-            "trade_value": 2584,
+            "trade_value": 2576,
             "source": "adp_only"
           }
         },
@@ -3548,7 +3548,7 @@
           "components": {
             "adp_value": 2791,
             "fpar_value": 0,
-            "trade_value": 2576,
+            "trade_value": 2568,
             "source": "adp_only"
           }
         },
@@ -3624,7 +3624,7 @@
           "components": {
             "adp_value": 2754,
             "fpar_value": 0,
-            "trade_value": 2526,
+            "trade_value": 2534,
             "source": "adp_only"
           }
         },
@@ -3643,7 +3643,7 @@
           "components": {
             "adp_value": 2746,
             "fpar_value": 0,
-            "trade_value": 2534,
+            "trade_value": 2526,
             "source": "adp_only"
           }
         },
@@ -3662,7 +3662,7 @@
           "components": {
             "adp_value": 2737,
             "fpar_value": 0,
-            "trade_value": 2496,
+            "trade_value": 2518,
             "source": "adp_only"
           }
         },
@@ -3681,7 +3681,7 @@
           "components": {
             "adp_value": 2729,
             "fpar_value": 0,
-            "trade_value": 2503,
+            "trade_value": 2511,
             "source": "adp_only"
           }
         },
@@ -3700,7 +3700,7 @@
           "components": {
             "adp_value": 2721,
             "fpar_value": 0,
-            "trade_value": 2511,
+            "trade_value": 2503,
             "source": "adp_only"
           }
         },
@@ -3719,7 +3719,7 @@
           "components": {
             "adp_value": 2713,
             "fpar_value": 0,
-            "trade_value": 2518,
+            "trade_value": 2496,
             "source": "adp_only"
           }
         },
@@ -3738,7 +3738,7 @@
           "components": {
             "adp_value": 2704,
             "fpar_value": 0,
-            "trade_value": 2473,
+            "trade_value": 2488,
             "source": "adp_only"
           }
         },
@@ -3776,7 +3776,7 @@
           "components": {
             "adp_value": 2688,
             "fpar_value": 0,
-            "trade_value": 2488,
+            "trade_value": 2473,
             "source": "adp_only"
           }
         },
@@ -3852,7 +3852,7 @@
           "components": {
             "adp_value": 2666,
             "fpar_value": 0,
-            "trade_value": 2447,
+            "trade_value": 2453,
             "source": "adp_only"
           }
         },
@@ -3871,7 +3871,7 @@
           "components": {
             "adp_value": 2663,
             "fpar_value": 0,
-            "trade_value": 2453,
+            "trade_value": 2450,
             "source": "adp_only"
           }
         },
@@ -3890,7 +3890,7 @@
           "components": {
             "adp_value": 2660,
             "fpar_value": 0,
-            "trade_value": 2450,
+            "trade_value": 2447,
             "source": "adp_only"
           }
         },
@@ -4004,7 +4004,7 @@
           "components": {
             "adp_value": 2644,
             "fpar_value": 0,
-            "trade_value": 2430,
+            "trade_value": 2432,
             "source": "adp_only"
           }
         },
@@ -4023,7 +4023,7 @@
           "components": {
             "adp_value": 2641,
             "fpar_value": 0,
-            "trade_value": 2432,
+            "trade_value": 2430,
             "source": "adp_only"
           }
         },
@@ -4099,7 +4099,7 @@
           "components": {
             "adp_value": 2631,
             "fpar_value": 0,
-            "trade_value": 2410,
+            "trade_value": 2421,
             "source": "adp_only"
           }
         },
@@ -4118,7 +4118,7 @@
           "components": {
             "adp_value": 2628,
             "fpar_value": 0,
-            "trade_value": 2421,
+            "trade_value": 2418,
             "source": "adp_only"
           }
         },
@@ -4137,7 +4137,7 @@
           "components": {
             "adp_value": 2625,
             "fpar_value": 0,
-            "trade_value": 2418,
+            "trade_value": 2415,
             "source": "adp_only"
           }
         },
@@ -4156,7 +4156,7 @@
           "components": {
             "adp_value": 2622,
             "fpar_value": 0,
-            "trade_value": 2415,
+            "trade_value": 2412,
             "source": "adp_only"
           }
         },
@@ -4175,7 +4175,7 @@
           "components": {
             "adp_value": 2620,
             "fpar_value": 0,
-            "trade_value": 2412,
+            "trade_value": 2410,
             "source": "adp_only"
           }
         },
@@ -4232,7 +4232,7 @@
           "components": {
             "adp_value": 2607,
             "fpar_value": 0,
-            "trade_value": 2390,
+            "trade_value": 2398,
             "source": "adp_only"
           }
         },
@@ -4251,7 +4251,7 @@
           "components": {
             "adp_value": 2602,
             "fpar_value": 0,
-            "trade_value": 2398,
+            "trade_value": 2394,
             "source": "adp_only"
           }
         },
@@ -4270,7 +4270,7 @@
           "components": {
             "adp_value": 2598,
             "fpar_value": 0,
-            "trade_value": 2394,
+            "trade_value": 2390,
             "source": "adp_only"
           }
         },
@@ -4593,7 +4593,7 @@
           "components": {
             "adp_value": 2512,
             "fpar_value": 0,
-            "trade_value": 2295,
+            "trade_value": 2311,
             "source": "adp_only"
           }
         },
@@ -4612,7 +4612,7 @@
           "components": {
             "adp_value": 2504,
             "fpar_value": 0,
-            "trade_value": 2311,
+            "trade_value": 2304,
             "source": "adp_only"
           }
         },
@@ -4631,7 +4631,7 @@
           "components": {
             "adp_value": 2495,
             "fpar_value": 0,
-            "trade_value": 2304,
+            "trade_value": 2295,
             "source": "adp_only"
           }
         },
@@ -4859,7 +4859,7 @@
           "components": {
             "adp_value": 2396,
             "fpar_value": 0,
-            "trade_value": 2167,
+            "trade_value": 2204,
             "source": "adp_only"
           }
         },
@@ -4878,7 +4878,7 @@
           "components": {
             "adp_value": 2388,
             "fpar_value": 0,
-            "trade_value": 2204,
+            "trade_value": 2197,
             "source": "adp_only"
           }
         },
@@ -4897,7 +4897,7 @@
           "components": {
             "adp_value": 2380,
             "fpar_value": 0,
-            "trade_value": 2197,
+            "trade_value": 2190,
             "source": "adp_only"
           }
         },
@@ -4916,7 +4916,7 @@
           "components": {
             "adp_value": 2372,
             "fpar_value": 0,
-            "trade_value": 2190,
+            "trade_value": 2182,
             "source": "adp_only"
           }
         },
@@ -4935,7 +4935,7 @@
           "components": {
             "adp_value": 2363,
             "fpar_value": 0,
-            "trade_value": 2182,
+            "trade_value": 2174,
             "source": "adp_only"
           }
         },
@@ -4954,7 +4954,7 @@
           "components": {
             "adp_value": 2355,
             "fpar_value": 0,
-            "trade_value": 2174,
+            "trade_value": 2167,
             "source": "adp_only"
           }
         },
@@ -5011,7 +5011,7 @@
           "components": {
             "adp_value": 2328,
             "fpar_value": 0,
-            "trade_value": 0,
+            "trade_value": 2142,
             "source": "adp_only"
           }
         },
@@ -5030,7 +5030,7 @@
           "components": {
             "adp_value": 2319,
             "fpar_value": 0,
-            "trade_value": 2142,
+            "trade_value": 2133,
             "source": "adp_only"
           }
         },
@@ -5049,7 +5049,7 @@
           "components": {
             "adp_value": 2310,
             "fpar_value": 0,
-            "trade_value": 2133,
+            "trade_value": 2125,
             "source": "adp_only"
           }
         },
@@ -5068,7 +5068,7 @@
           "components": {
             "adp_value": 2301,
             "fpar_value": 0,
-            "trade_value": 2125,
+            "trade_value": 2117,
             "source": "adp_only"
           }
         },
@@ -5087,7 +5087,7 @@
           "components": {
             "adp_value": 2292,
             "fpar_value": 0,
-            "trade_value": 2117,
+            "trade_value": 2109,
             "source": "adp_only"
           }
         },
@@ -5106,7 +5106,7 @@
           "components": {
             "adp_value": 2283,
             "fpar_value": 0,
-            "trade_value": 2109,
+            "trade_value": 2100,
             "source": "adp_only"
           }
         },
@@ -5125,7 +5125,7 @@
           "components": {
             "adp_value": 2274,
             "fpar_value": 0,
-            "trade_value": 2100,
+            "trade_value": 2092,
             "source": "adp_only"
           }
         },
@@ -5144,7 +5144,7 @@
           "components": {
             "adp_value": 2265,
             "fpar_value": 0,
-            "trade_value": 2092,
+            "trade_value": 2084,
             "source": "adp_only"
           }
         },
@@ -5163,7 +5163,7 @@
           "components": {
             "adp_value": 2256,
             "fpar_value": 0,
-            "trade_value": 2084,
+            "trade_value": 2076,
             "source": "adp_only"
           }
         },
@@ -5182,7 +5182,7 @@
           "components": {
             "adp_value": 2247,
             "fpar_value": 0,
-            "trade_value": 2076,
+            "trade_value": 2067,
             "source": "adp_only"
           }
         },
@@ -5201,7 +5201,7 @@
           "components": {
             "adp_value": 2238,
             "fpar_value": 0,
-            "trade_value": 2067,
+            "trade_value": 2059,
             "source": "adp_only"
           }
         },
@@ -5220,7 +5220,7 @@
           "components": {
             "adp_value": 2229,
             "fpar_value": 0,
-            "trade_value": 2059,
+            "trade_value": 2051,
             "source": "adp_only"
           }
         },
@@ -5239,7 +5239,7 @@
           "components": {
             "adp_value": 2220,
             "fpar_value": 0,
-            "trade_value": 2051,
+            "trade_value": 2042,
             "source": "adp_only"
           }
         },
@@ -5258,7 +5258,7 @@
           "components": {
             "adp_value": 2211,
             "fpar_value": 0,
-            "trade_value": 2042,
+            "trade_value": 2034,
             "source": "adp_only"
           }
         },
@@ -5277,7 +5277,7 @@
           "components": {
             "adp_value": 2202,
             "fpar_value": 0,
-            "trade_value": 2034,
+            "trade_value": 2026,
             "source": "adp_only"
           }
         },
@@ -5296,7 +5296,7 @@
           "components": {
             "adp_value": 2193,
             "fpar_value": 0,
-            "trade_value": 2026,
+            "trade_value": 2018,
             "source": "adp_only"
           }
         },
@@ -5315,7 +5315,7 @@
           "components": {
             "adp_value": 2184,
             "fpar_value": 0,
-            "trade_value": 2018,
+            "trade_value": 2009,
             "source": "adp_only"
           }
         },
@@ -5334,7 +5334,7 @@
           "components": {
             "adp_value": 2175,
             "fpar_value": 0,
-            "trade_value": 2009,
+            "trade_value": 2001,
             "source": "adp_only"
           }
         },
@@ -5353,7 +5353,7 @@
           "components": {
             "adp_value": 2168,
             "fpar_value": 0,
-            "trade_value": 2001,
+            "trade_value": 1995,
             "source": "adp_only"
           }
         },
@@ -5372,7 +5372,7 @@
           "components": {
             "adp_value": 2161,
             "fpar_value": 0,
-            "trade_value": 1995,
+            "trade_value": 1988,
             "source": "adp_only"
           }
         },
@@ -5391,7 +5391,7 @@
           "components": {
             "adp_value": 2154,
             "fpar_value": 0,
-            "trade_value": 1988,
+            "trade_value": 1982,
             "source": "adp_only"
           }
         },
@@ -5410,7 +5410,7 @@
           "components": {
             "adp_value": 2147,
             "fpar_value": 0,
-            "trade_value": 1982,
+            "trade_value": 1975,
             "source": "adp_only"
           }
         },
@@ -5429,7 +5429,7 @@
           "components": {
             "adp_value": 2140,
             "fpar_value": 0,
-            "trade_value": 1975,
+            "trade_value": 1969,
             "source": "adp_only"
           }
         },
@@ -5448,7 +5448,7 @@
           "components": {
             "adp_value": 2133,
             "fpar_value": 0,
-            "trade_value": 1969,
+            "trade_value": 1962,
             "source": "adp_only"
           }
         },
@@ -5467,7 +5467,7 @@
           "components": {
             "adp_value": 2126,
             "fpar_value": 0,
-            "trade_value": 1962,
+            "trade_value": 1956,
             "source": "adp_only"
           }
         },
@@ -5486,7 +5486,7 @@
           "components": {
             "adp_value": 2119,
             "fpar_value": 0,
-            "trade_value": 1956,
+            "trade_value": 1949,
             "source": "adp_only"
           }
         },
@@ -5505,7 +5505,7 @@
           "components": {
             "adp_value": 2112,
             "fpar_value": 0,
-            "trade_value": 1949,
+            "trade_value": 1943,
             "source": "adp_only"
           }
         },
@@ -5524,7 +5524,7 @@
           "components": {
             "adp_value": 2105,
             "fpar_value": 0,
-            "trade_value": 1943,
+            "trade_value": 1937,
             "source": "adp_only"
           }
         },
@@ -5543,7 +5543,7 @@
           "components": {
             "adp_value": 2097,
             "fpar_value": 0,
-            "trade_value": 1937,
+            "trade_value": 1929,
             "source": "adp_only"
           }
         },
@@ -5562,7 +5562,7 @@
           "components": {
             "adp_value": 2090,
             "fpar_value": 0,
-            "trade_value": 1929,
+            "trade_value": 1923,
             "source": "adp_only"
           }
         },
@@ -5581,7 +5581,7 @@
           "components": {
             "adp_value": 2083,
             "fpar_value": 0,
-            "trade_value": 1923,
+            "trade_value": 1916,
             "source": "adp_only"
           }
         },
@@ -5600,7 +5600,7 @@
           "components": {
             "adp_value": 2076,
             "fpar_value": 0,
-            "trade_value": 1916,
+            "trade_value": 1910,
             "source": "adp_only"
           }
         },
@@ -5619,7 +5619,7 @@
           "components": {
             "adp_value": 2069,
             "fpar_value": 0,
-            "trade_value": 1910,
+            "trade_value": 1903,
             "source": "adp_only"
           }
         },
@@ -5638,7 +5638,7 @@
           "components": {
             "adp_value": 2062,
             "fpar_value": 0,
-            "trade_value": 1903,
+            "trade_value": 1897,
             "source": "adp_only"
           }
         },
@@ -5657,7 +5657,7 @@
           "components": {
             "adp_value": 2055,
             "fpar_value": 0,
-            "trade_value": 1897,
+            "trade_value": 1891,
             "source": "adp_only"
           }
         },
@@ -5676,7 +5676,7 @@
           "components": {
             "adp_value": 2048,
             "fpar_value": 0,
-            "trade_value": 1891,
+            "trade_value": 1884,
             "source": "adp_only"
           }
         },
@@ -5695,7 +5695,7 @@
           "components": {
             "adp_value": 2041,
             "fpar_value": 0,
-            "trade_value": 1884,
+            "trade_value": 1878,
             "source": "adp_only"
           }
         },
@@ -5714,7 +5714,7 @@
           "components": {
             "adp_value": 2034,
             "fpar_value": 0,
-            "trade_value": 1878,
+            "trade_value": 1871,
             "source": "adp_only"
           }
         },
@@ -5733,7 +5733,7 @@
           "components": {
             "adp_value": 2026,
             "fpar_value": 0,
-            "trade_value": 1871,
+            "trade_value": 1864,
             "source": "adp_only"
           }
         },
@@ -5752,7 +5752,7 @@
           "components": {
             "adp_value": 2018,
             "fpar_value": 0,
-            "trade_value": 1864,
+            "trade_value": 1857,
             "source": "adp_only"
           }
         },
@@ -5771,7 +5771,7 @@
           "components": {
             "adp_value": 2011,
             "fpar_value": 0,
-            "trade_value": 1857,
+            "trade_value": 1850,
             "source": "adp_only"
           }
         },
@@ -5790,7 +5790,7 @@
           "components": {
             "adp_value": 2003,
             "fpar_value": 0,
-            "trade_value": 1850,
+            "trade_value": 1843,
             "source": "adp_only"
           }
         },
@@ -5809,7 +5809,7 @@
           "components": {
             "adp_value": 1995,
             "fpar_value": 0,
-            "trade_value": 1843,
+            "trade_value": 1835,
             "source": "adp_only"
           }
         },
@@ -5828,7 +5828,7 @@
           "components": {
             "adp_value": 1987,
             "fpar_value": 0,
-            "trade_value": 1835,
+            "trade_value": 1828,
             "source": "adp_only"
           }
         },
@@ -5847,7 +5847,7 @@
           "components": {
             "adp_value": 1979,
             "fpar_value": 0,
-            "trade_value": 1828,
+            "trade_value": 1821,
             "source": "adp_only"
           }
         },
@@ -5866,7 +5866,7 @@
           "components": {
             "adp_value": 1972,
             "fpar_value": 0,
-            "trade_value": 1821,
+            "trade_value": 1814,
             "source": "adp_only"
           }
         },
@@ -5885,7 +5885,7 @@
           "components": {
             "adp_value": 1964,
             "fpar_value": 0,
-            "trade_value": 1814,
+            "trade_value": 1807,
             "source": "adp_only"
           }
         },
@@ -5904,7 +5904,7 @@
           "components": {
             "adp_value": 1956,
             "fpar_value": 0,
-            "trade_value": 1807,
+            "trade_value": 1800,
             "source": "adp_only"
           }
         },
@@ -5923,7 +5923,7 @@
           "components": {
             "adp_value": 1948,
             "fpar_value": 0,
-            "trade_value": 1800,
+            "trade_value": 1792,
             "source": "adp_only"
           }
         },
@@ -5942,7 +5942,7 @@
           "components": {
             "adp_value": 1940,
             "fpar_value": 0,
-            "trade_value": 1792,
+            "trade_value": 1785,
             "source": "adp_only"
           }
         },
@@ -5961,7 +5961,7 @@
           "components": {
             "adp_value": 1933,
             "fpar_value": 0,
-            "trade_value": 1785,
+            "trade_value": 1778,
             "source": "adp_only"
           }
         },
@@ -5980,7 +5980,7 @@
           "components": {
             "adp_value": 1925,
             "fpar_value": 0,
-            "trade_value": 1778,
+            "trade_value": 1771,
             "source": "adp_only"
           }
         },
@@ -5999,7 +5999,7 @@
           "components": {
             "adp_value": 1917,
             "fpar_value": 0,
-            "trade_value": 1771,
+            "trade_value": 1764,
             "source": "adp_only"
           }
         },
@@ -6018,7 +6018,7 @@
           "components": {
             "adp_value": 1909,
             "fpar_value": 0,
-            "trade_value": 1764,
+            "trade_value": 1756,
             "source": "adp_only"
           }
         },
@@ -6550,7 +6550,7 @@
           "components": {
             "adp_value": 1681,
             "fpar_value": 0,
-            "trade_value": 1756,
+            "trade_value": 1547,
             "source": "adp_only"
           }
         },
@@ -6569,7 +6569,7 @@
           "components": {
             "adp_value": 1673,
             "fpar_value": 0,
-            "trade_value": 1547,
+            "trade_value": 1539,
             "source": "adp_only"
           }
         },
@@ -6588,7 +6588,7 @@
           "components": {
             "adp_value": 1666,
             "fpar_value": 0,
-            "trade_value": 1539,
+            "trade_value": 1533,
             "source": "adp_only"
           }
         },
@@ -6607,7 +6607,7 @@
           "components": {
             "adp_value": 1658,
             "fpar_value": 0,
-            "trade_value": 1533,
+            "trade_value": 1525,
             "source": "adp_only"
           }
         },
@@ -6626,7 +6626,7 @@
           "components": {
             "adp_value": 1650,
             "fpar_value": 0,
-            "trade_value": 1525,
+            "trade_value": 1518,
             "source": "adp_only"
           }
         },
@@ -6645,7 +6645,7 @@
           "components": {
             "adp_value": 1642,
             "fpar_value": 0,
-            "trade_value": 1518,
+            "trade_value": 1511,
             "source": "adp_only"
           }
         },
@@ -6664,7 +6664,7 @@
           "components": {
             "adp_value": 1635,
             "fpar_value": 0,
-            "trade_value": 1511,
+            "trade_value": 1504,
             "source": "adp_only"
           }
         },
@@ -6683,7 +6683,7 @@
           "components": {
             "adp_value": 1627,
             "fpar_value": 0,
-            "trade_value": 1504,
+            "trade_value": 1497,
             "source": "adp_only"
           }
         },
@@ -6702,7 +6702,7 @@
           "components": {
             "adp_value": 1619,
             "fpar_value": 0,
-            "trade_value": 1497,
+            "trade_value": 1489,
             "source": "adp_only"
           }
         },
@@ -6721,7 +6721,7 @@
           "components": {
             "adp_value": 1611,
             "fpar_value": 0,
-            "trade_value": 1489,
+            "trade_value": 1482,
             "source": "adp_only"
           }
         },
@@ -6740,7 +6740,7 @@
           "components": {
             "adp_value": 1604,
             "fpar_value": 0,
-            "trade_value": 1482,
+            "trade_value": 1476,
             "source": "adp_only"
           }
         },
@@ -6759,7 +6759,7 @@
           "components": {
             "adp_value": 1596,
             "fpar_value": 0,
-            "trade_value": 1476,
+            "trade_value": 1468,
             "source": "adp_only"
           }
         },
@@ -6778,7 +6778,7 @@
           "components": {
             "adp_value": 1588,
             "fpar_value": 0,
-            "trade_value": 1468,
+            "trade_value": 1461,
             "source": "adp_only"
           }
         },
@@ -6797,7 +6797,7 @@
           "components": {
             "adp_value": 1580,
             "fpar_value": 0,
-            "trade_value": 1461,
+            "trade_value": 1454,
             "source": "adp_only"
           }
         },
@@ -6816,7 +6816,7 @@
           "components": {
             "adp_value": 1573,
             "fpar_value": 0,
-            "trade_value": 1454,
+            "trade_value": 1447,
             "source": "adp_only"
           }
         },
@@ -6835,7 +6835,7 @@
           "components": {
             "adp_value": 1565,
             "fpar_value": 0,
-            "trade_value": 1447,
+            "trade_value": 1440,
             "source": "adp_only"
           }
         },
@@ -6854,7 +6854,7 @@
           "components": {
             "adp_value": 1557,
             "fpar_value": 0,
-            "trade_value": 1440,
+            "trade_value": 1432,
             "source": "adp_only"
           }
         },
@@ -6873,7 +6873,7 @@
           "components": {
             "adp_value": 1550,
             "fpar_value": 0,
-            "trade_value": 1432,
+            "trade_value": 1426,
             "source": "adp_only"
           }
         },
@@ -6892,7 +6892,7 @@
           "components": {
             "adp_value": 1543,
             "fpar_value": 0,
-            "trade_value": 1426,
+            "trade_value": 1420,
             "source": "adp_only"
           }
         },
@@ -6911,7 +6911,7 @@
           "components": {
             "adp_value": 1536,
             "fpar_value": 0,
-            "trade_value": 1420,
+            "trade_value": 1413,
             "source": "adp_only"
           }
         },
@@ -6930,7 +6930,7 @@
           "components": {
             "adp_value": 1529,
             "fpar_value": 0,
-            "trade_value": 1413,
+            "trade_value": 1407,
             "source": "adp_only"
           }
         },
@@ -6949,7 +6949,7 @@
           "components": {
             "adp_value": 1523,
             "fpar_value": 0,
-            "trade_value": 1407,
+            "trade_value": 1401,
             "source": "adp_only"
           }
         },
@@ -6968,7 +6968,7 @@
           "components": {
             "adp_value": 1516,
             "fpar_value": 0,
-            "trade_value": 1401,
+            "trade_value": 1395,
             "source": "adp_only"
           }
         },
@@ -6987,7 +6987,7 @@
           "components": {
             "adp_value": 1509,
             "fpar_value": 0,
-            "trade_value": 1395,
+            "trade_value": 1388,
             "source": "adp_only"
           }
         },
@@ -7006,7 +7006,7 @@
           "components": {
             "adp_value": 1502,
             "fpar_value": 0,
-            "trade_value": 1388,
+            "trade_value": 1382,
             "source": "adp_only"
           }
         },
@@ -7025,7 +7025,7 @@
           "components": {
             "adp_value": 1495,
             "fpar_value": 0,
-            "trade_value": 1382,
+            "trade_value": 1375,
             "source": "adp_only"
           }
         },
@@ -7044,7 +7044,7 @@
           "components": {
             "adp_value": 1488,
             "fpar_value": 0,
-            "trade_value": 1375,
+            "trade_value": 1369,
             "source": "adp_only"
           }
         },
@@ -7063,7 +7063,7 @@
           "components": {
             "adp_value": 1481,
             "fpar_value": 0,
-            "trade_value": 1369,
+            "trade_value": 1363,
             "source": "adp_only"
           }
         },
@@ -7082,7 +7082,7 @@
           "components": {
             "adp_value": 1474,
             "fpar_value": 0,
-            "trade_value": 1363,
+            "trade_value": 1356,
             "source": "adp_only"
           }
         },
@@ -7101,7 +7101,7 @@
           "components": {
             "adp_value": 1467,
             "fpar_value": 0,
-            "trade_value": 1356,
+            "trade_value": 1350,
             "source": "adp_only"
           }
         },
@@ -7120,7 +7120,7 @@
           "components": {
             "adp_value": 1460,
             "fpar_value": 0,
-            "trade_value": 1350,
+            "trade_value": 1343,
             "source": "adp_only"
           }
         },
@@ -7139,7 +7139,7 @@
           "components": {
             "adp_value": 1454,
             "fpar_value": 0,
-            "trade_value": 1343,
+            "trade_value": 1338,
             "source": "adp_only"
           }
         },
@@ -7158,7 +7158,7 @@
           "components": {
             "adp_value": 1447,
             "fpar_value": 0,
-            "trade_value": 1338,
+            "trade_value": 1331,
             "source": "adp_only"
           }
         },
@@ -7177,7 +7177,7 @@
           "components": {
             "adp_value": 1440,
             "fpar_value": 0,
-            "trade_value": 1331,
+            "trade_value": 1325,
             "source": "adp_only"
           }
         },
@@ -7196,7 +7196,7 @@
           "components": {
             "adp_value": 1433,
             "fpar_value": 0,
-            "trade_value": 1325,
+            "trade_value": 1318,
             "source": "adp_only"
           }
         },
@@ -7215,7 +7215,7 @@
           "components": {
             "adp_value": 1426,
             "fpar_value": 0,
-            "trade_value": 1318,
+            "trade_value": 1312,
             "source": "adp_only"
           }
         },
@@ -7234,7 +7234,7 @@
           "components": {
             "adp_value": 1419,
             "fpar_value": 0,
-            "trade_value": 1312,
+            "trade_value": 1305,
             "source": "adp_only"
           }
         },
@@ -7253,7 +7253,7 @@
           "components": {
             "adp_value": 1417,
             "fpar_value": 0,
-            "trade_value": 1305,
+            "trade_value": 1304,
             "source": "adp_only"
           }
         },
@@ -7272,7 +7272,7 @@
           "components": {
             "adp_value": 1416,
             "fpar_value": 0,
-            "trade_value": 1304,
+            "trade_value": 1303,
             "source": "adp_only"
           }
         },
@@ -7291,7 +7291,7 @@
           "components": {
             "adp_value": 1414,
             "fpar_value": 0,
-            "trade_value": 1303,
+            "trade_value": 1301,
             "source": "adp_only"
           }
         },
@@ -7310,7 +7310,7 @@
           "components": {
             "adp_value": 1413,
             "fpar_value": 0,
-            "trade_value": 1301,
+            "trade_value": 1300,
             "source": "adp_only"
           }
         },
@@ -7329,7 +7329,7 @@
           "components": {
             "adp_value": 1411,
             "fpar_value": 0,
-            "trade_value": 1300,
+            "trade_value": 1298,
             "source": "adp_only"
           }
         },
@@ -7348,7 +7348,7 @@
           "components": {
             "adp_value": 1409,
             "fpar_value": 0,
-            "trade_value": 1298,
+            "trade_value": 1296,
             "source": "adp_only"
           }
         },
@@ -7367,7 +7367,7 @@
           "components": {
             "adp_value": 1408,
             "fpar_value": 0,
-            "trade_value": 1296,
+            "trade_value": 1295,
             "source": "adp_only"
           }
         },
@@ -7386,7 +7386,7 @@
           "components": {
             "adp_value": 1406,
             "fpar_value": 0,
-            "trade_value": 1295,
+            "trade_value": 1294,
             "source": "adp_only"
           }
         },
@@ -7405,7 +7405,7 @@
           "components": {
             "adp_value": 1405,
             "fpar_value": 0,
-            "trade_value": 1294,
+            "trade_value": 1293,
             "source": "adp_only"
           }
         },
@@ -7424,7 +7424,7 @@
           "components": {
             "adp_value": 1403,
             "fpar_value": 0,
-            "trade_value": 1293,
+            "trade_value": 1291,
             "source": "adp_only"
           }
         },
@@ -7443,7 +7443,7 @@
           "components": {
             "adp_value": 1401,
             "fpar_value": 0,
-            "trade_value": 1291,
+            "trade_value": 1289,
             "source": "adp_only"
           }
         },
@@ -7462,7 +7462,7 @@
           "components": {
             "adp_value": 1400,
             "fpar_value": 0,
-            "trade_value": 1289,
+            "trade_value": 1288,
             "source": "adp_only"
           }
         },
@@ -7481,7 +7481,7 @@
           "components": {
             "adp_value": 1398,
             "fpar_value": 0,
-            "trade_value": 1288,
+            "trade_value": 1286,
             "source": "adp_only"
           }
         },
@@ -7500,7 +7500,7 @@
           "components": {
             "adp_value": 1397,
             "fpar_value": 0,
-            "trade_value": 1286,
+            "trade_value": 1285,
             "source": "adp_only"
           }
         },
@@ -7519,7 +7519,7 @@
           "components": {
             "adp_value": 1395,
             "fpar_value": 0,
-            "trade_value": 1285,
+            "trade_value": 1283,
             "source": "adp_only"
           }
         },
@@ -7538,7 +7538,7 @@
           "components": {
             "adp_value": 1393,
             "fpar_value": 0,
-            "trade_value": 1283,
+            "trade_value": 1282,
             "source": "adp_only"
           }
         },
@@ -7557,7 +7557,7 @@
           "components": {
             "adp_value": 1392,
             "fpar_value": 0,
-            "trade_value": 1282,
+            "trade_value": 1281,
             "source": "adp_only"
           }
         },
@@ -7576,7 +7576,7 @@
           "components": {
             "adp_value": 1390,
             "fpar_value": 0,
-            "trade_value": 1281,
+            "trade_value": 1279,
             "source": "adp_only"
           }
         },
@@ -7595,7 +7595,7 @@
           "components": {
             "adp_value": 1389,
             "fpar_value": 0,
-            "trade_value": 1279,
+            "trade_value": 1278,
             "source": "adp_only"
           }
         },
@@ -7614,7 +7614,7 @@
           "components": {
             "adp_value": 1387,
             "fpar_value": 0,
-            "trade_value": 1278,
+            "trade_value": 1276,
             "source": "adp_only"
           }
         },
@@ -7633,7 +7633,7 @@
           "components": {
             "adp_value": 1381,
             "fpar_value": 0,
-            "trade_value": 1276,
+            "trade_value": 1271,
             "source": "adp_only"
           }
         },
@@ -7652,7 +7652,7 @@
           "components": {
             "adp_value": 1376,
             "fpar_value": 0,
-            "trade_value": 1271,
+            "trade_value": 1266,
             "source": "adp_only"
           }
         },
@@ -7671,7 +7671,7 @@
           "components": {
             "adp_value": 1370,
             "fpar_value": 0,
-            "trade_value": 1266,
+            "trade_value": 1260,
             "source": "adp_only"
           }
         },
@@ -7690,7 +7690,7 @@
           "components": {
             "adp_value": 1365,
             "fpar_value": 0,
-            "trade_value": 1260,
+            "trade_value": 1256,
             "source": "adp_only"
           }
         },
@@ -7709,7 +7709,7 @@
           "components": {
             "adp_value": 1359,
             "fpar_value": 0,
-            "trade_value": 1256,
+            "trade_value": 1250,
             "source": "adp_only"
           }
         },
@@ -7728,7 +7728,7 @@
           "components": {
             "adp_value": 1353,
             "fpar_value": 0,
-            "trade_value": 1250,
+            "trade_value": 1245,
             "source": "adp_only"
           }
         },
@@ -7747,7 +7747,7 @@
           "components": {
             "adp_value": 1348,
             "fpar_value": 0,
-            "trade_value": 1245,
+            "trade_value": 1240,
             "source": "adp_only"
           }
         },
@@ -7766,7 +7766,7 @@
           "components": {
             "adp_value": 1342,
             "fpar_value": 0,
-            "trade_value": 1240,
+            "trade_value": 1235,
             "source": "adp_only"
           }
         },
@@ -7785,7 +7785,7 @@
           "components": {
             "adp_value": 1337,
             "fpar_value": 0,
-            "trade_value": 1235,
+            "trade_value": 1230,
             "source": "adp_only"
           }
         },
@@ -7804,7 +7804,7 @@
           "components": {
             "adp_value": 1331,
             "fpar_value": 0,
-            "trade_value": 1230,
+            "trade_value": 1225,
             "source": "adp_only"
           }
         },
@@ -7823,7 +7823,7 @@
           "components": {
             "adp_value": 1325,
             "fpar_value": 0,
-            "trade_value": 1225,
+            "trade_value": 1219,
             "source": "adp_only"
           }
         },
@@ -7842,7 +7842,7 @@
           "components": {
             "adp_value": 1320,
             "fpar_value": 0,
-            "trade_value": 1219,
+            "trade_value": 1214,
             "source": "adp_only"
           }
         },
@@ -7861,7 +7861,7 @@
           "components": {
             "adp_value": 1314,
             "fpar_value": 0,
-            "trade_value": 1214,
+            "trade_value": 1209,
             "source": "adp_only"
           }
         },
@@ -7880,7 +7880,7 @@
           "components": {
             "adp_value": 1309,
             "fpar_value": 0,
-            "trade_value": 1209,
+            "trade_value": 1204,
             "source": "adp_only"
           }
         },
@@ -7899,7 +7899,7 @@
           "components": {
             "adp_value": 1303,
             "fpar_value": 0,
-            "trade_value": 1204,
+            "trade_value": 1199,
             "source": "adp_only"
           }
         },
@@ -7918,7 +7918,7 @@
           "components": {
             "adp_value": 1297,
             "fpar_value": 0,
-            "trade_value": 1199,
+            "trade_value": 1193,
             "source": "adp_only"
           }
         },
@@ -7937,7 +7937,7 @@
           "components": {
             "adp_value": 1292,
             "fpar_value": 0,
-            "trade_value": 1193,
+            "trade_value": 1189,
             "source": "adp_only"
           }
         },
@@ -7956,7 +7956,7 @@
           "components": {
             "adp_value": 1286,
             "fpar_value": 0,
-            "trade_value": 1189,
+            "trade_value": 1183,
             "source": "adp_only"
           }
         },
@@ -7975,7 +7975,7 @@
           "components": {
             "adp_value": 1281,
             "fpar_value": 0,
-            "trade_value": 1183,
+            "trade_value": 1179,
             "source": "adp_only"
           }
         },
@@ -7994,7 +7994,7 @@
           "components": {
             "adp_value": 1275,
             "fpar_value": 0,
-            "trade_value": 1179,
+            "trade_value": 1173,
             "source": "adp_only"
           }
         },
@@ -8013,7 +8013,7 @@
           "components": {
             "adp_value": 1270,
             "fpar_value": 0,
-            "trade_value": 1173,
+            "trade_value": 1168,
             "source": "adp_only"
           }
         },
@@ -8032,7 +8032,7 @@
           "components": {
             "adp_value": 1265,
             "fpar_value": 0,
-            "trade_value": 1168,
+            "trade_value": 1164,
             "source": "adp_only"
           }
         },
@@ -8051,7 +8051,7 @@
           "components": {
             "adp_value": 1260,
             "fpar_value": 0,
-            "trade_value": 1164,
+            "trade_value": 1159,
             "source": "adp_only"
           }
         },
@@ -8070,7 +8070,7 @@
           "components": {
             "adp_value": 1254,
             "fpar_value": 0,
-            "trade_value": 1159,
+            "trade_value": 1154,
             "source": "adp_only"
           }
         },
@@ -8089,7 +8089,7 @@
           "components": {
             "adp_value": 1249,
             "fpar_value": 0,
-            "trade_value": 1154,
+            "trade_value": 1149,
             "source": "adp_only"
           }
         },
@@ -8108,7 +8108,7 @@
           "components": {
             "adp_value": 1244,
             "fpar_value": 0,
-            "trade_value": 1149,
+            "trade_value": 1144,
             "source": "adp_only"
           }
         },
@@ -8127,7 +8127,7 @@
           "components": {
             "adp_value": 1239,
             "fpar_value": 0,
-            "trade_value": 1144,
+            "trade_value": 1140,
             "source": "adp_only"
           }
         },
@@ -8146,7 +8146,7 @@
           "components": {
             "adp_value": 1234,
             "fpar_value": 0,
-            "trade_value": 1140,
+            "trade_value": 1135,
             "source": "adp_only"
           }
         },
@@ -8165,7 +8165,7 @@
           "components": {
             "adp_value": 1229,
             "fpar_value": 0,
-            "trade_value": 1135,
+            "trade_value": 1131,
             "source": "adp_only"
           }
         },
@@ -8184,7 +8184,7 @@
           "components": {
             "adp_value": 1224,
             "fpar_value": 0,
-            "trade_value": 1131,
+            "trade_value": 1126,
             "source": "adp_only"
           }
         },
@@ -8203,7 +8203,7 @@
           "components": {
             "adp_value": 1218,
             "fpar_value": 0,
-            "trade_value": 1126,
+            "trade_value": 1121,
             "source": "adp_only"
           }
         },
@@ -8222,7 +8222,7 @@
           "components": {
             "adp_value": 1213,
             "fpar_value": 0,
-            "trade_value": 1121,
+            "trade_value": 1116,
             "source": "adp_only"
           }
         },
@@ -8241,7 +8241,7 @@
           "components": {
             "adp_value": 1208,
             "fpar_value": 0,
-            "trade_value": 1116,
+            "trade_value": 1111,
             "source": "adp_only"
           }
         },
@@ -8260,7 +8260,7 @@
           "components": {
             "adp_value": 1203,
             "fpar_value": 0,
-            "trade_value": 1111,
+            "trade_value": 1107,
             "source": "adp_only"
           }
         },
@@ -8279,7 +8279,7 @@
           "components": {
             "adp_value": 1198,
             "fpar_value": 0,
-            "trade_value": 1107,
+            "trade_value": 1102,
             "source": "adp_only"
           }
         },
@@ -8298,7 +8298,7 @@
           "components": {
             "adp_value": 1193,
             "fpar_value": 0,
-            "trade_value": 1102,
+            "trade_value": 1098,
             "source": "adp_only"
           }
         },
@@ -8317,7 +8317,7 @@
           "components": {
             "adp_value": 1187,
             "fpar_value": 0,
-            "trade_value": 1098,
+            "trade_value": 1092,
             "source": "adp_only"
           }
         },
@@ -8336,7 +8336,7 @@
           "components": {
             "adp_value": 1182,
             "fpar_value": 0,
-            "trade_value": 1092,
+            "trade_value": 1087,
             "source": "adp_only"
           }
         },
@@ -8355,7 +8355,7 @@
           "components": {
             "adp_value": 1177,
             "fpar_value": 0,
-            "trade_value": 1087,
+            "trade_value": 1083,
             "source": "adp_only"
           }
         },
@@ -8374,7 +8374,7 @@
           "components": {
             "adp_value": 1172,
             "fpar_value": 0,
-            "trade_value": 1083,
+            "trade_value": 1078,
             "source": "adp_only"
           }
         },
@@ -8393,7 +8393,7 @@
           "components": {
             "adp_value": 1167,
             "fpar_value": 0,
-            "trade_value": 1078,
+            "trade_value": 1074,
             "source": "adp_only"
           }
         },
@@ -8412,7 +8412,7 @@
           "components": {
             "adp_value": 1162,
             "fpar_value": 0,
-            "trade_value": 1074,
+            "trade_value": 1069,
             "source": "adp_only"
           }
         },
@@ -8431,7 +8431,7 @@
           "components": {
             "adp_value": 1157,
             "fpar_value": 0,
-            "trade_value": 1069,
+            "trade_value": 1064,
             "source": "adp_only"
           }
         },
@@ -8450,7 +8450,7 @@
           "components": {
             "adp_value": 1153,
             "fpar_value": 0,
-            "trade_value": 1064,
+            "trade_value": 1061,
             "source": "adp_only"
           }
         },
@@ -8469,7 +8469,7 @@
           "components": {
             "adp_value": 1148,
             "fpar_value": 0,
-            "trade_value": 1061,
+            "trade_value": 1056,
             "source": "adp_only"
           }
         },
@@ -8488,7 +8488,7 @@
           "components": {
             "adp_value": 1143,
             "fpar_value": 0,
-            "trade_value": 1056,
+            "trade_value": 1052,
             "source": "adp_only"
           }
         },
@@ -8507,7 +8507,7 @@
           "components": {
             "adp_value": 1138,
             "fpar_value": 0,
-            "trade_value": 1052,
+            "trade_value": 1047,
             "source": "adp_only"
           }
         },
@@ -8526,7 +8526,7 @@
           "components": {
             "adp_value": 1133,
             "fpar_value": 0,
-            "trade_value": 1047,
+            "trade_value": 1042,
             "source": "adp_only"
           }
         },
@@ -8545,7 +8545,7 @@
           "components": {
             "adp_value": 1128,
             "fpar_value": 0,
-            "trade_value": 1042,
+            "trade_value": 1038,
             "source": "adp_only"
           }
         },
@@ -8564,7 +8564,7 @@
           "components": {
             "adp_value": 1124,
             "fpar_value": 0,
-            "trade_value": 1038,
+            "trade_value": 1034,
             "source": "adp_only"
           }
         },
@@ -8583,7 +8583,7 @@
           "components": {
             "adp_value": 1119,
             "fpar_value": 0,
-            "trade_value": 1034,
+            "trade_value": 1029,
             "source": "adp_only"
           }
         },
@@ -8602,7 +8602,7 @@
           "components": {
             "adp_value": 1114,
             "fpar_value": 0,
-            "trade_value": 1029,
+            "trade_value": 1025,
             "source": "adp_only"
           }
         },
@@ -8621,7 +8621,7 @@
           "components": {
             "adp_value": 1109,
             "fpar_value": 0,
-            "trade_value": 1025,
+            "trade_value": 1020,
             "source": "adp_only"
           }
         },
@@ -8640,7 +8640,7 @@
           "components": {
             "adp_value": 1104,
             "fpar_value": 0,
-            "trade_value": 1020,
+            "trade_value": 1016,
             "source": "adp_only"
           }
         },
@@ -8659,7 +8659,7 @@
           "components": {
             "adp_value": 1099,
             "fpar_value": 0,
-            "trade_value": 1016,
+            "trade_value": 1011,
             "source": "adp_only"
           }
         },
@@ -8678,7 +8678,7 @@
           "components": {
             "adp_value": 1094,
             "fpar_value": 0,
-            "trade_value": 1011,
+            "trade_value": 1006,
             "source": "adp_only"
           }
         },
@@ -8697,7 +8697,7 @@
           "components": {
             "adp_value": 1090,
             "fpar_value": 0,
-            "trade_value": 1006,
+            "trade_value": 1003,
             "source": "adp_only"
           }
         },
@@ -8716,7 +8716,7 @@
           "components": {
             "adp_value": 1085,
             "fpar_value": 0,
-            "trade_value": 1003,
+            "trade_value": 998,
             "source": "adp_only"
           }
         },
@@ -8735,7 +8735,7 @@
           "components": {
             "adp_value": 1080,
             "fpar_value": 0,
-            "trade_value": 998,
+            "trade_value": 994,
             "source": "adp_only"
           }
         },
@@ -8754,7 +8754,7 @@
           "components": {
             "adp_value": 1075,
             "fpar_value": 0,
-            "trade_value": 994,
+            "trade_value": 989,
             "source": "adp_only"
           }
         },
@@ -8773,7 +8773,7 @@
           "components": {
             "adp_value": 1070,
             "fpar_value": 0,
-            "trade_value": 989,
+            "trade_value": 984,
             "source": "adp_only"
           }
         },
@@ -8792,7 +8792,7 @@
           "components": {
             "adp_value": 1065,
             "fpar_value": 0,
-            "trade_value": 984,
+            "trade_value": 980,
             "source": "adp_only"
           }
         },
@@ -8811,7 +8811,7 @@
           "components": {
             "adp_value": 1060,
             "fpar_value": 0,
-            "trade_value": 980,
+            "trade_value": 975,
             "source": "adp_only"
           }
         },
@@ -8830,7 +8830,7 @@
           "components": {
             "adp_value": 1056,
             "fpar_value": 0,
-            "trade_value": 975,
+            "trade_value": 972,
             "source": "adp_only"
           }
         },
@@ -8849,7 +8849,7 @@
           "components": {
             "adp_value": 1051,
             "fpar_value": 0,
-            "trade_value": 972,
+            "trade_value": 967,
             "source": "adp_only"
           }
         },
@@ -8868,7 +8868,7 @@
           "components": {
             "adp_value": 1046,
             "fpar_value": 0,
-            "trade_value": 967,
+            "trade_value": 962,
             "source": "adp_only"
           }
         },
@@ -8887,7 +8887,7 @@
           "components": {
             "adp_value": 1041,
             "fpar_value": 0,
-            "trade_value": 962,
+            "trade_value": 958,
             "source": "adp_only"
           }
         },
@@ -8906,7 +8906,7 @@
           "components": {
             "adp_value": 1036,
             "fpar_value": 0,
-            "trade_value": 958,
+            "trade_value": 953,
             "source": "adp_only"
           }
         },
@@ -8925,7 +8925,7 @@
           "components": {
             "adp_value": 1031,
             "fpar_value": 0,
-            "trade_value": 953,
+            "trade_value": 949,
             "source": "adp_only"
           }
         },
@@ -8944,7 +8944,7 @@
           "components": {
             "adp_value": 1027,
             "fpar_value": 0,
-            "trade_value": 949,
+            "trade_value": 945,
             "source": "adp_only"
           }
         },
@@ -8963,7 +8963,7 @@
           "components": {
             "adp_value": 1022,
             "fpar_value": 0,
-            "trade_value": 945,
+            "trade_value": 940,
             "source": "adp_only"
           }
         },
@@ -8982,7 +8982,7 @@
           "components": {
             "adp_value": 1017,
             "fpar_value": 0,
-            "trade_value": 940,
+            "trade_value": 936,
             "source": "adp_only"
           }
         },
@@ -9001,7 +9001,7 @@
           "components": {
             "adp_value": 1012,
             "fpar_value": 0,
-            "trade_value": 936,
+            "trade_value": 931,
             "source": "adp_only"
           }
         },
@@ -9020,7 +9020,7 @@
           "components": {
             "adp_value": 1007,
             "fpar_value": 0,
-            "trade_value": 931,
+            "trade_value": 926,
             "source": "adp_only"
           }
         },
@@ -9039,7 +9039,7 @@
           "components": {
             "adp_value": 1002,
             "fpar_value": 0,
-            "trade_value": 926,
+            "trade_value": 922,
             "source": "adp_only"
           }
         },
@@ -9058,7 +9058,7 @@
           "components": {
             "adp_value": 997,
             "fpar_value": 0,
-            "trade_value": 922,
+            "trade_value": 917,
             "source": "adp_only"
           }
         },
@@ -9077,7 +9077,7 @@
           "components": {
             "adp_value": 993,
             "fpar_value": 0,
-            "trade_value": 917,
+            "trade_value": 914,
             "source": "adp_only"
           }
         },
@@ -9096,7 +9096,7 @@
           "components": {
             "adp_value": 988,
             "fpar_value": 0,
-            "trade_value": 914,
+            "trade_value": 909,
             "source": "adp_only"
           }
         },
@@ -9115,7 +9115,7 @@
           "components": {
             "adp_value": 983,
             "fpar_value": 0,
-            "trade_value": 909,
+            "trade_value": 904,
             "source": "adp_only"
           }
         },
@@ -9134,7 +9134,7 @@
           "components": {
             "adp_value": 978,
             "fpar_value": 0,
-            "trade_value": 904,
+            "trade_value": 900,
             "source": "adp_only"
           }
         },
@@ -9153,7 +9153,7 @@
           "components": {
             "adp_value": 969,
             "fpar_value": 0,
-            "trade_value": 900,
+            "trade_value": 891,
             "source": "adp_only"
           }
         },
@@ -9172,7 +9172,7 @@
           "components": {
             "adp_value": 959,
             "fpar_value": 0,
-            "trade_value": 891,
+            "trade_value": 882,
             "source": "adp_only"
           }
         },
@@ -9191,7 +9191,7 @@
           "components": {
             "adp_value": 950,
             "fpar_value": 0,
-            "trade_value": 882,
+            "trade_value": 874,
             "source": "adp_only"
           }
         },
@@ -9210,7 +9210,7 @@
           "components": {
             "adp_value": 940,
             "fpar_value": 0,
-            "trade_value": 874,
+            "trade_value": 865,
             "source": "adp_only"
           }
         },
@@ -9229,7 +9229,7 @@
           "components": {
             "adp_value": 931,
             "fpar_value": 0,
-            "trade_value": 865,
+            "trade_value": 857,
             "source": "adp_only"
           }
         },
@@ -9248,7 +9248,7 @@
           "components": {
             "adp_value": 921,
             "fpar_value": 0,
-            "trade_value": 857,
+            "trade_value": 847,
             "source": "adp_only"
           }
         },
@@ -9267,7 +9267,7 @@
           "components": {
             "adp_value": 912,
             "fpar_value": 0,
-            "trade_value": 847,
+            "trade_value": 839,
             "source": "adp_only"
           }
         },
@@ -9286,7 +9286,7 @@
           "components": {
             "adp_value": 902,
             "fpar_value": 0,
-            "trade_value": 839,
+            "trade_value": 830,
             "source": "adp_only"
           }
         },
@@ -9305,7 +9305,7 @@
           "components": {
             "adp_value": 893,
             "fpar_value": 0,
-            "trade_value": 830,
+            "trade_value": 822,
             "source": "adp_only"
           }
         },
@@ -9324,7 +9324,7 @@
           "components": {
             "adp_value": 883,
             "fpar_value": 0,
-            "trade_value": 822,
+            "trade_value": 812,
             "source": "adp_only"
           }
         },
@@ -9343,7 +9343,7 @@
           "components": {
             "adp_value": 874,
             "fpar_value": 0,
-            "trade_value": 812,
+            "trade_value": 804,
             "source": "adp_only"
           }
         },
@@ -9362,7 +9362,7 @@
           "components": {
             "adp_value": 864,
             "fpar_value": 0,
-            "trade_value": 804,
+            "trade_value": 795,
             "source": "adp_only"
           }
         },
@@ -9381,7 +9381,7 @@
           "components": {
             "adp_value": 855,
             "fpar_value": 0,
-            "trade_value": 795,
+            "trade_value": 787,
             "source": "adp_only"
           }
         },
@@ -9400,7 +9400,7 @@
           "components": {
             "adp_value": 845,
             "fpar_value": 0,
-            "trade_value": 787,
+            "trade_value": 777,
             "source": "adp_only"
           }
         },
@@ -9419,7 +9419,7 @@
           "components": {
             "adp_value": 836,
             "fpar_value": 0,
-            "trade_value": 777,
+            "trade_value": 769,
             "source": "adp_only"
           }
         },
@@ -9438,7 +9438,7 @@
           "components": {
             "adp_value": 826,
             "fpar_value": 0,
-            "trade_value": 769,
+            "trade_value": 760,
             "source": "adp_only"
           }
         },
@@ -9457,7 +9457,7 @@
           "components": {
             "adp_value": 817,
             "fpar_value": 0,
-            "trade_value": 760,
+            "trade_value": 752,
             "source": "adp_only"
           }
         },
@@ -9476,7 +9476,7 @@
           "components": {
             "adp_value": 807,
             "fpar_value": 0,
-            "trade_value": 752,
+            "trade_value": 742,
             "source": "adp_only"
           }
         },
@@ -9495,7 +9495,7 @@
           "components": {
             "adp_value": 798,
             "fpar_value": 0,
-            "trade_value": 742,
+            "trade_value": 734,
             "source": "adp_only"
           }
         },
@@ -9514,7 +9514,7 @@
           "components": {
             "adp_value": 788,
             "fpar_value": 0,
-            "trade_value": 734,
+            "trade_value": 725,
             "source": "adp_only"
           }
         },
@@ -9533,7 +9533,7 @@
           "components": {
             "adp_value": 785,
             "fpar_value": 0,
-            "trade_value": 725,
+            "trade_value": 722,
             "source": "adp_only"
           }
         },
@@ -9552,7 +9552,7 @@
           "components": {
             "adp_value": 782,
             "fpar_value": 0,
-            "trade_value": 722,
+            "trade_value": 719,
             "source": "adp_only"
           }
         },
@@ -9571,7 +9571,7 @@
           "components": {
             "adp_value": 779,
             "fpar_value": 0,
-            "trade_value": 719,
+            "trade_value": 717,
             "source": "adp_only"
           }
         },
@@ -9590,7 +9590,7 @@
           "components": {
             "adp_value": 776,
             "fpar_value": 0,
-            "trade_value": 717,
+            "trade_value": 714,
             "source": "adp_only"
           }
         },
@@ -9609,7 +9609,7 @@
           "components": {
             "adp_value": 773,
             "fpar_value": 0,
-            "trade_value": 714,
+            "trade_value": 711,
             "source": "adp_only"
           }
         },
@@ -9628,7 +9628,7 @@
           "components": {
             "adp_value": 770,
             "fpar_value": 0,
-            "trade_value": 711,
+            "trade_value": 708,
             "source": "adp_only"
           }
         },
@@ -9647,7 +9647,7 @@
           "components": {
             "adp_value": 767,
             "fpar_value": 0,
-            "trade_value": 708,
+            "trade_value": 706,
             "source": "adp_only"
           }
         },
@@ -9666,7 +9666,7 @@
           "components": {
             "adp_value": 764,
             "fpar_value": 0,
-            "trade_value": 706,
+            "trade_value": 703,
             "source": "adp_only"
           }
         },
@@ -9685,7 +9685,7 @@
           "components": {
             "adp_value": 761,
             "fpar_value": 0,
-            "trade_value": 703,
+            "trade_value": 700,
             "source": "adp_only"
           }
         },
@@ -9704,7 +9704,7 @@
           "components": {
             "adp_value": 758,
             "fpar_value": 0,
-            "trade_value": 700,
+            "trade_value": 697,
             "source": "adp_only"
           }
         },
@@ -9723,7 +9723,7 @@
           "components": {
             "adp_value": 755,
             "fpar_value": 0,
-            "trade_value": 697,
+            "trade_value": 695,
             "source": "adp_only"
           }
         },
@@ -9742,7 +9742,7 @@
           "components": {
             "adp_value": 752,
             "fpar_value": 0,
-            "trade_value": 695,
+            "trade_value": 692,
             "source": "adp_only"
           }
         },
@@ -9761,7 +9761,7 @@
           "components": {
             "adp_value": 749,
             "fpar_value": 0,
-            "trade_value": 692,
+            "trade_value": 689,
             "source": "adp_only"
           }
         },
@@ -9780,7 +9780,7 @@
           "components": {
             "adp_value": 746,
             "fpar_value": 0,
-            "trade_value": 689,
+            "trade_value": 686,
             "source": "adp_only"
           }
         },
@@ -9799,7 +9799,7 @@
           "components": {
             "adp_value": 743,
             "fpar_value": 0,
-            "trade_value": 686,
+            "trade_value": 684,
             "source": "adp_only"
           }
         },
@@ -9818,7 +9818,7 @@
           "components": {
             "adp_value": 740,
             "fpar_value": 0,
-            "trade_value": 684,
+            "trade_value": 681,
             "source": "adp_only"
           }
         },
@@ -9837,7 +9837,7 @@
           "components": {
             "adp_value": 737,
             "fpar_value": 0,
-            "trade_value": 681,
+            "trade_value": 678,
             "source": "adp_only"
           }
         },
@@ -9856,7 +9856,7 @@
           "components": {
             "adp_value": 734,
             "fpar_value": 0,
-            "trade_value": 678,
+            "trade_value": 675,
             "source": "adp_only"
           }
         },
@@ -9875,7 +9875,7 @@
           "components": {
             "adp_value": 731,
             "fpar_value": 0,
-            "trade_value": 675,
+            "trade_value": 673,
             "source": "adp_only"
           }
         },
@@ -9894,7 +9894,7 @@
           "components": {
             "adp_value": 728,
             "fpar_value": 0,
-            "trade_value": 673,
+            "trade_value": 670,
             "source": "adp_only"
           }
         },
@@ -9913,7 +9913,7 @@
           "components": {
             "adp_value": 725,
             "fpar_value": 0,
-            "trade_value": 670,
+            "trade_value": 667,
             "source": "adp_only"
           }
         },
@@ -9932,7 +9932,7 @@
           "components": {
             "adp_value": 722,
             "fpar_value": 0,
-            "trade_value": 667,
+            "trade_value": 664,
             "source": "adp_only"
           }
         },
@@ -9951,7 +9951,7 @@
           "components": {
             "adp_value": 719,
             "fpar_value": 0,
-            "trade_value": 664,
+            "trade_value": 661,
             "source": "adp_only"
           }
         },
@@ -9970,7 +9970,7 @@
           "components": {
             "adp_value": 716,
             "fpar_value": 0,
-            "trade_value": 661,
+            "trade_value": 659,
             "source": "adp_only"
           }
         },
@@ -9989,7 +9989,7 @@
           "components": {
             "adp_value": 713,
             "fpar_value": 0,
-            "trade_value": 659,
+            "trade_value": 656,
             "source": "adp_only"
           }
         },
@@ -10008,7 +10008,7 @@
           "components": {
             "adp_value": 710,
             "fpar_value": 0,
-            "trade_value": 656,
+            "trade_value": 653,
             "source": "adp_only"
           }
         },
@@ -10027,7 +10027,7 @@
           "components": {
             "adp_value": 707,
             "fpar_value": 0,
-            "trade_value": 653,
+            "trade_value": 650,
             "source": "adp_only"
           }
         },
@@ -10046,7 +10046,7 @@
           "components": {
             "adp_value": 704,
             "fpar_value": 0,
-            "trade_value": 650,
+            "trade_value": 648,
             "source": "adp_only"
           }
         },
@@ -10065,7 +10065,7 @@
           "components": {
             "adp_value": 701,
             "fpar_value": 0,
-            "trade_value": 648,
+            "trade_value": 645,
             "source": "adp_only"
           }
         },
@@ -10084,7 +10084,7 @@
           "components": {
             "adp_value": 698,
             "fpar_value": 0,
-            "trade_value": 645,
+            "trade_value": 642,
             "source": "adp_only"
           }
         },
@@ -10103,7 +10103,7 @@
           "components": {
             "adp_value": 695,
             "fpar_value": 0,
-            "trade_value": 642,
+            "trade_value": 639,
             "source": "adp_only"
           }
         },
@@ -10122,7 +10122,7 @@
           "components": {
             "adp_value": 692,
             "fpar_value": 0,
-            "trade_value": 639,
+            "trade_value": 637,
             "source": "adp_only"
           }
         },
@@ -10141,7 +10141,7 @@
           "components": {
             "adp_value": 689,
             "fpar_value": 0,
-            "trade_value": 637,
+            "trade_value": 634,
             "source": "adp_only"
           }
         },
@@ -10160,7 +10160,7 @@
           "components": {
             "adp_value": 686,
             "fpar_value": 0,
-            "trade_value": 634,
+            "trade_value": 631,
             "source": "adp_only"
           }
         },
@@ -10179,7 +10179,7 @@
           "components": {
             "adp_value": 683,
             "fpar_value": 0,
-            "trade_value": 631,
+            "trade_value": 628,
             "source": "adp_only"
           }
         },
@@ -10198,7 +10198,7 @@
           "components": {
             "adp_value": 680,
             "fpar_value": 0,
-            "trade_value": 628,
+            "trade_value": 626,
             "source": "adp_only"
           }
         },
@@ -10217,7 +10217,7 @@
           "components": {
             "adp_value": 677,
             "fpar_value": 0,
-            "trade_value": 626,
+            "trade_value": 623,
             "source": "adp_only"
           }
         },
@@ -10236,7 +10236,7 @@
           "components": {
             "adp_value": 674,
             "fpar_value": 0,
-            "trade_value": 623,
+            "trade_value": 620,
             "source": "adp_only"
           }
         },
@@ -10255,7 +10255,7 @@
           "components": {
             "adp_value": 671,
             "fpar_value": 0,
-            "trade_value": 620,
+            "trade_value": 617,
             "source": "adp_only"
           }
         },
@@ -10274,7 +10274,7 @@
           "components": {
             "adp_value": 668,
             "fpar_value": 0,
-            "trade_value": 617,
+            "trade_value": 615,
             "source": "adp_only"
           }
         },
@@ -10293,7 +10293,7 @@
           "components": {
             "adp_value": 665,
             "fpar_value": 0,
-            "trade_value": 615,
+            "trade_value": 612,
             "source": "adp_only"
           }
         },
@@ -10312,7 +10312,7 @@
           "components": {
             "adp_value": 662,
             "fpar_value": 0,
-            "trade_value": 612,
+            "trade_value": 609,
             "source": "adp_only"
           }
         },
@@ -10331,7 +10331,7 @@
           "components": {
             "adp_value": 659,
             "fpar_value": 0,
-            "trade_value": 609,
+            "trade_value": 606,
             "source": "adp_only"
           }
         }
