@@ -37,7 +37,9 @@ jobs:
         run: node scripts/import-historical.mjs
 
       - name: Build consensus rankings
-        run: node scripts/build-consensus.mjs
+        # PAUSED - consensus is manually maintained, do not overwrite
+        # run: node scripts/build-consensus.mjs
+        run: echo "Consensus build paused - manually maintained"
 
       - name: Build NFL stats + contracts (standalone)
         run: node scripts/build-nfl-stats.mjs
