@@ -6,7 +6,7 @@
       "name": "Bijan Robinson",
       "pos": "RB",
       "value": 8951,
-      "avg_pick": 3.081081081081081,
+      "avg_pick": 3.060810810810811,
       "rank": 1
     },
     {
@@ -14,7 +14,7 @@
       "name": "Josh Allen",
       "pos": "QB",
       "value": 8907,
-      "avg_pick": 4.898648648648648,
+      "avg_pick": 4.972972972972973,
       "rank": 2
     },
     {
@@ -22,7 +22,7 @@
       "name": "Jahmyr Gibbs",
       "pos": "RB",
       "value": 8884,
-      "avg_pick": 5.0675675675675675,
+      "avg_pick": 5.047297297297297,
       "rank": 3
     },
     {
@@ -30,7 +30,7 @@
       "name": "Ja'Marr Chase",
       "pos": "WR",
       "value": 8862,
-      "avg_pick": 5.736486486486487,
+      "avg_pick": 5.75,
       "rank": 4
     },
     {
@@ -38,7 +38,7 @@
       "name": "Puka Nacua",
       "pos": "WR",
       "value": 8728,
-      "avg_pick": 7.722972972972973,
+      "avg_pick": 7.70945945945946,
       "rank": 5
     },
     {
@@ -46,7 +46,7 @@
       "name": "Jaxon Smith-Njigba",
       "pos": "WR",
       "value": 8191,
-      "avg_pick": 8.277027027027026,
+      "avg_pick": 8.297297297297296,
       "rank": 6
     },
     {
@@ -54,7 +54,7 @@
       "name": "Drake Maye",
       "pos": "QB",
       "value": 8169,
-      "avg_pick": 9.79054054054054,
+      "avg_pick": 9.89864864864865,
       "rank": 7
     },
     {
@@ -62,7 +62,7 @@
       "name": "Amon-Ra St. Brown",
       "pos": "WR",
       "value": 7810,
-      "avg_pick": 13.966216216216216,
+      "avg_pick": 13.945945945945946,
       "rank": 8
     },
     {
@@ -70,7 +70,7 @@
       "name": "Ashton Jeanty",
       "pos": "RB",
       "value": 7779,
-      "avg_pick": 14.641891891891891,
+      "avg_pick": 14.621621621621621,
       "rank": 9
     },
     {
@@ -78,7 +78,7 @@
       "name": "Trey McBride",
       "pos": "TE",
       "value": 7743,
-      "avg_pick": 15.236486486486486,
+      "avg_pick": 15.263513513513514,
       "rank": 10
     },
     {
@@ -86,7 +86,7 @@
       "name": "De'Von Achane",
       "pos": "RB",
       "value": 7734,
-      "avg_pick": 16.54054054054054,
+      "avg_pick": 16.533783783783782,
       "rank": 11
     },
     {
@@ -94,7 +94,7 @@
       "name": "Malik Nabers",
       "pos": "WR",
       "value": 7716,
-      "avg_pick": 16.695945945945947,
+      "avg_pick": 16.68243243243243,
       "rank": 12
     },
     {
@@ -102,7 +102,7 @@
       "name": "Brock Bowers",
       "pos": "TE",
       "value": 7286,
-      "avg_pick": 17.85810810810811,
+      "avg_pick": 17.93243243243243,
       "rank": 13
     },
     {
@@ -110,7 +110,7 @@
       "name": "Justin Jefferson",
       "pos": "WR",
       "value": 7000,
-      "avg_pick": 18.013513513513512,
+      "avg_pick": 17.95945945945946,
       "rank": 14
     },
     {
@@ -118,7 +118,7 @@
       "name": "CeeDee Lamb",
       "pos": "WR",
       "value": 6906,
-      "avg_pick": 18.256756756756758,
+      "avg_pick": 18.16891891891892,
       "rank": 15
     },
     {
@@ -126,7 +126,7 @@
       "name": "Joe Burrow",
       "pos": "QB",
       "value": 6893,
-      "avg_pick": 18.31756756756757,
+      "avg_pick": 18.324324324324323,
       "rank": 16
     },
     {
@@ -134,47 +134,47 @@
       "name": "Jayden Daniels",
       "pos": "QB",
       "value": 6714,
-      "avg_pick": 19.5,
+      "avg_pick": 19.58108108108108,
       "rank": 17
-    },
-    {
-      "id": "4881",
-      "name": "Lamar Jackson",
-      "pos": "QB",
-      "value": 6669,
-      "avg_pick": 20.574324324324323,
-      "rank": 18
     },
     {
       "id": "12507",
       "name": "Omarion Hampton",
       "pos": "RB",
-      "value": 6647,
-      "avg_pick": 20.75,
-      "rank": 19
+      "value": 6669,
+      "avg_pick": 20.695945945945947,
+      "rank": 18
     },
     {
       "id": "6813",
       "name": "Jonathan Taylor",
       "pos": "RB",
-      "value": 6355,
-      "avg_pick": 20.824324324324323,
-      "rank": 20
+      "value": 6647,
+      "avg_pick": 20.83108108108108,
+      "rank": 19
     },
     {
-      "id": "8112",
-      "name": "Drake London",
-      "pos": "WR",
-      "value": 6266,
-      "avg_pick": 24.20945945945946,
-      "rank": 21
+      "id": "4881",
+      "name": "Lamar Jackson",
+      "pos": "QB",
+      "value": 6355,
+      "avg_pick": 20.85135135135135,
+      "rank": 20
     },
     {
       "id": "13287",
       "name": "Jeremiyah Love",
       "pos": "RB",
+      "value": 6266,
+      "avg_pick": 23.73076923076923,
+      "rank": 21
+    },
+    {
+      "id": "8112",
+      "name": "Drake London",
+      "pos": "WR",
       "value": 6177,
-      "avg_pick": 24.32,
+      "avg_pick": 24.18918918918919,
       "rank": 22
     },
     {
@@ -186,19 +186,19 @@
       "rank": 23
     },
     {
-      "id": "11560",
-      "name": "Caleb Williams",
-      "pos": "QB",
-      "value": 6065,
-      "avg_pick": 26.574324324324323,
-      "rank": 24
-    },
-    {
       "id": "4034",
       "name": "Christian McCaffrey",
       "pos": "RB",
+      "value": 6065,
+      "avg_pick": 26.804054054054053,
+      "rank": 24
+    },
+    {
+      "id": "11560",
+      "name": "Caleb Williams",
+      "pos": "QB",
       "value": 6043,
-      "avg_pick": 26.7972972972973,
+      "avg_pick": 26.804054054054053,
       "rank": 25
     },
     {
@@ -206,7 +206,7 @@
       "name": "Tetairoa McMillan",
       "pos": "WR",
       "value": 5818,
-      "avg_pick": 31.513513513513512,
+      "avg_pick": 31.52027027027027,
       "rank": 26
     },
     {
@@ -214,7 +214,7 @@
       "name": "Nico Collins",
       "pos": "WR",
       "value": 5796,
-      "avg_pick": 33.398648648648646,
+      "avg_pick": 33.479729729729726,
       "rank": 27
     },
     {
@@ -222,7 +222,7 @@
       "name": "Jalen Hurts",
       "pos": "QB",
       "value": 5783,
-      "avg_pick": 33.54054054054054,
+      "avg_pick": 33.601351351351354,
       "rank": 28
     },
     {
@@ -230,7 +230,7 @@
       "name": "Chase Brown",
       "pos": "RB",
       "value": 5774,
-      "avg_pick": 34.99324324324324,
+      "avg_pick": 34.939189189189186,
       "rank": 29
     },
     {
@@ -238,7 +238,7 @@
       "name": "George Pickens",
       "pos": "WR",
       "value": 5752,
-      "avg_pick": 35.229729729729726,
+      "avg_pick": 35.141891891891895,
       "rank": 30
     },
     {
@@ -246,7 +246,7 @@
       "name": "Jaxson Dart",
       "pos": "QB",
       "value": 5729,
-      "avg_pick": 36.08783783783784,
+      "avg_pick": 36.20945945945946,
       "rank": 31
     },
     {
@@ -254,7 +254,7 @@
       "name": "Justin Herbert",
       "pos": "QB",
       "value": 5685,
-      "avg_pick": 37.714285714285715,
+      "avg_pick": 37.70748299319728,
       "rank": 32
     },
     {
@@ -262,7 +262,7 @@
       "name": "Saquon Barkley",
       "pos": "RB",
       "value": 5662,
-      "avg_pick": 37.972972972972975,
+      "avg_pick": 37.79054054054054,
       "rank": 33
     },
     {
@@ -270,7 +270,7 @@
       "name": "Colston Loveland",
       "pos": "TE",
       "value": 5640,
-      "avg_pick": 38.060810810810814,
+      "avg_pick": 38.16891891891892,
       "rank": 34
     },
     {
@@ -278,7 +278,7 @@
       "name": "Chris Olave",
       "pos": "WR",
       "value": 5595,
-      "avg_pick": 39.445945945945944,
+      "avg_pick": 39.50675675675676,
       "rank": 35
     },
     {
@@ -286,7 +286,7 @@
       "name": "TreVeyon Henderson",
       "pos": "RB",
       "value": 5586,
-      "avg_pick": 40.58783783783784,
+      "avg_pick": 40.67567567567568,
       "rank": 36
     },
     {
@@ -294,7 +294,7 @@
       "name": "Bucky Irving",
       "pos": "RB",
       "value": 5550,
-      "avg_pick": 40.74324324324324,
+      "avg_pick": 40.736486486486484,
       "rank": 37
     },
     {
@@ -302,7 +302,7 @@
       "name": "Carnell Tate",
       "pos": "WR",
       "value": 5505,
-      "avg_pick": 42.791666666666664,
+      "avg_pick": 42.88,
       "rank": 38
     },
     {
@@ -310,23 +310,23 @@
       "name": "Patrick Mahomes",
       "pos": "QB",
       "value": 5483,
-      "avg_pick": 43.734693877551024,
+      "avg_pick": 43.8445945945946,
       "rank": 39
-    },
-    {
-      "id": "11563",
-      "name": "Bo Nix",
-      "pos": "QB",
-      "value": 5460,
-      "avg_pick": 44.2027027027027,
-      "rank": 40
     },
     {
       "id": "7523",
       "name": "Trevor Lawrence",
       "pos": "QB",
+      "value": 5460,
+      "avg_pick": 44.25675675675676,
+      "rank": 40
+    },
+    {
+      "id": "11563",
+      "name": "Bo Nix",
+      "pos": "QB",
       "value": 5237,
-      "avg_pick": 44.270270270270274,
+      "avg_pick": 44.432432432432435,
       "rank": 41
     },
     {
@@ -334,7 +334,7 @@
       "name": "Emeka Egbuka",
       "pos": "WR",
       "value": 5215,
-      "avg_pick": 44.898648648648646,
+      "avg_pick": 45.020270270270274,
       "rank": 42
     },
     {
@@ -342,7 +342,7 @@
       "name": "Breece Hall",
       "pos": "RB",
       "value": 5192,
-      "avg_pick": 45.12162162162162,
+      "avg_pick": 45.03378378378378,
       "rank": 43
     },
     {
@@ -350,7 +350,7 @@
       "name": "Tyler Warren",
       "pos": "TE",
       "value": 5102,
-      "avg_pick": 45.310810810810814,
+      "avg_pick": 45.41891891891892,
       "rank": 44
     },
     {
@@ -358,7 +358,7 @@
       "name": "Garrett Wilson",
       "pos": "WR",
       "value": 5057,
-      "avg_pick": 45.62162162162162,
+      "avg_pick": 45.479729729729726,
       "rank": 45
     },
     {
@@ -366,7 +366,7 @@
       "name": "Rashee Rice",
       "pos": "WR",
       "value": 5013,
-      "avg_pick": 46.75,
+      "avg_pick": 46.601351351351354,
       "rank": 46
     },
     {
@@ -374,7 +374,7 @@
       "name": "Brock Purdy",
       "pos": "QB",
       "value": 4968,
-      "avg_pick": 47.36486486486486,
+      "avg_pick": 47.33108108108108,
       "rank": 47
     },
     {
@@ -382,7 +382,7 @@
       "name": "Kenneth Walker",
       "pos": "RB",
       "value": 4924,
-      "avg_pick": 47.5,
+      "avg_pick": 47.4054054054054,
       "rank": 48
     },
     {
@@ -390,23 +390,23 @@
       "name": "Kyren Williams",
       "pos": "RB",
       "value": 4834,
-      "avg_pick": 49.32432432432432,
+      "avg_pick": 49.195945945945944,
       "rank": 49
-    },
-    {
-      "id": "11635",
-      "name": "Ladd McConkey",
-      "pos": "WR",
-      "value": 4816,
-      "avg_pick": 50.28378378378378,
-      "rank": 50
     },
     {
       "id": "12512",
       "name": "Quinshon Judkins",
       "pos": "RB",
+      "value": 4816,
+      "avg_pick": 50.41216216216216,
+      "rank": 50
+    },
+    {
+      "id": "11635",
+      "name": "Ladd McConkey",
+      "pos": "WR",
       "value": 4800,
-      "avg_pick": 50.472972972972975,
+      "avg_pick": 50.479729729729726,
       "rank": 51
     },
     {
@@ -414,7 +414,7 @@
       "name": "Dak Prescott",
       "pos": "QB",
       "value": 4784,
-      "avg_pick": 54.979729729729726,
+      "avg_pick": 54.96621621621622,
       "rank": 52
     },
     {
@@ -422,7 +422,7 @@
       "name": "A.J. Brown",
       "pos": "WR",
       "value": 4767,
-      "avg_pick": 55.00675675675676,
+      "avg_pick": 54.99324324324324,
       "rank": 53
     },
     {
@@ -430,7 +430,7 @@
       "name": "Cam Skattebo",
       "pos": "RB",
       "value": 4752,
-      "avg_pick": 55.560810810810814,
+      "avg_pick": 55.41891891891892,
       "rank": 54
     },
     {
@@ -438,7 +438,7 @@
       "name": "Harold Fannin",
       "pos": "TE",
       "value": 4735,
-      "avg_pick": 56.945945945945944,
+      "avg_pick": 57.067567567567565,
       "rank": 55
     },
     {
@@ -446,7 +446,7 @@
       "name": "Josh Jacobs",
       "pos": "RB",
       "value": 4722,
-      "avg_pick": 57.36486486486486,
+      "avg_pick": 57.28378378378378,
       "rank": 56
     },
     {
@@ -454,7 +454,7 @@
       "name": "Tee Higgins",
       "pos": "WR",
       "value": 4710,
-      "avg_pick": 59.851351351351354,
+      "avg_pick": 59.92567567567568,
       "rank": 57
     },
     {
@@ -462,7 +462,7 @@
       "name": "Jordyn Tyson",
       "pos": "WR",
       "value": 4698,
-      "avg_pick": 61.083333333333336,
+      "avg_pick": 60.72,
       "rank": 58
     },
     {
@@ -470,39 +470,39 @@
       "name": "Luther Burden",
       "pos": "WR",
       "value": 4686,
-      "avg_pick": 61.7972972972973,
+      "avg_pick": 61.891891891891895,
       "rank": 59
-    },
-    {
-      "id": "13269",
-      "name": "Fernando Mendoza",
-      "pos": "QB",
-      "value": 4673,
-      "avg_pick": 62.666666666666664,
-      "rank": 60
     },
     {
       "id": "3198",
       "name": "Derrick Henry",
       "pos": "RB",
-      "value": 4663,
-      "avg_pick": 62.932432432432435,
-      "rank": 61
+      "value": 4673,
+      "avg_pick": 62.810810810810814,
+      "rank": 60
     },
     {
       "id": "7588",
       "name": "Javonte Williams",
       "pos": "RB",
-      "value": 4654,
-      "avg_pick": 63.11486486486486,
-      "rank": 62
+      "value": 4663,
+      "avg_pick": 62.91216216216216,
+      "rank": 61
     },
     {
       "id": "11631",
       "name": "Brian Thomas",
       "pos": "WR",
+      "value": 4654,
+      "avg_pick": 63.270270270270274,
+      "rank": 62
+    },
+    {
+      "id": "13269",
+      "name": "Fernando Mendoza",
+      "pos": "QB",
       "value": 4646,
-      "avg_pick": 63.17567567567568,
+      "avg_pick": 63.32,
       "rank": 63
     },
     {
@@ -510,7 +510,7 @@
       "name": "Travis Etienne",
       "pos": "RB",
       "value": 4637,
-      "avg_pick": 64.02702702702703,
+      "avg_pick": 63.88513513513514,
       "rank": 64
     },
     {
@@ -518,31 +518,31 @@
       "name": "Rome Odunze",
       "pos": "WR",
       "value": 4628,
-      "avg_pick": 64.36486486486487,
+      "avg_pick": 64.39189189189189,
       "rank": 65
-    },
-    {
-      "id": "9997",
-      "name": "Zay Flowers",
-      "pos": "WR",
-      "value": 4606,
-      "avg_pick": 65.62837837837837,
-      "rank": 66
-    },
-    {
-      "id": "6804",
-      "name": "Jordan Love",
-      "pos": "QB",
-      "value": 4585,
-      "avg_pick": 66,
-      "rank": 67
     },
     {
       "id": "13294",
       "name": "Makai Lemon",
       "pos": "WR",
+      "value": 4606,
+      "avg_pick": 65.62962962962963,
+      "rank": 66
+    },
+    {
+      "id": "9997",
+      "name": "Zay Flowers",
+      "pos": "WR",
+      "value": 4585,
+      "avg_pick": 65.78378378378379,
+      "rank": 67
+    },
+    {
+      "id": "6804",
+      "name": "Jordan Love",
+      "pos": "QB",
       "value": 4563,
-      "avg_pick": 66.07692307692308,
+      "avg_pick": 66.0945945945946,
       "rank": 68
     },
     {
@@ -550,7 +550,7 @@
       "name": "Marvin Harrison",
       "pos": "WR",
       "value": 4542,
-      "avg_pick": 66.3445945945946,
+      "avg_pick": 66.49324324324324,
       "rank": 69
     },
     {
@@ -558,7 +558,7 @@
       "name": "RJ Harvey",
       "pos": "RB",
       "value": 4521,
-      "avg_pick": 66.36486486486487,
+      "avg_pick": 66.5608108108108,
       "rank": 70
     },
     {
@@ -566,7 +566,7 @@
       "name": "Tucker Kraft",
       "pos": "TE",
       "value": 4492,
-      "avg_pick": 66.6891891891892,
+      "avg_pick": 66.79729729729729,
       "rank": 71
     },
     {
@@ -574,7 +574,7 @@
       "name": "Sam LaPorta",
       "pos": "TE",
       "value": 4464,
-      "avg_pick": 68.75675675675676,
+      "avg_pick": 68.96621621621621,
       "rank": 72
     },
     {
@@ -582,7 +582,7 @@
       "name": "Jameson Williams",
       "pos": "WR",
       "value": 4434,
-      "avg_pick": 69.8843537414966,
+      "avg_pick": 69.95945945945945,
       "rank": 73
     },
     {
@@ -590,7 +590,7 @@
       "name": "DeVonta Smith",
       "pos": "WR",
       "value": 4406,
-      "avg_pick": 71.75,
+      "avg_pick": 71.66891891891892,
       "rank": 74
     },
     {
@@ -598,7 +598,7 @@
       "name": "Kyle Pitts",
       "pos": "TE",
       "value": 4377,
-      "avg_pick": 73.73648648648648,
+      "avg_pick": 73.89864864864865,
       "rank": 75
     },
     {
@@ -606,7 +606,7 @@
       "name": "Kenyon Sadiq",
       "pos": "TE",
       "value": 4370,
-      "avg_pick": 74.29166666666667,
+      "avg_pick": 74.88,
       "rank": 76
     },
     {
@@ -614,7 +614,7 @@
       "name": "Baker Mayfield",
       "pos": "QB",
       "value": 4363,
-      "avg_pick": 75.26388888888889,
+      "avg_pick": 75.41666666666667,
       "rank": 77
     },
     {
@@ -622,23 +622,23 @@
       "name": "Jaylen Waddle",
       "pos": "WR",
       "value": 4356,
-      "avg_pick": 77.62162162162163,
+      "avg_pick": 77.70945945945945,
       "rank": 78
-    },
-    {
-      "id": "3163",
-      "name": "Jared Goff",
-      "pos": "QB",
-      "value": 4349,
-      "avg_pick": 77.73793103448276,
-      "rank": 79
     },
     {
       "id": "12545",
       "name": "Tyler Shough",
       "pos": "QB",
+      "value": 4349,
+      "avg_pick": 77.79591836734694,
+      "rank": 79
+    },
+    {
+      "id": "3163",
+      "name": "Jared Goff",
+      "pos": "QB",
       "value": 4341,
-      "avg_pick": 77.85616438356165,
+      "avg_pick": 77.82876712328768,
       "rank": 80
     },
     {
@@ -646,7 +646,7 @@
       "name": "Cam Ward",
       "pos": "QB",
       "value": 4320,
-      "avg_pick": 78.66197183098592,
+      "avg_pick": 78.58450704225352,
       "rank": 81
     },
     {
@@ -654,7 +654,7 @@
       "name": "C.J. Stroud",
       "pos": "QB",
       "value": 4298,
-      "avg_pick": 84.66901408450704,
+      "avg_pick": 84.7062937062937,
       "rank": 82
     },
     {
@@ -662,7 +662,7 @@
       "name": "Jadarian Price",
       "pos": "RB",
       "value": 4277,
-      "avg_pick": 86.66666666666667,
+      "avg_pick": 85.48,
       "rank": 83
     },
     {
@@ -670,7 +670,7 @@
       "name": "Oronde Gadsden",
       "pos": "TE",
       "value": 4255,
-      "avg_pick": 86.8108108108108,
+      "avg_pick": 86.99324324324324,
       "rank": 84
     },
     {
@@ -678,7 +678,7 @@
       "name": "Sam Darnold",
       "pos": "QB",
       "value": 4234,
-      "avg_pick": 88.02112676056338,
+      "avg_pick": 88.06293706293707,
       "rank": 85
     },
     {
@@ -686,7 +686,7 @@
       "name": "D'Andre Swift",
       "pos": "RB",
       "value": 4211,
-      "avg_pick": 92.19727891156462,
+      "avg_pick": 92.1554054054054,
       "rank": 86
     },
     {
@@ -694,7 +694,7 @@
       "name": "Michael Wilson",
       "pos": "WR",
       "value": 4188,
-      "avg_pick": 92.34693877551021,
+      "avg_pick": 92.3445945945946,
       "rank": 87
     },
     {
@@ -702,7 +702,7 @@
       "name": "Kyle Monangai",
       "pos": "RB",
       "value": 4164,
-      "avg_pick": 93.02027027027027,
+      "avg_pick": 93,
       "rank": 88
     },
     {
@@ -710,7 +710,7 @@
       "name": "Terry McLaurin",
       "pos": "WR",
       "value": 4141,
-      "avg_pick": 93.71621621621621,
+      "avg_pick": 93.89864864864865,
       "rank": 89
     },
     {
@@ -718,7 +718,7 @@
       "name": "Bryce Young",
       "pos": "QB",
       "value": 4118,
-      "avg_pick": 94.02097902097903,
+      "avg_pick": 94.09722222222223,
       "rank": 90
     },
     {
@@ -726,23 +726,23 @@
       "name": "Davante Adams",
       "pos": "WR",
       "value": 4077,
-      "avg_pick": 95.06802721088435,
+      "avg_pick": 95.17567567567568,
       "rank": 91
-    },
-    {
-      "id": "421",
-      "name": "Matthew Stafford",
-      "pos": "QB",
-      "value": 4035,
-      "avg_pick": 95.26573426573427,
-      "rank": 92
     },
     {
       "id": "13298",
       "name": "KC Concepcion",
       "pos": "WR",
+      "value": 4035,
+      "avg_pick": 95.28,
+      "rank": 92
+    },
+    {
+      "id": "421",
+      "name": "Matthew Stafford",
+      "pos": "QB",
       "value": 3995,
-      "avg_pick": 96,
+      "avg_pick": 95.35416666666667,
       "rank": 93
     },
     {
@@ -750,7 +750,7 @@
       "name": "DK Metcalf",
       "pos": "WR",
       "value": 3953,
-      "avg_pick": 99.84353741496598,
+      "avg_pick": 99.87162162162163,
       "rank": 94
     },
     {
@@ -758,7 +758,7 @@
       "name": "Travis Hunter",
       "pos": "WR",
       "value": 3912,
-      "avg_pick": 102.86206896551724,
+      "avg_pick": 102.93835616438356,
       "rank": 95
     },
     {
@@ -766,7 +766,7 @@
       "name": "Jake Ferguson",
       "pos": "TE",
       "value": 3881,
-      "avg_pick": 102.91836734693878,
+      "avg_pick": 103.16326530612245,
       "rank": 96
     },
     {
@@ -782,39 +782,39 @@
       "name": "Chuba Hubbard",
       "pos": "RB",
       "value": 3821,
-      "avg_pick": 104.54421768707483,
+      "avg_pick": 104.64625850340136,
       "rank": 98
-    },
-    {
-      "id": "4983",
-      "name": "DJ Moore",
-      "pos": "WR",
-      "value": 3790,
-      "avg_pick": 105.39455782312925,
-      "rank": 99
     },
     {
       "id": "13346",
       "name": "Denzel Boston",
       "pos": "WR",
-      "value": 3760,
-      "avg_pick": 105.41666666666667,
-      "rank": 100
+      "value": 3790,
+      "avg_pick": 105.44,
+      "rank": 99
     },
     {
-      "id": "8228",
-      "name": "Jaylen Warren",
-      "pos": "RB",
-      "value": 3735,
-      "avg_pick": 105.9047619047619,
-      "rank": 101
+      "id": "4983",
+      "name": "DJ Moore",
+      "pos": "WR",
+      "value": 3760,
+      "avg_pick": 105.48299319727892,
+      "rank": 100
     },
     {
       "id": "12490",
       "name": "Bhayshul Tuten",
       "pos": "RB",
+      "value": 3735,
+      "avg_pick": 105.9391891891892,
+      "rank": 101
+    },
+    {
+      "id": "8228",
+      "name": "Jaylen Warren",
+      "pos": "RB",
       "value": 3709,
-      "avg_pick": 106.13513513513513,
+      "avg_pick": 106.06756756756756,
       "rank": 102
     },
     {
@@ -822,7 +822,7 @@
       "name": "Alec Pierce",
       "pos": "WR",
       "value": 3685,
-      "avg_pick": 106.85135135135135,
+      "avg_pick": 106.86486486486487,
       "rank": 103
     },
     {
@@ -830,7 +830,7 @@
       "name": "Jonah Coleman",
       "pos": "RB",
       "value": 3660,
-      "avg_pick": 107.54166666666667,
+      "avg_pick": 108.16,
       "rank": 104
     },
     {
@@ -838,7 +838,7 @@
       "name": "Christian Watson",
       "pos": "WR",
       "value": 3635,
-      "avg_pick": 108.77551020408163,
+      "avg_pick": 108.98639455782313,
       "rank": 105
     },
     {
@@ -846,7 +846,7 @@
       "name": "Dalton Kincaid",
       "pos": "TE",
       "value": 3609,
-      "avg_pick": 109.28571428571429,
+      "avg_pick": 109.32432432432432,
       "rank": 106
     },
     {
@@ -854,7 +854,7 @@
       "name": "Ricky Pearsall",
       "pos": "WR",
       "value": 3584,
-      "avg_pick": 109.45578231292517,
+      "avg_pick": 109.45945945945945,
       "rank": 107
     },
     {
@@ -862,7 +862,7 @@
       "name": "Wan'Dale Robinson",
       "pos": "WR",
       "value": 3559,
-      "avg_pick": 110.95238095238095,
+      "avg_pick": 110.88513513513513,
       "rank": 108
     },
     {
@@ -870,7 +870,7 @@
       "name": "Courtland Sutton",
       "pos": "WR",
       "value": 3534,
-      "avg_pick": 111.48630136986301,
+      "avg_pick": 111.61904761904762,
       "rank": 109
     },
     {
@@ -878,7 +878,7 @@
       "name": "Parker Washington",
       "pos": "WR",
       "value": 3509,
-      "avg_pick": 111.78231292517007,
+      "avg_pick": 111.6554054054054,
       "rank": 110
     },
     {
@@ -886,7 +886,7 @@
       "name": "George Kittle",
       "pos": "TE",
       "value": 3489,
-      "avg_pick": 112.00680272108843,
+      "avg_pick": 112.41496598639456,
       "rank": 111
     },
     {
@@ -894,7 +894,7 @@
       "name": "Daniel Jones",
       "pos": "QB",
       "value": 3467,
-      "avg_pick": 112.32846715328468,
+      "avg_pick": 112.57971014492753,
       "rank": 112
     },
     {
@@ -902,7 +902,7 @@
       "name": "Jordan Addison",
       "pos": "WR",
       "value": 3447,
-      "avg_pick": 113.45833333333333,
+      "avg_pick": 113.38620689655173,
       "rank": 113
     },
     {
@@ -910,7 +910,7 @@
       "name": "Rico Dowdle",
       "pos": "RB",
       "value": 3426,
-      "avg_pick": 115.29931972789116,
+      "avg_pick": 115.42567567567568,
       "rank": 114
     },
     {
@@ -918,23 +918,23 @@
       "name": "David Montgomery",
       "pos": "RB",
       "value": 3406,
-      "avg_pick": 115.86486486486487,
+      "avg_pick": 116,
       "rank": 115
-    },
-    {
-      "id": "9753",
-      "name": "Zach Charbonnet",
-      "pos": "RB",
-      "value": 3386,
-      "avg_pick": 116.87074829931973,
-      "rank": 116
     },
     {
       "id": "13349",
       "name": "Eli Stowers",
       "pos": "TE",
+      "value": 3386,
+      "avg_pick": 116.6,
+      "rank": 116
+    },
+    {
+      "id": "9753",
+      "name": "Zach Charbonnet",
+      "pos": "RB",
       "value": 3364,
-      "avg_pick": 118,
+      "avg_pick": 116.91891891891892,
       "rank": 117
     },
     {
@@ -942,7 +942,7 @@
       "name": "Brenton Strange",
       "pos": "TE",
       "value": 3344,
-      "avg_pick": 118.75342465753425,
+      "avg_pick": 118.77551020408163,
       "rank": 118
     },
     {
@@ -950,23 +950,23 @@
       "name": "Mike Evans",
       "pos": "WR",
       "value": 3323,
-      "avg_pick": 119.33333333333333,
+      "avg_pick": 119.59183673469387,
       "rank": 119
-    },
-    {
-      "id": "5947",
-      "name": "Jakobi Meyers",
-      "pos": "WR",
-      "value": 3303,
-      "avg_pick": 120.1027397260274,
-      "rank": 120
     },
     {
       "id": "13276",
       "name": "Omar Cooper",
       "pos": "WR",
+      "value": 3303,
+      "avg_pick": 120.125,
+      "rank": 120
+    },
+    {
+      "id": "5947",
+      "name": "Jakobi Meyers",
+      "pos": "WR",
       "value": 3281,
-      "avg_pick": 121.08695652173913,
+      "avg_pick": 120.38095238095238,
       "rank": 121
     },
     {
@@ -974,7 +974,7 @@
       "name": "Blake Corum",
       "pos": "RB",
       "value": 3258,
-      "avg_pick": 121.79310344827586,
+      "avg_pick": 121.44520547945206,
       "rank": 122
     },
     {
@@ -982,7 +982,7 @@
       "name": "Malik Willis",
       "pos": "QB",
       "value": 3236,
-      "avg_pick": 124.2109375,
+      "avg_pick": 124.27131782945736,
       "rank": 123
     },
     {
@@ -990,7 +990,7 @@
       "name": "Michael Pittman",
       "pos": "WR",
       "value": 3214,
-      "avg_pick": 124.61904761904762,
+      "avg_pick": 124.93197278911565,
       "rank": 124
     },
     {
@@ -998,7 +998,7 @@
       "name": "Rhamondre Stevenson",
       "pos": "RB",
       "value": 3191,
-      "avg_pick": 125.12244897959184,
+      "avg_pick": 125.22297297297297,
       "rank": 125
     },
     {
@@ -1006,7 +1006,7 @@
       "name": "Woody Marks",
       "pos": "RB",
       "value": 3168,
-      "avg_pick": 126.04794520547945,
+      "avg_pick": 126.14965986394557,
       "rank": 126
     },
     {
@@ -1014,7 +1014,7 @@
       "name": "Jayden Higgins",
       "pos": "WR",
       "value": 3146,
-      "avg_pick": 126.27972027972028,
+      "avg_pick": 126.20833333333333,
       "rank": 127
     },
     {
@@ -1022,7 +1022,7 @@
       "name": "Tyler Allgeier",
       "pos": "RB",
       "value": 3124,
-      "avg_pick": 127.9103448275862,
+      "avg_pick": 127.96575342465754,
       "rank": 128
     },
     {
@@ -1030,7 +1030,7 @@
       "name": "Matthew Golden",
       "pos": "WR",
       "value": 3101,
-      "avg_pick": 130.5241379310345,
+      "avg_pick": 130.84827586206896,
       "rank": 129
     },
     {
@@ -1038,7 +1038,7 @@
       "name": "Quentin Johnston",
       "pos": "WR",
       "value": 3079,
-      "avg_pick": 133.20138888888889,
+      "avg_pick": 133.26896551724138,
       "rank": 130
     },
     {
@@ -1046,7 +1046,7 @@
       "name": "Xavier Worthy",
       "pos": "WR",
       "value": 3070,
-      "avg_pick": 134.625,
+      "avg_pick": 134.68965517241378,
       "rank": 131
     },
     {
@@ -1054,47 +1054,47 @@
       "name": "Jacory Croskey-Merritt",
       "pos": "RB",
       "value": 3062,
-      "avg_pick": 135.3655172413793,
+      "avg_pick": 135.37671232876713,
       "rank": 132
-    },
-    {
-      "id": "11559",
-      "name": "Michael Penix",
-      "pos": "QB",
-      "value": 3053,
-      "avg_pick": 136.515625,
-      "rank": 133
-    },
-    {
-      "id": "8131",
-      "name": "Isaiah Likely",
-      "pos": "TE",
-      "value": 3043,
-      "avg_pick": 136.74468085106383,
-      "rank": 134
-    },
-    {
-      "id": "7002",
-      "name": "Juwan Johnson",
-      "pos": "TE",
-      "value": 3035,
-      "avg_pick": 137.15277777777777,
-      "rank": 135
     },
     {
       "id": "13288",
       "name": "Nicholas Singleton",
       "pos": "RB",
-      "value": 3026,
-      "avg_pick": 137.875,
-      "rank": 136
+      "value": 3053,
+      "avg_pick": 136.44,
+      "rank": 133
+    },
+    {
+      "id": "11559",
+      "name": "Michael Penix",
+      "pos": "QB",
+      "value": 3043,
+      "avg_pick": 136.72868217054264,
+      "rank": 134
     },
     {
       "id": "13337",
       "name": "Emmett Johnson",
       "pos": "RB",
+      "value": 3035,
+      "avg_pick": 136.75,
+      "rank": 135
+    },
+    {
+      "id": "8131",
+      "name": "Isaiah Likely",
+      "pos": "TE",
+      "value": 3026,
+      "avg_pick": 137.06382978723406,
+      "rank": 136
+    },
+    {
+      "id": "7002",
+      "name": "Juwan Johnson",
+      "pos": "TE",
       "value": 3017,
-      "avg_pick": 138.04347826086956,
+      "avg_pick": 137.26896551724138,
       "rank": 137
     },
     {
@@ -1102,7 +1102,7 @@
       "name": "J.J. McCarthy",
       "pos": "QB",
       "value": 3007,
-      "avg_pick": 139.765625,
+      "avg_pick": 140.07751937984497,
       "rank": 138
     },
     {
@@ -1110,7 +1110,7 @@
       "name": "Ty Simpson",
       "pos": "QB",
       "value": 2999,
-      "avg_pick": 140.34782608695653,
+      "avg_pick": 140.25,
       "rank": 139
     },
     {
@@ -1118,7 +1118,7 @@
       "name": "Kenneth Gainwell",
       "pos": "RB",
       "value": 2990,
-      "avg_pick": 141.27586206896552,
+      "avg_pick": 141.3013698630137,
       "rank": 140
     },
     {
@@ -1126,7 +1126,7 @@
       "name": "Jayden Reed",
       "pos": "WR",
       "value": 2979,
-      "avg_pick": 145.27397260273972,
+      "avg_pick": 145.31972789115648,
       "rank": 141
     },
     {
@@ -1134,7 +1134,7 @@
       "name": "Tony Pollard",
       "pos": "RB",
       "value": 2969,
-      "avg_pick": 145.77464788732394,
+      "avg_pick": 145.91608391608392,
       "rank": 142
     },
     {
@@ -1142,7 +1142,7 @@
       "name": "Trey Benson",
       "pos": "RB",
       "value": 2958,
-      "avg_pick": 146.43661971830986,
+      "avg_pick": 146.6853146853147,
       "rank": 143
     },
     {
@@ -1150,7 +1150,7 @@
       "name": "J.K. Dobbins",
       "pos": "RB",
       "value": 2947,
-      "avg_pick": 148.11805555555554,
+      "avg_pick": 148.10344827586206,
       "rank": 144
     },
     {
@@ -1158,7 +1158,7 @@
       "name": "Jalen Coker",
       "pos": "WR",
       "value": 2937,
-      "avg_pick": 148.61267605633802,
+      "avg_pick": 148.67832167832168,
       "rank": 145
     },
     {
@@ -1166,23 +1166,23 @@
       "name": "Dallas Goedert",
       "pos": "TE",
       "value": 2926,
-      "avg_pick": 148.992700729927,
+      "avg_pick": 149.07246376811594,
       "rank": 146
-    },
-    {
-      "id": "8134",
-      "name": "Khalil Shakir",
-      "pos": "WR",
-      "value": 2915,
-      "avg_pick": 150.16666666666666,
-      "rank": 147
     },
     {
       "id": "13305",
       "name": "Mike Washington",
       "pos": "RB",
+      "value": 2915,
+      "avg_pick": 150,
+      "rank": 147
+    },
+    {
+      "id": "8134",
+      "name": "Khalil Shakir",
+      "pos": "WR",
       "value": 2904,
-      "avg_pick": 152.2173913043478,
+      "avg_pick": 150.3655172413793,
       "rank": 148
     },
     {
@@ -1190,7 +1190,7 @@
       "name": "Shedeur Sanders",
       "pos": "QB",
       "value": 2893,
-      "avg_pick": 153.015625,
+      "avg_pick": 153.09302325581396,
       "rank": 149
     },
     {
@@ -1198,39 +1198,39 @@
       "name": "Mason Taylor",
       "pos": "TE",
       "value": 2882,
-      "avg_pick": 153.91044776119404,
+      "avg_pick": 153.88148148148147,
       "rank": 150
-    },
-    {
-      "id": "13320",
-      "name": "Zachariah Branch",
-      "pos": "WR",
-      "value": 2871,
-      "avg_pick": 156.1818181818182,
-      "rank": 151
-    },
-    {
-      "id": "7049",
-      "name": "Jauan Jennings",
-      "pos": "WR",
-      "value": 2861,
-      "avg_pick": 156.62142857142857,
-      "rank": 152
     },
     {
       "id": "13268",
       "name": "Elijah Sarratt",
       "pos": "WR",
-      "value": 2850,
-      "avg_pick": 156.72727272727272,
-      "rank": 153
+      "value": 2871,
+      "avg_pick": 156.65217391304347,
+      "rank": 151
+    },
+    {
+      "id": "13320",
+      "name": "Zachariah Branch",
+      "pos": "WR",
+      "value": 2861,
+      "avg_pick": 156.69565217391303,
+      "rank": 152
     },
     {
       "id": "8121",
       "name": "Romeo Doubs",
       "pos": "WR",
+      "value": 2850,
+      "avg_pick": 156.7605633802817,
+      "rank": 153
+    },
+    {
+      "id": "7049",
+      "name": "Jauan Jennings",
+      "pos": "WR",
       "value": 2839,
-      "avg_pick": 156.81560283687944,
+      "avg_pick": 156.88652482269504,
       "rank": 154
     },
     {
@@ -1238,7 +1238,7 @@
       "name": "Mark Andrews",
       "pos": "TE",
       "value": 2829,
-      "avg_pick": 157.5072463768116,
+      "avg_pick": 157.49640287769785,
       "rank": 155
     },
     {
@@ -1246,7 +1246,7 @@
       "name": "Chris Godwin",
       "pos": "WR",
       "value": 2818,
-      "avg_pick": 157.70422535211267,
+      "avg_pick": 157.76923076923077,
       "rank": 156
     },
     {
@@ -1254,7 +1254,7 @@
       "name": "Josh Downs",
       "pos": "WR",
       "value": 2807,
-      "avg_pick": 159.74468085106383,
+      "avg_pick": 159.66197183098592,
       "rank": 157
     },
     {
@@ -1262,7 +1262,7 @@
       "name": "AJ Barner",
       "pos": "TE",
       "value": 2796,
-      "avg_pick": 160,
+      "avg_pick": 159.8014705882353,
       "rank": 158
     },
     {
@@ -1270,7 +1270,7 @@
       "name": "Tua Tagovailoa",
       "pos": "QB",
       "value": 2786,
-      "avg_pick": 160.64,
+      "avg_pick": 160.61111111111111,
       "rank": 159
     },
     {
@@ -1278,23 +1278,23 @@
       "name": "Tyrone Tracy",
       "pos": "RB",
       "value": 2775,
-      "avg_pick": 161.4375,
+      "avg_pick": 161.6,
       "rank": 160
-    },
-    {
-      "id": "5844",
-      "name": "T.J. Hockenson",
-      "pos": "TE",
-      "value": 2767,
-      "avg_pick": 163.34883720930233,
-      "rank": 161
     },
     {
       "id": "13311",
       "name": "Chris Bell",
       "pos": "WR",
+      "value": 2767,
+      "avg_pick": 161.8695652173913,
+      "rank": 161
+    },
+    {
+      "id": "5844",
+      "name": "T.J. Hockenson",
+      "pos": "TE",
       "value": 2760,
-      "avg_pick": 163.86363636363637,
+      "avg_pick": 163.44615384615383,
       "rank": 162
     },
     {
@@ -1302,7 +1302,7 @@
       "name": "Brandon Aiyuk",
       "pos": "WR",
       "value": 2752,
-      "avg_pick": 167.8962962962963,
+      "avg_pick": 167.99264705882354,
       "rank": 163
     },
     {
@@ -1310,7 +1310,7 @@
       "name": "Theo Johnson",
       "pos": "TE",
       "value": 2744,
-      "avg_pick": 167.90625,
+      "avg_pick": 168.1627906976744,
       "rank": 164
     },
     {
@@ -1318,7 +1318,7 @@
       "name": "Jonathon Brooks",
       "pos": "RB",
       "value": 2737,
-      "avg_pick": 169.61971830985917,
+      "avg_pick": 169.48951048951048,
       "rank": 165
     },
     {
@@ -1326,7 +1326,7 @@
       "name": "Jacoby Brissett",
       "pos": "QB",
       "value": 2730,
-      "avg_pick": 170.528,
+      "avg_pick": 170.56349206349208,
       "rank": 166
     },
     {
@@ -1334,7 +1334,7 @@
       "name": "Jordan Mason",
       "pos": "RB",
       "value": 2722,
-      "avg_pick": 171.5744680851064,
+      "avg_pick": 171.67605633802816,
       "rank": 167
     },
     {
@@ -1342,7 +1342,7 @@
       "name": "Rashid Shaheed",
       "pos": "WR",
       "value": 2714,
-      "avg_pick": 172.05109489051094,
+      "avg_pick": 172.17391304347825,
       "rank": 168
     },
     {
@@ -1350,7 +1350,7 @@
       "name": "Terrance Ferguson",
       "pos": "TE",
       "value": 2707,
-      "avg_pick": 172.2357723577236,
+      "avg_pick": 172.4516129032258,
       "rank": 169
     },
     {
@@ -1358,7 +1358,7 @@
       "name": "Jalen McMillan",
       "pos": "WR",
       "value": 2699,
-      "avg_pick": 174.1,
+      "avg_pick": 173.95035460992906,
       "rank": 170
     },
     {
@@ -1366,7 +1366,7 @@
       "name": "Kaleb Johnson",
       "pos": "RB",
       "value": 2691,
-      "avg_pick": 175.3030303030303,
+      "avg_pick": 175.4360902255639,
       "rank": 171
     },
     {
@@ -1374,15 +1374,15 @@
       "name": "Tyjae Spears",
       "pos": "RB",
       "value": 2683,
-      "avg_pick": 175.91240875912408,
+      "avg_pick": 175.9927536231884,
       "rank": 172
     },
     {
-      "id": "5001",
-      "name": "Dalton Schultz",
-      "pos": "TE",
+      "id": "13405",
+      "name": "Kaytron Allen",
+      "pos": "RB",
       "value": 2675,
-      "avg_pick": 176.992,
+      "avg_pick": 177,
       "rank": 173
     },
     {
@@ -1390,15 +1390,15 @@
       "name": "Braelon Allen",
       "pos": "RB",
       "value": 2667,
-      "avg_pick": 177.03676470588235,
+      "avg_pick": 177.08029197080293,
       "rank": 174
     },
     {
-      "id": "12540",
-      "name": "Chimere Dike",
-      "pos": "WR",
+      "id": "5001",
+      "name": "Dalton Schultz",
+      "pos": "TE",
       "value": 2659,
-      "avg_pick": 177.1492537313433,
+      "avg_pick": 177.13492063492063,
       "rank": 175
     },
     {
@@ -1410,43 +1410,43 @@
       "rank": 176
     },
     {
+      "id": "12540",
+      "name": "Chimere Dike",
+      "pos": "WR",
+      "value": 2642,
+      "avg_pick": 177.3037037037037,
+      "rank": 177
+    },
+    {
       "id": "3214",
       "name": "Hunter Henry",
       "pos": "TE",
-      "value": 2642,
-      "avg_pick": 177.72357723577235,
-      "rank": 177
+      "value": 2635,
+      "avg_pick": 177.94354838709677,
+      "rank": 178
     },
     {
       "id": "1466",
       "name": "Travis Kelce",
       "pos": "TE",
-      "value": 2635,
-      "avg_pick": 177.944,
-      "rank": 178
+      "value": 2627,
+      "avg_pick": 177.9920634920635,
+      "rank": 179
     },
     {
       "id": "12509",
       "name": "Tre' Harris",
       "pos": "WR",
-      "value": 2627,
-      "avg_pick": 178.0888888888889,
-      "rank": 179
+      "value": 2618,
+      "avg_pick": 177.99264705882354,
+      "rank": 180
     },
     {
       "id": "4035",
       "name": "Alvin Kamara",
       "pos": "RB",
-      "value": 2618,
-      "avg_pick": 178.4732824427481,
-      "rank": 180
-    },
-    {
-      "id": "13405",
-      "name": "Kaytron Allen",
-      "pos": "RB",
       "value": 2610,
-      "avg_pick": 179.9,
+      "avg_pick": 178.4732824427481,
       "rank": 181
     },
     {
@@ -1458,35 +1458,35 @@
       "rank": 182
     },
     {
+      "id": "13274",
+      "name": "Germie Bernard",
+      "pos": "WR",
+      "value": 2593,
+      "avg_pick": 181,
+      "rank": 183
+    },
+    {
       "id": "12492",
       "name": "Pat Bryant",
       "pos": "WR",
-      "value": 2593,
-      "avg_pick": 181.50375939849624,
-      "rank": 183
+      "value": 2584,
+      "avg_pick": 181.47761194029852,
+      "rank": 184
     },
     {
       "id": "11627",
       "name": "Troy Franklin",
       "pos": "WR",
-      "value": 2584,
-      "avg_pick": 181.58646616541353,
-      "rank": 184
+      "value": 2576,
+      "avg_pick": 181.72388059701493,
+      "rank": 185
     },
     {
       "id": "8136",
       "name": "Rachaad White",
       "pos": "RB",
-      "value": 2576,
-      "avg_pick": 182.0791366906475,
-      "rank": 185
-    },
-    {
-      "id": "13274",
-      "name": "Germie Bernard",
-      "pos": "WR",
       "value": 2568,
-      "avg_pick": 182.95,
+      "avg_pick": 181.74285714285713,
       "rank": 186
     },
     {
@@ -1494,7 +1494,7 @@
       "name": "Kayshon Boutte",
       "pos": "WR",
       "value": 2559,
-      "avg_pick": 184.05426356589146,
+      "avg_pick": 184.19230769230768,
       "rank": 187
     },
     {
@@ -1502,7 +1502,7 @@
       "name": "Dylan Sampson",
       "pos": "RB",
       "value": 2550,
-      "avg_pick": 186.02205882352942,
+      "avg_pick": 186.03649635036496,
       "rank": 188
     },
     {
@@ -1510,63 +1510,63 @@
       "name": "Deebo Samuel",
       "pos": "WR",
       "value": 2542,
-      "avg_pick": 188.37121212121212,
+      "avg_pick": 188.48872180451127,
       "rank": 189
-    },
-    {
-      "id": "6783",
-      "name": "Jerry Jeudy",
-      "pos": "WR",
-      "value": 2534,
-      "avg_pick": 189.69172932330827,
-      "rank": 190
     },
     {
       "id": "12502",
       "name": "Gunnar Helm",
       "pos": "TE",
+      "value": 2534,
+      "avg_pick": 189.52,
+      "rank": 190
+    },
+    {
+      "id": "6783",
+      "name": "Jerry Jeudy",
+      "pos": "WR",
       "value": 2526,
-      "avg_pick": 190.01612903225808,
+      "avg_pick": 189.7462686567164,
       "rank": 191
-    },
-    {
-      "id": "12535",
-      "name": "Isaac TeSlaa",
-      "pos": "WR",
-      "value": 2518,
-      "avg_pick": 190.3021582733813,
-      "rank": 192
-    },
-    {
-      "id": "4137",
-      "name": "James Conner",
-      "pos": "RB",
-      "value": 2511,
-      "avg_pick": 191.03731343283582,
-      "rank": 193
-    },
-    {
-      "id": "13402",
-      "name": "Skyler Bell",
-      "pos": "WR",
-      "value": 2503,
-      "avg_pick": 191.89473684210526,
-      "rank": 194
     },
     {
       "id": "13293",
       "name": "Ja'Kobi Lane",
       "pos": "WR",
+      "value": 2518,
+      "avg_pick": 190.08695652173913,
+      "rank": 192
+    },
+    {
+      "id": "13402",
+      "name": "Skyler Bell",
+      "pos": "WR",
+      "value": 2511,
+      "avg_pick": 190.4,
+      "rank": 193
+    },
+    {
+      "id": "4137",
+      "name": "James Conner",
+      "pos": "RB",
+      "value": 2503,
+      "avg_pick": 191.03731343283582,
+      "rank": 194
+    },
+    {
+      "id": "12535",
+      "name": "Isaac TeSlaa",
+      "pos": "WR",
       "value": 2496,
-      "avg_pick": 192.95454545454547,
+      "avg_pick": 191.10071942446044,
       "rank": 195
     },
     {
-      "id": "7527",
-      "name": "Mac Jones",
-      "pos": "QB",
+      "id": "13353",
+      "name": "Chris Brazzell",
+      "pos": "WR",
       "value": 2488,
-      "avg_pick": 193.62727272727273,
+      "avg_pick": 193.4090909090909,
       "rank": 196
     },
     {
@@ -1578,11 +1578,11 @@
       "rank": 197
     },
     {
-      "id": "13353",
-      "name": "Chris Brazzell",
-      "pos": "WR",
+      "id": "7527",
+      "name": "Mac Jones",
+      "pos": "QB",
       "value": 2473,
-      "avg_pick": 194.33333333333334,
+      "avg_pick": 193.74774774774775,
       "rank": 198
     },
     {
@@ -1590,7 +1590,7 @@
       "name": "Isiah Pacheco",
       "pos": "RB",
       "value": 2465,
-      "avg_pick": 194.95488721804512,
+      "avg_pick": 195.03731343283582,
       "rank": 199
     },
     {
@@ -1606,31 +1606,31 @@
       "name": "Chig Okonkwo",
       "pos": "TE",
       "value": 2455,
-      "avg_pick": 198.60330578512398,
+      "avg_pick": 198.0327868852459,
       "rank": 201
-    },
-    {
-      "id": "12499",
-      "name": "Elic Ayomanor",
-      "pos": "WR",
-      "value": 2453,
-      "avg_pick": 202.4453125,
-      "rank": 202
-    },
-    {
-      "id": "4033",
-      "name": "David Njoku",
-      "pos": "TE",
-      "value": 2450,
-      "avg_pick": 203.23893805309734,
-      "rank": 203
     },
     {
       "id": "13301",
       "name": "Antonio Williams",
       "pos": "WR",
+      "value": 2453,
+      "avg_pick": 200.22222222222223,
+      "rank": 202
+    },
+    {
+      "id": "12499",
+      "name": "Elic Ayomanor",
+      "pos": "WR",
+      "value": 2450,
+      "avg_pick": 202.4453125,
+      "rank": 203
+    },
+    {
+      "id": "4033",
+      "name": "David Njoku",
+      "pos": "TE",
       "value": 2447,
-      "avg_pick": 203.8235294117647,
+      "avg_pick": 203.28070175438597,
       "rank": 204
     },
     {
@@ -1646,7 +1646,7 @@
       "name": "Adonai Mitchell",
       "pos": "WR",
       "value": 2443,
-      "avg_pick": 204.1015625,
+      "avg_pick": 204.09302325581396,
       "rank": 206
     },
     {
@@ -1674,19 +1674,19 @@
       "rank": 209
     },
     {
-      "id": "9229",
-      "name": "Anthony Richardson",
-      "pos": "QB",
-      "value": 2432,
-      "avg_pick": 208.19626168224298,
-      "rank": 210
-    },
-    {
       "id": "13285",
       "name": "Malachi Fields",
       "pos": "WR",
+      "value": 2432,
+      "avg_pick": 207.04761904761904,
+      "rank": 210
+    },
+    {
+      "id": "9229",
+      "name": "Anthony Richardson",
+      "pos": "QB",
       "value": 2430,
-      "avg_pick": 208.85,
+      "avg_pick": 207.90740740740742,
       "rank": 211
     },
     {
@@ -1694,7 +1694,7 @@
       "name": "Tank Bigsby",
       "pos": "RB",
       "value": 2428,
-      "avg_pick": 209.29457364341084,
+      "avg_pick": 209.19230769230768,
       "rank": 212
     },
     {
@@ -1702,7 +1702,7 @@
       "name": "Tank Dell",
       "pos": "WR",
       "value": 2425,
-      "avg_pick": 211.61016949152543,
+      "avg_pick": 211.58823529411765,
       "rank": 213
     },
     {
@@ -1714,43 +1714,43 @@
       "rank": 214
     },
     {
+      "id": "13278",
+      "name": "Max Klare",
+      "pos": "TE",
+      "value": 2421,
+      "avg_pick": 214.52631578947367,
+      "rank": 215
+    },
+    {
       "id": "8698",
       "name": "Jake Tonges",
       "pos": "TE",
-      "value": 2421,
+      "value": 2418,
       "avg_pick": 215.126213592233,
-      "rank": 215
+      "rank": 216
     },
     {
       "id": "13347",
       "name": "Demond Claiborne",
       "pos": "RB",
-      "value": 2418,
+      "value": 2415,
       "avg_pick": 215.38888888888889,
-      "rank": 216
+      "rank": 217
     },
     {
       "id": "11637",
       "name": "Keon Coleman",
       "pos": "WR",
-      "value": 2415,
+      "value": 2412,
       "avg_pick": 215.55737704918033,
-      "rank": 217
+      "rank": 218
     },
     {
       "id": "12547",
       "name": "Kyle Williams",
       "pos": "WR",
-      "value": 2412,
-      "avg_pick": 216.1404958677686,
-      "rank": 218
-    },
-    {
-      "id": "13278",
-      "name": "Max Klare",
-      "pos": "TE",
       "value": 2410,
-      "avg_pick": 216.88888888888889,
+      "avg_pick": 216.1404958677686,
       "rank": 219
     },
     {
@@ -1758,7 +1758,7 @@
       "name": "Chris Rodriguez",
       "pos": "RB",
       "value": 2408,
-      "avg_pick": 218.25619834710744,
+      "avg_pick": 217.88524590163934,
       "rank": 220
     },
     {
@@ -1770,27 +1770,27 @@
       "rank": 221
     },
     {
+      "id": "1373",
+      "name": "Geno Smith",
+      "pos": "QB",
+      "value": 2398,
+      "avg_pick": 220.08256880733944,
+      "rank": 222
+    },
+    {
       "id": "11435",
       "name": "Emanuel Wilson",
       "pos": "RB",
-      "value": 2398,
+      "value": 2394,
       "avg_pick": 220.3801652892562,
-      "rank": 222
+      "rank": 223
     },
     {
       "id": "7591",
       "name": "Justin Fields",
       "pos": "QB",
-      "value": 2394,
-      "avg_pick": 220.47222222222223,
-      "rank": 223
-    },
-    {
-      "id": "1373",
-      "name": "Geno Smith",
-      "pos": "QB",
       "value": 2390,
-      "avg_pick": 220.55555555555554,
+      "avg_pick": 220.47222222222223,
       "rank": 224
     },
     {
@@ -1922,27 +1922,27 @@
       "rank": 240
     },
     {
+      "id": "13317",
+      "name": "Ted Hurst",
+      "pos": "WR",
+      "value": 2311,
+      "avg_pick": 234.875,
+      "rank": 241
+    },
+    {
       "id": "13400",
       "name": "Justin Joly",
       "pos": "TE",
-      "value": 2311,
+      "value": 2304,
       "avg_pick": 237.5,
-      "rank": 241
+      "rank": 242
     },
     {
       "id": "4066",
       "name": "Evan Engram",
       "pos": "TE",
-      "value": 2304,
-      "avg_pick": 238.7319587628866,
-      "rank": 242
-    },
-    {
-      "id": "13317",
-      "name": "Ted Hurst",
-      "pos": "WR",
       "value": 2295,
-      "avg_pick": 239.93333333333334,
+      "avg_pick": 238.7319587628866,
       "rank": 243
     },
     {
@@ -2034,51 +2034,51 @@
       "rank": 254
     },
     {
+      "id": "13319",
+      "name": "Oscar Delp",
+      "pos": "TE",
+      "value": 2204,
+      "avg_pick": 250.45454545454547,
+      "rank": 255
+    },
+    {
       "id": "11575",
       "name": "Ray Davis",
       "pos": "RB",
-      "value": 2204,
+      "value": 2197,
       "avg_pick": 252.10377358490567,
-      "rank": 255
+      "rank": 256
     },
     {
       "id": "12500",
       "name": "Quinn Ewers",
       "pos": "QB",
-      "value": 2197,
+      "value": 2190,
       "avg_pick": 252.10843373493975,
-      "rank": 256
+      "rank": 257
     },
     {
       "id": "13272",
       "name": "Carson Beck",
       "pos": "QB",
-      "value": 2190,
+      "value": 2182,
       "avg_pick": 252.375,
-      "rank": 257
+      "rank": 258
     },
     {
       "id": "11783",
       "name": "Ryan Flournoy",
       "pos": "WR",
-      "value": 2182,
+      "value": 2174,
       "avg_pick": 254.33333333333334,
-      "rank": 258
+      "rank": 259
     },
     {
       "id": "12511",
       "name": "Will Howard",
       "pos": "QB",
-      "value": 2174,
-      "avg_pick": 254.36470588235295,
-      "rank": 259
-    },
-    {
-      "id": "13319",
-      "name": "Oscar Delp",
-      "pos": "TE",
       "value": 2167,
-      "avg_pick": 254.5,
+      "avg_pick": 254.36470588235295,
       "rank": 260
     },
     {
@@ -2098,435 +2098,435 @@
       "rank": 262
     },
     {
+      "id": "13417",
+      "name": "De'Zhaun Stribling",
+      "pos": "WR",
+      "value": 2142,
+      "avg_pick": 256.8,
+      "rank": 263
+    },
+    {
       "id": "11600",
       "name": "Ja'Tavion Sanders",
       "pos": "TE",
-      "value": 2142,
+      "value": 2133,
       "avg_pick": 257.18390804597703,
-      "rank": 263
+      "rank": 264
     },
     {
       "id": "12503",
       "name": "Isaiah Bond",
       "pos": "WR",
-      "value": 2133,
+      "value": 2125,
       "avg_pick": 257.4767441860465,
-      "rank": 264
+      "rank": 265
     },
     {
       "id": "12541",
       "name": "Dont'e Thornton",
       "pos": "WR",
-      "value": 2125,
+      "value": 2117,
       "avg_pick": 258.0217391304348,
-      "rank": 265
+      "rank": 266
     },
     {
       "id": "13401",
       "name": "Michael Trigg",
       "pos": "TE",
-      "value": 2117,
+      "value": 2109,
       "avg_pick": 258.3076923076923,
-      "rank": 266
+      "rank": 267
     },
     {
       "id": "11834",
       "name": "Devaughn Vele",
       "pos": "WR",
-      "value": 2109,
+      "value": 2100,
       "avg_pick": 258.85555555555555,
-      "rank": 267
+      "rank": 268
     },
     {
       "id": "12485",
       "name": "Tez Johnson",
       "pos": "WR",
-      "value": 2100,
+      "value": 2092,
       "avg_pick": 259.54761904761904,
-      "rank": 268
+      "rank": 269
     },
     {
       "id": "13306",
       "name": "Taylen Green",
       "pos": "QB",
-      "value": 2092,
+      "value": 2084,
       "avg_pick": 259.9230769230769,
-      "rank": 269
+      "rank": 270
     },
     {
       "id": "9759",
       "name": "C.J. Johnson",
       "pos": "WR",
-      "value": 2084,
+      "value": 2076,
       "avg_pick": 260.546875,
-      "rank": 270
+      "rank": 271
     },
     {
       "id": "13300",
       "name": "Le'Veon Moss",
       "pos": "RB",
-      "value": 2076,
+      "value": 2067,
       "avg_pick": 261.72727272727275,
-      "rank": 271
+      "rank": 272
     },
     {
       "id": "13333",
       "name": "Deion Burks",
       "pos": "WR",
-      "value": 2067,
+      "value": 2059,
       "avg_pick": 263.2,
-      "rank": 272
+      "rank": 273
     },
     {
       "id": "7571",
       "name": "Rashod Bateman",
       "pos": "WR",
-      "value": 2059,
+      "value": 2051,
       "avg_pick": 264.7608695652174,
-      "rank": 273
+      "rank": 274
     },
     {
       "id": "4039",
       "name": "Cooper Kupp",
       "pos": "WR",
-      "value": 2051,
+      "value": 2042,
       "avg_pick": 266.2020202020202,
-      "rank": 274
+      "rank": 275
     },
     {
       "id": "5848",
       "name": "Marquise Brown",
       "pos": "WR",
-      "value": 2042,
+      "value": 2034,
       "avg_pick": 267.53409090909093,
-      "rank": 275
+      "rank": 276
     },
     {
       "id": "9757",
       "name": "Kendre Miller",
       "pos": "RB",
-      "value": 2034,
+      "value": 2026,
       "avg_pick": 267.64367816091954,
-      "rank": 276
+      "rank": 277
     },
     {
       "id": "12467",
       "name": "Jordan James",
       "pos": "RB",
-      "value": 2026,
+      "value": 2018,
       "avg_pick": 267.8333333333333,
-      "rank": 277
+      "rank": 278
     },
     {
       "id": "13380",
       "name": "Brenen Thompson",
       "pos": "WR",
-      "value": 2018,
+      "value": 2009,
       "avg_pick": 268.8181818181818,
-      "rank": 278
+      "rank": 279
     },
     {
       "id": "4017",
       "name": "Deshaun Watson",
       "pos": "QB",
-      "value": 2009,
+      "value": 2001,
       "avg_pick": 269.1923076923077,
-      "rank": 279
+      "rank": 280
     },
     {
       "id": "11571",
       "name": "Isaiah Davis",
       "pos": "RB",
-      "value": 2001,
+      "value": 1995,
       "avg_pick": 269.2638888888889,
-      "rank": 280
+      "rank": 281
     },
     {
       "id": "1479",
       "name": "Keenan Allen",
       "pos": "WR",
-      "value": 1995,
+      "value": 1988,
       "avg_pick": 269.6741573033708,
-      "rank": 281
+      "rank": 282
     },
     {
       "id": "9486",
       "name": "Dontayvion Wicks",
       "pos": "WR",
-      "value": 1988,
+      "value": 1982,
       "avg_pick": 270.5308641975309,
-      "rank": 282
+      "rank": 283
     },
     {
       "id": "12470",
       "name": "Riley Leonard",
       "pos": "QB",
-      "value": 1982,
+      "value": 1975,
       "avg_pick": 270.6714285714286,
-      "rank": 283
+      "rank": 284
     },
     {
       "id": "10444",
       "name": "Cedric Tillman",
       "pos": "WR",
-      "value": 1975,
+      "value": 1969,
       "avg_pick": 274.46835443037975,
-      "rank": 284
+      "rank": 285
     },
     {
       "id": "13403",
       "name": "Jam Miller",
       "pos": "RB",
-      "value": 1969,
+      "value": 1962,
       "avg_pick": 275.2,
-      "rank": 285
+      "rank": 286
     },
     {
       "id": "6826",
       "name": "Cole Kmet",
       "pos": "TE",
-      "value": 1962,
+      "value": 1956,
       "avg_pick": 277.7671232876712,
-      "rank": 286
+      "rank": 287
     },
     {
       "id": "4993",
       "name": "Mike Gesicki",
       "pos": "TE",
-      "value": 1956,
+      "value": 1949,
       "avg_pick": 278.5844155844156,
-      "rank": 287
+      "rank": 288
     },
     {
       "id": "12505",
       "name": "Jalen Royals",
       "pos": "WR",
-      "value": 1949,
+      "value": 1943,
       "avg_pick": 279.69736842105266,
-      "rank": 288
+      "rank": 289
     },
     {
       "id": "12544",
       "name": "LeQuint Allen",
       "pos": "RB",
-      "value": 1943,
+      "value": 1937,
       "avg_pick": 279.7971014492754,
-      "rank": 289
+      "rank": 290
     },
     {
       "id": "9501",
       "name": "DeMario Douglas",
       "pos": "WR",
-      "value": 1937,
+      "value": 1929,
       "avg_pick": 280.7792207792208,
-      "rank": 290
+      "rank": 291
     },
     {
       "id": "7828",
       "name": "Noah Gray",
       "pos": "TE",
-      "value": 1929,
+      "value": 1923,
       "avg_pick": 283.5223880597015,
-      "rank": 291
+      "rank": 292
     },
     {
       "id": "11651",
       "name": "Isaac Guerendo",
       "pos": "RB",
-      "value": 1923,
+      "value": 1916,
       "avg_pick": 284.54411764705884,
-      "rank": 292
+      "rank": 293
     },
     {
       "id": "184",
       "name": "Adrian Peterson",
       "pos": "RB",
-      "value": 1916,
+      "value": 1910,
       "avg_pick": 286,
-      "rank": 293
+      "rank": 294
     },
     {
       "id": "12531",
       "name": "Trevor Etienne",
       "pos": "RB",
-      "value": 1910,
+      "value": 1903,
       "avg_pick": 286.64179104477614,
-      "rank": 294
+      "rank": 295
     },
     {
       "id": "8188",
       "name": "Tyquan Thornton",
       "pos": "WR",
-      "value": 1903,
+      "value": 1897,
       "avg_pick": 286.70175438596493,
-      "rank": 295
+      "rank": 296
     },
     {
       "id": "89",
       "name": "Chad Henne",
       "pos": "QB",
-      "value": 1897,
+      "value": 1891,
       "avg_pick": 287.3333333333333,
-      "rank": 296
+      "rank": 297
     },
     {
       "id": "223",
       "name": "Larry Fitzgerald",
       "pos": "WR",
-      "value": 1891,
+      "value": 1884,
       "avg_pick": 287.8,
-      "rank": 297
+      "rank": 298
     },
     {
       "id": "9479",
       "name": "Darnell Washington",
       "pos": "TE",
-      "value": 1884,
+      "value": 1878,
       "avg_pick": 288.06060606060606,
-      "rank": 298
+      "rank": 299
     },
     {
       "id": "8172",
       "name": "Greg Dulcich",
       "pos": "TE",
-      "value": 1878,
+      "value": 1871,
       "avg_pick": 292.55555555555554,
-      "rank": 299
+      "rank": 300
     },
     {
       "id": "4098",
       "name": "Kareem Hunt",
       "pos": "RB",
-      "value": 1871,
+      "value": 1864,
       "avg_pick": 292.89285714285717,
-      "rank": 300
+      "rank": 301
     },
     {
       "id": "2307",
       "name": "Marcus Mariota",
       "pos": "QB",
-      "value": 1864,
+      "value": 1857,
       "avg_pick": 293.3859649122807,
-      "rank": 301
+      "rank": 302
     },
     {
       "id": "11557",
       "name": "Joe Milton",
       "pos": "QB",
-      "value": 1857,
+      "value": 1850,
       "avg_pick": 293.7758620689655,
-      "rank": 302
+      "rank": 303
     },
     {
       "id": "4144",
       "name": "Jonnu Smith",
       "pos": "TE",
-      "value": 1850,
+      "value": 1843,
       "avg_pick": 294.859649122807,
-      "rank": 303
+      "rank": 304
     },
     {
       "id": "13303",
       "name": "Cade Klubnik",
       "pos": "QB",
-      "value": 1843,
+      "value": 1835,
       "avg_pick": 295.25,
-      "rank": 304
+      "rank": 305
     },
     {
       "id": "13338",
       "name": "Kevin Coleman",
       "pos": "WR",
-      "value": 1835,
+      "value": 1828,
       "avg_pick": 296.1,
-      "rank": 305
+      "rank": 306
     },
     {
       "id": "4988",
       "name": "Nick Chubb",
       "pos": "RB",
-      "value": 1828,
+      "value": 1821,
       "avg_pick": 297.84615384615387,
-      "rank": 306
+      "rank": 307
     },
     {
       "id": "11579",
       "name": "Audric Estime",
       "pos": "RB",
-      "value": 1821,
+      "value": 1814,
       "avg_pick": 298.14814814814815,
-      "rank": 307
+      "rank": 308
     },
     {
       "id": "8117",
       "name": "Jalen Tolbert",
       "pos": "WR",
-      "value": 1814,
+      "value": 1807,
       "avg_pick": 299.5,
-      "rank": 308
+      "rank": 309
     },
     {
       "id": "19",
       "name": "Joe Flacco",
       "pos": "QB",
-      "value": 1807,
+      "value": 1800,
       "avg_pick": 299.765625,
-      "rank": 309
+      "rank": 310
     },
     {
       "id": "4663",
       "name": "Austin Ekeler",
       "pos": "RB",
-      "value": 1800,
+      "value": 1792,
       "avg_pick": 300.27906976744185,
-      "rank": 310
+      "rank": 311
     },
     {
       "id": "2306",
       "name": "Jameis Winston",
       "pos": "QB",
-      "value": 1792,
+      "value": 1785,
       "avg_pick": 302.44444444444446,
-      "rank": 311
+      "rank": 312
     },
     {
       "id": "8917",
       "name": "KaVontae Turpin",
       "pos": "WR",
-      "value": 1785,
+      "value": 1778,
       "avg_pick": 304.21875,
-      "rank": 312
+      "rank": 313
     },
     {
       "id": "954",
       "name": "Cam Newton",
       "pos": "QB",
-      "value": 1778,
+      "value": 1771,
       "avg_pick": 306.6,
-      "rank": 313
+      "rank": 314
     },
     {
       "id": "11650",
       "name": "Luke McCaffrey",
       "pos": "WR",
-      "value": 1771,
+      "value": 1764,
       "avg_pick": 306.8292682926829,
-      "rank": 314
+      "rank": 315
     },
     {
       "id": "8119",
       "name": "Jahan Dotson",
       "pos": "WR",
-      "value": 1764,
-      "avg_pick": 307.3181818181818,
-      "rank": 315
-    },
-    {
-      "id": "167",
-      "name": "Tom Brady",
-      "pos": "QB",
       "value": 1756,
-      "avg_pick": 307.85714285714283,
+      "avg_pick": 307.3181818181818,
       "rank": 316
     },
     {
@@ -2746,1596 +2746,1604 @@
       "rank": 343
     },
     {
+      "id": "167",
+      "name": "Tom Brady",
+      "pos": "QB",
+      "value": 1547,
+      "avg_pick": 324.84615384615387,
+      "rank": 344
+    },
+    {
       "id": "7538",
       "name": "Zach Wilson",
       "pos": "QB",
-      "value": 1547,
+      "value": 1539,
       "avg_pick": 325.5,
-      "rank": 344
+      "rank": 345
     },
     {
       "id": "1234",
       "name": "Russell Wilson",
       "pos": "QB",
-      "value": 1539,
+      "value": 1533,
       "avg_pick": 326.2121212121212,
-      "rank": 345
+      "rank": 346
     },
     {
       "id": "7585",
       "name": "Davis Mills",
       "pos": "QB",
-      "value": 1533,
+      "value": 1525,
       "avg_pick": 326.4594594594595,
-      "rank": 346
+      "rank": 347
     },
     {
       "id": "11577",
       "name": "Will Shipley",
       "pos": "RB",
-      "value": 1525,
+      "value": 1518,
       "avg_pick": 327.7105263157895,
-      "rank": 347
+      "rank": 348
     },
     {
       "id": "12670",
       "name": "KeAndre Lambert-Smith",
       "pos": "WR",
-      "value": 1518,
+      "value": 1511,
       "avg_pick": 327.72222222222223,
-      "rank": 348
+      "rank": 349
     },
     {
       "id": "928",
       "name": "Randall Cobb",
       "pos": "WR",
-      "value": 1511,
+      "value": 1504,
       "avg_pick": 328,
-      "rank": 349
+      "rank": 350
     },
     {
       "id": "11629",
       "name": "Devontez Walker",
       "pos": "WR",
-      "value": 1504,
+      "value": 1497,
       "avg_pick": 328.2916666666667,
-      "rank": 350
+      "rank": 351
     },
     {
       "id": "12048",
       "name": "George Holani",
       "pos": "RB",
-      "value": 1497,
+      "value": 1489,
       "avg_pick": 328.375,
-      "rank": 351
+      "rank": 352
     },
     {
       "id": "7610",
       "name": "Trey Lance",
       "pos": "QB",
-      "value": 1489,
+      "value": 1482,
       "avg_pick": 330.55882352941177,
-      "rank": 352
+      "rank": 353
     },
     {
       "id": "13079",
       "name": "Jahdae Walker",
       "pos": "WR",
-      "value": 1482,
+      "value": 1476,
       "avg_pick": 331.45,
-      "rank": 353
+      "rank": 354
     },
     {
       "id": "12718",
       "name": "Konata Mumpfield",
       "pos": "WR",
-      "value": 1476,
+      "value": 1468,
       "avg_pick": 332.47058823529414,
-      "rank": 354
+      "rank": 355
     },
     {
       "id": "9503",
       "name": "Jacob Copeland",
       "pos": "WR",
-      "value": 1468,
+      "value": 1461,
       "avg_pick": 332.5238095238095,
-      "rank": 355
+      "rank": 356
     },
     {
       "id": "9481",
       "name": "Luke Musgrave",
       "pos": "TE",
-      "value": 1461,
+      "value": 1454,
       "avg_pick": 332.55102040816325,
-      "rank": 356
+      "rank": 357
     },
     {
       "id": "9498",
       "name": "Jadon Haselwood",
       "pos": "WR",
-      "value": 1454,
+      "value": 1447,
       "avg_pick": 333.05,
-      "rank": 357
+      "rank": 358
     },
     {
       "id": "8800",
       "name": "Malik Davis",
       "pos": "RB",
-      "value": 1447,
+      "value": 1440,
       "avg_pick": 333.60714285714283,
-      "rank": 358
+      "rank": 359
     },
     {
       "id": "12486",
       "name": "Dillon Gabriel",
       "pos": "QB",
-      "value": 1440,
+      "value": 1432,
       "avg_pick": 333.72222222222223,
-      "rank": 359
+      "rank": 360
     },
     {
       "id": "7601",
       "name": "Rondale Moore",
       "pos": "WR",
-      "value": 1432,
+      "value": 1426,
       "avg_pick": 334.3333333333333,
-      "rank": 360
+      "rank": 361
     },
     {
       "id": "12738",
       "name": "Phil Mafah",
       "pos": "RB",
-      "value": 1426,
+      "value": 1420,
       "avg_pick": 334.6,
-      "rank": 361
+      "rank": 362
     },
     {
       "id": "11256",
       "name": "Tyson Bagent",
       "pos": "QB",
-      "value": 1420,
+      "value": 1413,
       "avg_pick": 335.8,
-      "rank": 362
+      "rank": 363
     },
     {
       "id": "12482",
       "name": "Savion Williams",
       "pos": "WR",
-      "value": 1413,
+      "value": 1407,
       "avg_pick": 337.07894736842104,
-      "rank": 363
+      "rank": 364
     },
     {
       "id": "11619",
       "name": "Ja'Lynn Polk",
       "pos": "WR",
-      "value": 1407,
+      "value": 1401,
       "avg_pick": 337.93548387096774,
-      "rank": 364
+      "rank": 365
     },
     {
       "id": "6039",
       "name": "Ty Johnson",
       "pos": "RB",
-      "value": 1401,
+      "value": 1395,
       "avg_pick": 338.53846153846155,
-      "rank": 365
+      "rank": 366
     },
     {
       "id": "1837",
       "name": "Jimmy Garoppolo",
       "pos": "QB",
-      "value": 1395,
+      "value": 1388,
       "avg_pick": 338.8636363636364,
-      "rank": 366
+      "rank": 367
     },
     {
       "id": "6011",
       "name": "Gardner Minshew",
       "pos": "QB",
-      "value": 1388,
+      "value": 1382,
       "avg_pick": 339.5769230769231,
-      "rank": 367
+      "rank": 368
     },
     {
       "id": "12523",
       "name": "Jimmy Horn",
       "pos": "WR",
-      "value": 1382,
+      "value": 1375,
       "avg_pick": 339.60526315789474,
-      "rank": 368
+      "rank": 369
     },
     {
       "id": "11439",
       "name": "Jaleel McLaughlin",
       "pos": "RB",
-      "value": 1375,
+      "value": 1369,
       "avg_pick": 340.1666666666667,
-      "rank": 369
+      "rank": 370
     },
     {
       "id": "10218",
       "name": "Xavier Hutchinson",
       "pos": "WR",
-      "value": 1369,
+      "value": 1363,
       "avg_pick": 340.82142857142856,
-      "rank": 370
+      "rank": 371
     },
     {
       "id": "12496",
       "name": "Tai Felton",
       "pos": "WR",
-      "value": 1363,
+      "value": 1356,
       "avg_pick": 340.8333333333333,
-      "rank": 371
+      "rank": 372
     },
     {
       "id": "9499",
       "name": "Bryce Ford-Wheaton",
       "pos": "WR",
-      "value": 1356,
+      "value": 1350,
       "avg_pick": 341.3157894736842,
-      "rank": 372
+      "rank": 373
     },
     {
       "id": "4454",
       "name": "Kendrick Bourne",
       "pos": "WR",
-      "value": 1350,
+      "value": 1343,
       "avg_pick": 343.04761904761904,
-      "rank": 373
+      "rank": 374
     },
     {
       "id": "9507",
       "name": "Titus Swen",
       "pos": "RB",
-      "value": 1343,
+      "value": 1338,
       "avg_pick": 343.3333333333333,
-      "rank": 374
+      "rank": 375
     },
     {
       "id": "9510",
       "name": "Lew Nichols",
       "pos": "RB",
-      "value": 1338,
+      "value": 1331,
       "avg_pick": 344.23809523809524,
-      "rank": 375
+      "rank": 376
     },
     {
       "id": "8928",
       "name": "Daylen Baldwin",
       "pos": "WR",
-      "value": 1331,
+      "value": 1325,
       "avg_pick": 345,
-      "rank": 376
+      "rank": 377
     },
     {
       "id": "8135",
       "name": "Treylon Burks",
       "pos": "WR",
-      "value": 1325,
+      "value": 1318,
       "avg_pick": 345.65625,
-      "rank": 377
+      "rank": 378
     },
     {
       "id": "9496",
       "name": "Sam James",
       "pos": "WR",
-      "value": 1318,
+      "value": 1312,
       "avg_pick": 345.73333333333335,
-      "rank": 378
+      "rank": 379
     },
     {
       "id": "11623",
       "name": "Jordan Whittington",
       "pos": "WR",
-      "value": 1312,
+      "value": 1305,
       "avg_pick": 346.0416666666667,
-      "rank": 379
+      "rank": 380
     },
     {
       "id": "11592",
       "name": "Erick All",
       "pos": "TE",
-      "value": 1305,
+      "value": 1304,
       "avg_pick": 346.7878787878788,
-      "rank": 380
+      "rank": 381
     },
     {
       "id": "6111",
       "name": "Jake Browning",
       "pos": "QB",
-      "value": 1304,
+      "value": 1303,
       "avg_pick": 347,
-      "rank": 381
+      "rank": 382
     },
     {
       "id": "2028",
       "name": "Derek Carr",
       "pos": "QB",
-      "value": 1303,
+      "value": 1301,
       "avg_pick": 347.2,
-      "rank": 382
+      "rank": 383
     },
     {
       "id": "12688",
       "name": "Cam Miller",
       "pos": "QB",
-      "value": 1301,
+      "value": 1300,
       "avg_pick": 347.3333333333333,
-      "rank": 383
+      "rank": 384
     },
     {
       "id": "5857",
       "name": "Noah Fant",
       "pos": "TE",
-      "value": 1300,
+      "value": 1298,
       "avg_pick": 347.55882352941177,
-      "rank": 384
+      "rank": 385
     },
     {
       "id": "4972",
       "name": "Mason Rudolph",
       "pos": "QB",
-      "value": 1298,
+      "value": 1296,
       "avg_pick": 348.3809523809524,
-      "rank": 385
+      "rank": 386
     },
     {
       "id": "3271",
       "name": "Tyler Higbee",
       "pos": "TE",
-      "value": 1296,
+      "value": 1295,
       "avg_pick": 349.65384615384613,
-      "rank": 386
+      "rank": 387
     },
     {
       "id": "5970",
       "name": "Greg Dortch",
       "pos": "WR",
-      "value": 1295,
+      "value": 1294,
       "avg_pick": 350.14285714285717,
-      "rank": 387
+      "rank": 388
     },
     {
       "id": "9491",
       "name": "Ty Scott",
       "pos": "WR",
-      "value": 1294,
+      "value": 1293,
       "avg_pick": 350.4,
-      "rank": 388
+      "rank": 389
     },
     {
       "id": "973",
       "name": "Anthony Sherman",
       "pos": "RB",
-      "value": 1293,
+      "value": 1291,
       "avg_pick": 350.9130434782609,
-      "rank": 389
+      "rank": 390
     },
     {
       "id": "9495",
       "name": "Rakim Jarrett",
       "pos": "WR",
-      "value": 1291,
+      "value": 1289,
       "avg_pick": 350.94736842105266,
-      "rank": 390
+      "rank": 391
     },
     {
       "id": "947",
       "name": "Julio Jones",
       "pos": "WR",
-      "value": 1289,
+      "value": 1288,
       "avg_pick": 351.8888888888889,
-      "rank": 391
+      "rank": 392
     },
     {
       "id": "6271",
       "name": "Olamide Zaccheaus",
       "pos": "WR",
-      "value": 1288,
+      "value": 1286,
       "avg_pick": 352.94444444444446,
-      "rank": 392
+      "rank": 393
     },
     {
       "id": "12520",
       "name": "Xavier Restrepo",
       "pos": "WR",
-      "value": 1286,
+      "value": 1285,
       "avg_pick": 353,
-      "rank": 393
+      "rank": 394
     },
     {
       "id": "8129",
       "name": "Dameon Pierce",
       "pos": "RB",
-      "value": 1285,
+      "value": 1283,
       "avg_pick": 353.70588235294116,
-      "rank": 394
+      "rank": 395
     },
     {
       "id": "11588",
       "name": "Jawhar Jordan",
       "pos": "RB",
-      "value": 1283,
+      "value": 1282,
       "avg_pick": 353.8965517241379,
-      "rank": 395
+      "rank": 396
     },
     {
       "id": "8225",
       "name": "Daniel Bellinger",
       "pos": "TE",
-      "value": 1282,
+      "value": 1281,
       "avg_pick": 354.8235294117647,
-      "rank": 396
+      "rank": 397
     },
     {
       "id": "8908",
       "name": "Brandon Lewis",
       "pos": "WR",
-      "value": 1281,
+      "value": 1279,
       "avg_pick": 355.3333333333333,
-      "rank": 397
+      "rank": 398
     },
     {
       "id": "830",
       "name": "A.J. Green",
       "pos": "WR",
-      "value": 1279,
+      "value": 1278,
       "avg_pick": 356,
-      "rank": 398
+      "rank": 399
     },
     {
       "id": "7562",
       "name": "Tutu Atwell",
       "pos": "WR",
-      "value": 1278,
+      "value": 1276,
       "avg_pick": 356.3157894736842,
-      "rank": 399
+      "rank": 400
     },
     {
       "id": "6723",
       "name": "Vincent Testaverde",
       "pos": "QB",
-      "value": 1276,
+      "value": 1271,
       "avg_pick": 356.3333333333333,
-      "rank": 400
+      "rank": 401
     },
     {
       "id": "11599",
       "name": "Cade Stover",
       "pos": "TE",
-      "value": 1271,
+      "value": 1266,
       "avg_pick": 359.67857142857144,
-      "rank": 401
+      "rank": 402
     },
     {
       "id": "10235",
       "name": "Roschon Johnson",
       "pos": "RB",
-      "value": 1266,
+      "value": 1260,
       "avg_pick": 360.11764705882354,
-      "rank": 402
+      "rank": 403
     },
     {
       "id": "7587",
       "name": "Dyami Brown",
       "pos": "WR",
-      "value": 1260,
+      "value": 1256,
       "avg_pick": 360.6363636363636,
-      "rank": 403
+      "rank": 404
     },
     {
       "id": "331",
       "name": "Philip Rivers",
       "pos": "QB",
-      "value": 1256,
-      "avg_pick": 361,
-      "rank": 404
-    },
-    {
-      "id": "10216",
-      "name": "Kenny McIntosh",
-      "pos": "RB",
       "value": 1250,
       "avg_pick": 361,
       "rank": 405
     },
     {
+      "id": "10216",
+      "name": "Kenny McIntosh",
+      "pos": "RB",
+      "value": 1245,
+      "avg_pick": 361,
+      "rank": 406
+    },
+    {
       "id": "23",
       "name": "Jason Witten",
       "pos": "TE",
-      "value": 1245,
+      "value": 1240,
       "avg_pick": 361.6666666666667,
-      "rank": 406
+      "rank": 407
     },
     {
       "id": "6136",
       "name": "Jarrett Stidham",
       "pos": "QB",
-      "value": 1240,
+      "value": 1235,
       "avg_pick": 361.94736842105266,
-      "rank": 407
+      "rank": 408
     },
     {
       "id": "6789",
       "name": "Henry Ruggs",
       "pos": "WR",
-      "value": 1235,
+      "value": 1230,
       "avg_pick": 362.27272727272725,
-      "rank": 408
+      "rank": 409
     },
     {
       "id": "8938",
       "name": "Nathan Rourke",
       "pos": "QB",
-      "value": 1230,
+      "value": 1225,
       "avg_pick": 362.4,
-      "rank": 409
+      "rank": 410
     },
     {
       "id": "11608",
       "name": "Isaiah Williams",
       "pos": "WR",
-      "value": 1225,
+      "value": 1219,
       "avg_pick": 362.8333333333333,
-      "rank": 410
+      "rank": 411
     },
     {
       "id": "12472",
       "name": "Raheim Sanders",
       "pos": "RB",
-      "value": 1219,
+      "value": 1214,
       "avg_pick": 364.4,
-      "rank": 411
+      "rank": 412
     },
     {
       "id": "7694",
       "name": "Tommy Tremble",
       "pos": "TE",
-      "value": 1214,
+      "value": 1209,
       "avg_pick": 365,
-      "rank": 412
+      "rank": 413
     },
     {
       "id": "8122",
       "name": "Zonovan Knight",
       "pos": "RB",
-      "value": 1209,
+      "value": 1204,
       "avg_pick": 366.1666666666667,
-      "rank": 413
+      "rank": 414
     },
     {
       "id": "3286",
       "name": "Demarcus Robinson",
       "pos": "WR",
-      "value": 1204,
+      "value": 1199,
       "avg_pick": 367,
-      "rank": 414
+      "rank": 415
     },
     {
       "id": "9497",
       "name": "Jalin Hyatt",
       "pos": "WR",
-      "value": 1199,
+      "value": 1193,
       "avg_pick": 367.14285714285717,
-      "rank": 415
+      "rank": 416
     },
     {
       "id": "12462",
       "name": "Damien Martinez",
       "pos": "RB",
-      "value": 1193,
+      "value": 1189,
       "avg_pick": 367.57894736842104,
-      "rank": 416
+      "rank": 417
     },
     {
       "id": "8849",
       "name": "Tanner Conner",
       "pos": "TE",
-      "value": 1189,
+      "value": 1183,
       "avg_pick": 368.3333333333333,
-      "rank": 417
+      "rank": 418
     },
     {
       "id": "9483",
       "name": "Zack Kuntz",
       "pos": "TE",
-      "value": 1183,
+      "value": 1179,
       "avg_pick": 369.07142857142856,
-      "rank": 418
+      "rank": 419
     },
     {
       "id": "9998",
       "name": "Hendon Hooker",
       "pos": "QB",
-      "value": 1179,
+      "value": 1173,
       "avg_pick": 373.2857142857143,
-      "rank": 419
+      "rank": 420
     },
     {
       "id": "9227",
       "name": "Israel Abanikanda",
       "pos": "RB",
-      "value": 1173,
+      "value": 1168,
       "avg_pick": 373.6666666666667,
-      "rank": 420
+      "rank": 421
     },
     {
       "id": "9512",
       "name": "DeWayne McBride",
       "pos": "RB",
-      "value": 1168,
+      "value": 1164,
       "avg_pick": 374,
-      "rank": 421
+      "rank": 422
     },
     {
       "id": "12473",
       "name": "Mitchell Evans",
       "pos": "TE",
-      "value": 1164,
+      "value": 1159,
       "avg_pick": 374.0833333333333,
-      "rank": 422
+      "rank": 423
     },
     {
       "id": "12860",
       "name": "Theo Wease",
       "pos": "WR",
-      "value": 1159,
+      "value": 1154,
       "avg_pick": 375.5,
-      "rank": 423
+      "rank": 424
     },
     {
       "id": "11370",
       "name": "Chris Brooks",
       "pos": "RB",
-      "value": 1154,
+      "value": 1149,
       "avg_pick": 376.875,
-      "rank": 424
+      "rank": 425
     },
     {
       "id": "9231",
       "name": "Jaren Hall",
       "pos": "QB",
-      "value": 1149,
+      "value": 1144,
       "avg_pick": 380.8333333333333,
-      "rank": 425
+      "rank": 426
     },
     {
       "id": "8160",
       "name": "Kenny Pickett",
       "pos": "QB",
-      "value": 1144,
+      "value": 1140,
       "avg_pick": 381.1,
-      "rank": 426
+      "rank": 427
     },
     {
       "id": "10231",
       "name": "Elijah Higgins",
       "pos": "TE",
-      "value": 1140,
+      "value": 1135,
       "avg_pick": 381.1764705882353,
-      "rank": 427
+      "rank": 428
     },
     {
       "id": "9505",
       "name": "Deuce Vaughn",
       "pos": "RB",
-      "value": 1135,
+      "value": 1131,
       "avg_pick": 381.6363636363636,
-      "rank": 428
+      "rank": 429
     },
     {
       "id": "1426",
       "name": "DeAndre Hopkins",
       "pos": "WR",
-      "value": 1131,
+      "value": 1126,
       "avg_pick": 382.5,
-      "rank": 429
+      "rank": 430
     },
     {
       "id": "11570",
       "name": "Rasheen Ali",
       "pos": "RB",
-      "value": 1126,
+      "value": 1121,
       "avg_pick": 384.6111111111111,
-      "rank": 430
+      "rank": 431
     },
     {
       "id": "8824",
       "name": "Samson Nacua",
       "pos": "WR",
-      "value": 1121,
+      "value": 1116,
       "avg_pick": 385,
-      "rank": 431
+      "rank": 432
     },
     {
       "id": "8884",
       "name": "JJ Howland",
       "pos": "TE",
-      "value": 1116,
+      "value": 1111,
       "avg_pick": 386.3333333333333,
-      "rank": 432
+      "rank": 433
     },
     {
       "id": "902",
       "name": "Dwayne Harris",
       "pos": "WR",
-      "value": 1111,
+      "value": 1107,
       "avg_pick": 386.4,
-      "rank": 433
+      "rank": 434
     },
     {
       "id": "5854",
       "name": "Drew Lock",
       "pos": "QB",
-      "value": 1107,
+      "value": 1102,
       "avg_pick": 387.6666666666667,
-      "rank": 434
+      "rank": 435
     },
     {
       "id": "7596",
       "name": "Elijah Moore",
       "pos": "WR",
-      "value": 1102,
+      "value": 1098,
       "avg_pick": 388.6363636363636,
-      "rank": 435
+      "rank": 436
     },
     {
       "id": "6945",
       "name": "Antonio Gibson",
       "pos": "RB",
-      "value": 1098,
+      "value": 1092,
       "avg_pick": 389.14285714285717,
-      "rank": 436
+      "rank": 437
     },
     {
       "id": "13075",
       "name": "Myles Price",
       "pos": "WR",
-      "value": 1092,
+      "value": 1087,
       "avg_pick": 391,
-      "rank": 437
+      "rank": 438
     },
     {
       "id": "956",
       "name": "Mark Ingram",
       "pos": "RB",
-      "value": 1087,
+      "value": 1083,
       "avg_pick": 392.6666666666667,
-      "rank": 438
+      "rank": 439
     },
     {
       "id": "9490",
       "name": "Tyler Scott",
       "pos": "WR",
-      "value": 1083,
+      "value": 1078,
       "avg_pick": 392.8,
-      "rank": 439
+      "rank": 440
     },
     {
       "id": "12658",
       "name": "Jackson Hawes",
       "pos": "TE",
-      "value": 1078,
+      "value": 1074,
       "avg_pick": 393.7894736842105,
-      "rank": 440
+      "rank": 441
     },
     {
       "id": "12478",
       "name": "Nick Nash",
       "pos": "WR",
-      "value": 1074,
+      "value": 1069,
       "avg_pick": 394.3333333333333,
-      "rank": 441
+      "rank": 442
     },
     {
       "id": "7083",
       "name": "Tyler Huntley",
       "pos": "QB",
-      "value": 1069,
+      "value": 1064,
       "avg_pick": 394.82608695652175,
-      "rank": 442
+      "rank": 443
     },
     {
       "id": "9492",
       "name": "Trey Palmer",
       "pos": "WR",
-      "value": 1064,
+      "value": 1061,
       "avg_pick": 395.46153846153845,
-      "rank": 443
+      "rank": 444
     },
     {
       "id": "289",
       "name": "Drew Brees",
       "pos": "QB",
-      "value": 1061,
+      "value": 1056,
       "avg_pick": 395.6666666666667,
-      "rank": 444
+      "rank": 445
     },
     {
       "id": "12715",
       "name": "Thomas Fidone",
       "pos": "TE",
-      "value": 1056,
+      "value": 1052,
       "avg_pick": 396,
-      "rank": 445
+      "rank": 446
     },
     {
       "id": "8162",
       "name": "Sam Howell",
       "pos": "QB",
-      "value": 1052,
+      "value": 1047,
       "avg_pick": 396.5,
-      "rank": 446
+      "rank": 447
     },
     {
       "id": "3161",
       "name": "Carson Wentz",
       "pos": "QB",
-      "value": 1047,
+      "value": 1042,
       "avg_pick": 397.5,
-      "rank": 447
+      "rank": 448
     },
     {
       "id": "12539",
       "name": "Arian Smith",
       "pos": "WR",
-      "value": 1042,
+      "value": 1038,
       "avg_pick": 398.27272727272725,
-      "rank": 448
+      "rank": 449
     },
     {
       "id": "6151",
       "name": "Miles Sanders",
       "pos": "RB",
-      "value": 1038,
+      "value": 1034,
       "avg_pick": 398.8181818181818,
-      "rank": 449
+      "rank": 450
     },
     {
       "id": "4464",
       "name": "Nick Mullens",
       "pos": "QB",
-      "value": 1034,
+      "value": 1029,
       "avg_pick": 399.25,
-      "rank": 450
+      "rank": 451
     },
     {
       "id": "2197",
       "name": "Brandin Cooks",
       "pos": "WR",
-      "value": 1029,
+      "value": 1025,
       "avg_pick": 399.27272727272725,
-      "rank": 451
+      "rank": 452
     },
     {
       "id": "13150",
       "name": "Darius Cooper",
       "pos": "WR",
-      "value": 1025,
+      "value": 1020,
       "avg_pick": 399.55555555555554,
-      "rank": 452
+      "rank": 453
     },
     {
       "id": "12516",
       "name": "Kalel Mullings",
       "pos": "RB",
-      "value": 1020,
+      "value": 1016,
       "avg_pick": 400.2307692307692,
-      "rank": 453
+      "rank": 454
     },
     {
       "id": "2309",
       "name": "Amari Cooper",
       "pos": "WR",
-      "value": 1016,
+      "value": 1011,
       "avg_pick": 400.6666666666667,
-      "rank": 454
+      "rank": 455
     },
     {
       "id": "5937",
       "name": "Diontae Johnson",
       "pos": "WR",
-      "value": 1011,
+      "value": 1006,
       "avg_pick": 402.5,
-      "rank": 455
+      "rank": 456
     },
     {
       "id": "8878",
       "name": "Jared Scott",
       "pos": "TE",
-      "value": 1006,
+      "value": 1003,
       "avg_pick": 402.6,
-      "rank": 456
+      "rank": 457
     },
     {
       "id": "12634",
       "name": "Jordan Watkins",
       "pos": "WR",
-      "value": 1003,
+      "value": 998,
       "avg_pick": 403.75,
-      "rank": 457
+      "rank": 458
     },
     {
       "id": "8924",
       "name": "Thomas Odukoya",
       "pos": "TE",
-      "value": 998,
-      "avg_pick": 406.2,
-      "rank": 458
-    },
-    {
-      "id": "11729",
-      "name": "Sione Vaki",
-      "pos": "RB",
       "value": 994,
       "avg_pick": 406.2,
       "rank": 459
     },
     {
+      "id": "11729",
+      "name": "Sione Vaki",
+      "pos": "RB",
+      "value": 989,
+      "avg_pick": 406.2,
+      "rank": 460
+    },
+    {
       "id": "827",
       "name": "Tyrod Taylor",
       "pos": "QB",
-      "value": 989,
+      "value": 984,
       "avg_pick": 411.9166666666667,
-      "rank": 460
+      "rank": 461
     },
     {
       "id": "8891",
       "name": "Ryan McDaniel",
       "pos": "WR",
-      "value": 984,
+      "value": 980,
       "avg_pick": 413.3333333333333,
-      "rank": 461
+      "rank": 462
     },
     {
       "id": "943",
       "name": "Kyle Rudolph",
       "pos": "TE",
-      "value": 980,
+      "value": 975,
       "avg_pick": 413.75,
-      "rank": 462
+      "rank": 463
     },
     {
       "id": "12538",
       "name": "Brady Cook",
       "pos": "QB",
-      "value": 975,
+      "value": 972,
       "avg_pick": 414,
-      "rank": 463
+      "rank": 464
     },
     {
       "id": "11617",
       "name": "Malachi Corley",
       "pos": "WR",
-      "value": 972,
+      "value": 967,
       "avg_pick": 414.3333333333333,
-      "rank": 464
+      "rank": 465
     },
     {
       "id": "10871",
       "name": "Luke Schoonmaker",
       "pos": "TE",
-      "value": 967,
+      "value": 962,
       "avg_pick": 415.9166666666667,
-      "rank": 465
+      "rank": 466
     },
     {
       "id": "9223",
       "name": "Tiyon Evans",
       "pos": "RB",
-      "value": 962,
+      "value": 958,
       "avg_pick": 416.7142857142857,
-      "rank": 466
+      "rank": 467
     },
     {
       "id": "8159",
       "name": "Desmond Ridder",
       "pos": "QB",
-      "value": 958,
+      "value": 953,
       "avg_pick": 417,
-      "rank": 467
+      "rank": 468
     },
     {
       "id": "9220",
       "name": "Evan Hull",
       "pos": "RB",
-      "value": 953,
+      "value": 949,
       "avg_pick": 417.1111111111111,
-      "rank": 468
+      "rank": 469
     },
     {
       "id": "8127",
       "name": "Charlie Kolar",
       "pos": "TE",
-      "value": 949,
+      "value": 945,
       "avg_pick": 417.1333333333333,
-      "rank": 469
+      "rank": 470
     },
     {
       "id": "8890",
       "name": "Naz Bohannon",
       "pos": "TE",
-      "value": 945,
+      "value": 940,
       "avg_pick": 417.3333333333333,
-      "rank": 470
+      "rank": 471
     },
     {
       "id": "3976",
       "name": "Mitchell Trubisky",
       "pos": "QB",
-      "value": 940,
+      "value": 936,
       "avg_pick": 418.72727272727275,
-      "rank": 471
+      "rank": 472
     },
     {
       "id": "11377",
       "name": "Tyrell Shavers",
       "pos": "WR",
-      "value": 936,
+      "value": 931,
       "avg_pick": 419.7,
-      "rank": 472
+      "rank": 473
     },
     {
       "id": "862",
       "name": "Blaine Gabbert",
       "pos": "QB",
-      "value": 931,
+      "value": 926,
       "avg_pick": 420.3333333333333,
-      "rank": 473
+      "rank": 474
     },
     {
       "id": "2374",
       "name": "Tyler Lockett",
       "pos": "WR",
-      "value": 926,
+      "value": 922,
       "avg_pick": 421.2,
-      "rank": 474
+      "rank": 475
     },
     {
       "id": "12897",
       "name": "Nathan Carter",
       "pos": "RB",
-      "value": 922,
+      "value": 917,
       "avg_pick": 422,
-      "rank": 475
+      "rank": 476
     },
     {
       "id": "9222",
       "name": "Zach Evans",
       "pos": "RB",
-      "value": 917,
+      "value": 914,
       "avg_pick": 424.4,
-      "rank": 476
+      "rank": 477
     },
     {
       "id": "829",
       "name": "Andy Dalton",
       "pos": "QB",
-      "value": 914,
+      "value": 909,
       "avg_pick": 424.72727272727275,
-      "rank": 477
+      "rank": 478
     },
     {
       "id": "5987",
       "name": "Alexander Mattison",
       "pos": "RB",
-      "value": 909,
+      "value": 904,
       "avg_pick": 425.25,
-      "rank": 478
+      "rank": 479
     },
     {
       "id": "4040",
       "name": "JuJu Smith-Schuster",
       "pos": "WR",
-      "value": 904,
+      "value": 900,
       "avg_pick": 428.375,
-      "rank": 479
+      "rank": 480
     },
     {
       "id": "4381",
       "name": "Taysom Hill",
       "pos": "TE",
-      "value": 900,
+      "value": 891,
       "avg_pick": 428.8181818181818,
-      "rank": 480
+      "rank": 481
     },
     {
       "id": "4219",
       "name": "Jeremy McNichols",
       "pos": "RB",
-      "value": 891,
+      "value": 882,
       "avg_pick": 432.9,
-      "rank": 481
+      "rank": 482
     },
     {
       "id": "8139",
       "name": "Zamir White",
       "pos": "RB",
-      "value": 882,
+      "value": 874,
       "avg_pick": 433.57142857142856,
-      "rank": 482
+      "rank": 483
     },
     {
       "id": "9489",
       "name": "Justin Shorter",
       "pos": "WR",
-      "value": 874,
+      "value": 865,
       "avg_pick": 434.14285714285717,
-      "rank": 483
+      "rank": 484
     },
     {
       "id": "8931",
       "name": "Josh Ali",
       "pos": "WR",
-      "value": 865,
+      "value": 857,
       "avg_pick": 437.14285714285717,
-      "rank": 484
+      "rank": 485
     },
     {
       "id": "6943",
       "name": "Gabe Davis",
       "pos": "WR",
-      "value": 857,
+      "value": 847,
       "avg_pick": 440.42857142857144,
-      "rank": 485
+      "rank": 486
     },
     {
       "id": "10866",
       "name": "Aidan O'Connell",
       "pos": "QB",
-      "value": 847,
+      "value": 839,
       "avg_pick": 441.42857142857144,
-      "rank": 486
+      "rank": 487
     },
     {
       "id": "4179",
       "name": "Joshua Dobbs",
       "pos": "QB",
-      "value": 839,
+      "value": 830,
       "avg_pick": 443.14285714285717,
-      "rank": 487
+      "rank": 488
     },
     {
       "id": "8208",
       "name": "Tyler Badie",
       "pos": "RB",
-      "value": 830,
+      "value": 822,
       "avg_pick": 443.8333333333333,
-      "rank": 488
+      "rank": 489
     },
     {
       "id": "11595",
       "name": "Jared Wiley",
       "pos": "TE",
-      "value": 822,
+      "value": 812,
       "avg_pick": 445.6666666666667,
-      "rank": 489
+      "rank": 490
     },
     {
       "id": "2749",
       "name": "Raheem Mostert",
       "pos": "RB",
-      "value": 812,
+      "value": 804,
       "avg_pick": 447.3333333333333,
-      "rank": 490
+      "rank": 491
     },
     {
       "id": "8123",
       "name": "Hassan Haskins",
       "pos": "RB",
-      "value": 804,
+      "value": 795,
       "avg_pick": 449.5,
-      "rank": 491
+      "rank": 492
     },
     {
       "id": "745",
       "name": "Marshawn Lynch",
       "pos": "RB",
-      "value": 795,
+      "value": 787,
       "avg_pick": 450.5,
-      "rank": 492
+      "rank": 493
     },
     {
       "id": "7891",
       "name": "Brock Wright",
       "pos": "TE",
-      "value": 787,
+      "value": 777,
       "avg_pick": 450.55555555555554,
-      "rank": 493
+      "rank": 494
     },
     {
       "id": "7608",
       "name": "Khalil Herbert",
       "pos": "RB",
-      "value": 777,
+      "value": 769,
       "avg_pick": 453.2,
-      "rank": 494
+      "rank": 495
     },
     {
       "id": "8921",
       "name": "Maurice Alexander",
       "pos": "WR",
-      "value": 769,
+      "value": 760,
       "avg_pick": 453.6,
-      "rank": 495
+      "rank": 496
     },
     {
       "id": "7496",
       "name": "Nick Westbrook-Ikhine",
       "pos": "WR",
-      "value": 760,
+      "value": 752,
       "avg_pick": 459.25,
-      "rank": 496
+      "rank": 497
     },
     {
       "id": "11640",
       "name": "Jermaine Burton",
       "pos": "WR",
-      "value": 752,
+      "value": 742,
       "avg_pick": 460.5,
-      "rank": 497
+      "rank": 498
     },
     {
       "id": "8177",
       "name": "Grant Calcaterra",
       "pos": "TE",
-      "value": 742,
+      "value": 734,
       "avg_pick": 462.3333333333333,
-      "rank": 498
+      "rank": 499
     },
     {
       "id": "5973",
       "name": "Josh Oliver",
       "pos": "TE",
-      "value": 734,
+      "value": 725,
       "avg_pick": 463.7142857142857,
-      "rank": 499
+      "rank": 500
     },
     {
       "id": "4234",
       "name": "Noah Brown",
       "pos": "WR",
-      "value": 725,
+      "value": 722,
       "avg_pick": 464,
-      "rank": 500
+      "rank": 501
     },
     {
       "id": "8200",
       "name": "Kevin Austin",
       "pos": "WR",
-      "value": 722,
+      "value": 719,
       "avg_pick": 465.1666666666667,
-      "rank": 501
+      "rank": 502
     },
     {
       "id": "10214",
       "name": "Davis Allen",
       "pos": "TE",
-      "value": 719,
+      "value": 717,
       "avg_pick": 467.2,
-      "rank": 502
+      "rank": 503
     },
     {
       "id": "8864",
       "name": "Ben Beise",
       "pos": "TE",
-      "value": 717,
+      "value": 714,
       "avg_pick": 472,
-      "rank": 503
+      "rank": 504
     },
     {
       "id": "5185",
       "name": "Allen Lazard",
       "pos": "WR",
-      "value": 714,
+      "value": 711,
       "avg_pick": 472.5,
-      "rank": 504
+      "rank": 505
     },
     {
       "id": "11299",
       "name": "Zavier Scott",
       "pos": "RB",
-      "value": 711,
+      "value": 708,
       "avg_pick": 472.75,
-      "rank": 505
+      "rank": 506
     },
     {
       "id": "8230",
       "name": "Ty Chandler",
       "pos": "RB",
-      "value": 708,
+      "value": 706,
       "avg_pick": 475,
-      "rank": 506
+      "rank": 507
     },
     {
       "id": "8820",
       "name": "Troy Hairston",
       "pos": "RB",
-      "value": 706,
+      "value": 703,
       "avg_pick": 476.42857142857144,
-      "rank": 507
+      "rank": 508
     },
     {
       "id": "4082",
       "name": "Curtis Samuel",
       "pos": "WR",
-      "value": 703,
+      "value": 700,
       "avg_pick": 481.7142857142857,
-      "rank": 508
+      "rank": 509
     },
     {
       "id": "11616",
       "name": "Jacob Cowing",
       "pos": "WR",
-      "value": 700,
+      "value": 697,
       "avg_pick": 484.5,
-      "rank": 509
+      "rank": 510
     },
     {
       "id": "3200",
       "name": "Sterling Shepard",
       "pos": "WR",
-      "value": 697,
+      "value": 695,
       "avg_pick": 485.3333333333333,
-      "rank": 510
+      "rank": 511
     },
     {
       "id": "3202",
       "name": "Austin Hooper",
       "pos": "TE",
-      "value": 695,
+      "value": 692,
       "avg_pick": 487.6666666666667,
-      "rank": 511
+      "rank": 512
     },
     {
       "id": "6938",
       "name": "Cam Akers",
       "pos": "RB",
-      "value": 692,
+      "value": 689,
       "avg_pick": 490.25,
-      "rank": 512
+      "rank": 513
     },
     {
       "id": "8168",
       "name": "Skyy Moore",
       "pos": "WR",
-      "value": 689,
+      "value": 686,
       "avg_pick": 490.8333333333333,
-      "rank": 513
+      "rank": 514
     },
     {
       "id": "10228",
       "name": "Charlie Jones",
       "pos": "WR",
-      "value": 686,
+      "value": 684,
       "avg_pick": 496.6666666666667,
-      "rank": 514
+      "rank": 515
     },
     {
       "id": "11994",
       "name": "Kameron Johnson",
       "pos": "WR",
-      "value": 684,
+      "value": 681,
       "avg_pick": 498,
-      "rank": 515
+      "rank": 516
     },
     {
       "id": "8892",
       "name": "Keric Wheatfall",
       "pos": "WR",
-      "value": 681,
+      "value": 678,
       "avg_pick": 502,
-      "rank": 516
+      "rank": 517
     },
     {
       "id": "7568",
       "name": "Brevin Jordan",
       "pos": "TE",
-      "value": 678,
+      "value": 675,
       "avg_pick": 502.7142857142857,
-      "rank": 517
+      "rank": 518
     },
     {
       "id": "11068",
       "name": "Mitch Tinsley",
       "pos": "WR",
-      "value": 675,
+      "value": 673,
       "avg_pick": 503,
-      "rank": 518
+      "rank": 519
     },
     {
       "id": "5938",
       "name": "Lil'Jordan Humphrey",
       "pos": "WR",
-      "value": 673,
+      "value": 670,
       "avg_pick": 520.6666666666666,
-      "rank": 519
+      "rank": 520
     },
     {
       "id": "3634",
       "name": "Kalif Raymond",
       "pos": "WR",
-      "value": 670,
+      "value": 667,
       "avg_pick": 526.5,
-      "rank": 520
+      "rank": 521
     },
     {
       "id": "10867",
       "name": "Jake Bobo",
       "pos": "WR",
-      "value": 667,
+      "value": 664,
       "avg_pick": 531,
-      "rank": 521
+      "rank": 522
     },
     {
       "id": "886",
       "name": "Taiwan Jones",
       "pos": "RB",
-      "value": 664,
+      "value": 661,
       "avg_pick": 533.75,
-      "rank": 522
+      "rank": 523
     },
     {
       "id": "515",
       "name": "Rob Gronkowski",
       "pos": "TE",
-      "value": 661,
+      "value": 659,
       "avg_pick": 534.3333333333334,
-      "rank": 523
+      "rank": 524
     },
     {
       "id": "4171",
       "name": "Josh Reynolds",
       "pos": "WR",
-      "value": 659,
+      "value": 656,
       "avg_pick": 538.5,
-      "rank": 524
+      "rank": 525
     },
     {
       "id": "8145",
       "name": "Jeremy Ruckert",
       "pos": "TE",
-      "value": 656,
+      "value": 653,
       "avg_pick": 546,
-      "rank": 525
+      "rank": 526
     },
     {
       "id": "8207",
       "name": "Tyler Goodson",
       "pos": "RB",
-      "value": 653,
+      "value": 650,
       "avg_pick": 553.2,
-      "rank": 526
+      "rank": 527
     },
     {
       "id": "5133",
       "name": "Tyler Conklin",
       "pos": "TE",
-      "value": 650,
+      "value": 648,
       "avg_pick": 558.2,
-      "rank": 527
+      "rank": 528
     },
     {
       "id": "7716",
       "name": "John Bates",
       "pos": "TE",
-      "value": 648,
+      "value": 645,
       "avg_pick": 569.5,
-      "rank": 528
+      "rank": 529
     },
     {
       "id": "11168",
       "name": "Xavier Smith",
       "pos": "WR",
-      "value": 645,
+      "value": 642,
       "avg_pick": 576.25,
-      "rank": 529
+      "rank": 530
     },
     {
       "id": "5086",
       "name": "Marquez Valdes-Scantling",
       "pos": "WR",
-      "value": 642,
+      "value": 639,
       "avg_pick": 577,
-      "rank": 530
+      "rank": 531
     },
     {
       "id": "10225",
       "name": "Jonathan Mingo",
       "pos": "WR",
-      "value": 639,
+      "value": 637,
       "avg_pick": 580.5,
-      "rank": 531
+      "rank": 532
     },
     {
       "id": "7535",
       "name": "Hunter Long",
       "pos": "TE",
-      "value": 637,
+      "value": 634,
       "avg_pick": 582,
-      "rank": 532
+      "rank": 533
     },
     {
       "id": "5010",
       "name": "Will Dissly",
       "pos": "TE",
-      "value": 634,
+      "value": 631,
       "avg_pick": 588,
-      "rank": 533
+      "rank": 534
     },
     {
       "id": "8809",
       "name": "Aaron Shampklin",
       "pos": "RB",
-      "value": 631,
+      "value": 628,
       "avg_pick": 593.3333333333334,
-      "rank": 534
+      "rank": 535
     },
     {
       "id": "6853",
       "name": "Van Jefferson",
       "pos": "WR",
-      "value": 628,
+      "value": 626,
       "avg_pick": 599.6666666666666,
-      "rank": 535
+      "rank": 536
     },
     {
       "id": "6828",
       "name": "AJ Dillon",
       "pos": "RB",
-      "value": 626,
+      "value": 623,
       "avg_pick": 610,
-      "rank": 536
+      "rank": 537
     },
     {
       "id": "12412",
       "name": "Terrell Jennings",
       "pos": "RB",
-      "value": 623,
+      "value": 620,
       "avg_pick": 616.6666666666666,
-      "rank": 537
+      "rank": 538
     },
     {
       "id": "11645",
       "name": "Javon Baker",
       "pos": "WR",
-      "value": 620,
+      "value": 617,
       "avg_pick": 617,
-      "rank": 538
+      "rank": 539
     },
     {
       "id": "11633",
       "name": "Jamari Thrash",
       "pos": "WR",
-      "value": 617,
+      "value": 615,
       "avg_pick": 621.3333333333334,
-      "rank": 539
+      "rank": 540
     },
     {
       "id": "4351",
       "name": "Tim Patrick",
       "pos": "WR",
-      "value": 615,
+      "value": 612,
       "avg_pick": 626.3333333333334,
-      "rank": 540
+      "rank": 541
     },
     {
       "id": "5409",
       "name": "Tanner Hudson",
       "pos": "TE",
-      "value": 612,
+      "value": 609,
       "avg_pick": 652,
-      "rank": 541
+      "rank": 542
     },
     {
       "id": "6920",
       "name": "Isaiah Hodgins",
       "pos": "WR",
-      "value": 609,
+      "value": 606,
       "avg_pick": 653,
-      "rank": 542
+      "rank": 543
     }
   ],
   "qb1": [
