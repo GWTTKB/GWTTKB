@@ -47,7 +47,7 @@ async function buildCollegeStats() {
   // + cfb stats: college_rec_yds, college_rush_yds, college_pass_yds, etc.
   try {
     console.log('Fetching NFLverse draft picks...');
-    const res = await fetch(`${BASE}/draft_picks/draft_picks.csv`);
+    const res = await fetch(`${BASE}/draft_picks/draft_picks.csv`, { redirect:'follow', headers:{'User-Agent':'GWTTKB/1.0'} });
     if (res.ok) {
       const csv = await res.text();
       const rows = parseCSV(csv);
@@ -107,7 +107,7 @@ async function buildCollegeStats() {
   // ── LAYER 2: NFLverse combine data (more combine fields) ──
   try {
     console.log('Fetching combine data...');
-    const res = await fetch(`${BASE}/combine/combine.csv`);
+    const res = await fetch(`${BASE}/combine/combine.csv`, { redirect:'follow', headers:{'User-Agent':'GWTTKB/1.0'} });
     if (res.ok) {
       const csv = await res.text();
       const rows = parseCSV(csv);
@@ -151,7 +151,7 @@ async function buildCollegeStats() {
 
     for (const url of urls) {
       try {
-        const res = await fetch(url);
+        const res = await fetch(url, { redirect:'follow', headers:{'User-Agent':'GWTTKB/1.0'} });
         if (!res.ok) continue;
         const csv = await res.text();
         const rows = parseCSV(csv);
