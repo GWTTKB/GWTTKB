@@ -1407,17 +1407,31 @@ THIS MANAGER (@${CTX.myTeam?.username||'?'}): ${CTX.myTeam?.wins||0}W-${CTX.myTe
 
 ⚠️ DYNASTY ROSTER (players THIS MANAGER owns in BYX Dynasty — NOT the same as NFL team rosters):
 PLAYERS: ${(CTX.myRoster||[]).map(p=>p.name+'('+p.pos+',val='+p.value+')').join(' | ')}
-MY DRAFT PICKS IN BYX DYNASTY (exact slots where known, Early/Mid/Late for future unknowns — these are what literally appear on my roster):
+MY DRAFT PICKS IN BYX DYNASTY (from Sleeper draft order + traded picks — exact slots):
 ${(()=>{
-  // Use myPicks which comes from rosterPicks (non-numeric IDs in r.players)
-  // These are the picks that literally show on the Sleeper roster screen
-  const picks=(CTX.myPicks||[]);
-  if(!picks.length){
-    // Fallback: check allTeams picks
-    const myTeam=(CTX.allTeams||[]).find(t=>t.isMe);
-    const teamPicks=(myTeam?.rosterPicks||[]);
-    if(!teamPicks.length)return 'PICKS NOT LOADED - Sleeper roster pick data unavailable';
-    return teamPicks.map(p=>p.label).join(', ');
+  // Primary: use pickOwnership grid built from draft_order + traded_picks
+  const po=CTX.pickOwnership||{};
+  const myTeam=(CTX.allTeams||[]).find(t=>t.isMe);
+  if(!myTeam)return 'Roster not loaded';
+
+  const myPicks=Object.values(po).filter(p=>p.owner?.roster_id===myTeam.roster_id)
+    .sort((a,b)=>a.season-b.season||a.round-b.round||a.slot-b.slot);
+
+  if(myPicks.length){
+    return myPicks.map(p=>{
+      const slot=p.slot?String(p.round)+'.'+String(p.slot).padStart(2,'0'):p.round+'.??';
+      const yr=p.season;
+      const traded=p.is_traded?' (from '+p.original?.username+')':' (own)';
+      return yr+' '+slot+traded;
+    }).join(', ');
+  }
+
+  // Fallback: myPicks from rosterPicks
+  const rp=(CTX.myPicks||[]);
+  if(rp.length) return rp.map(p=>p.label||p.season+' R'+p.round).join(', ');
+
+  return 'PICKS NOT LOADED — draft order may not be set up yet in Sleeper';
+})()}cks.map(p=>p.label).join(', ');
   }
   return picks.map(p=>p.label).join(', ');
 })()}
