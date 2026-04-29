@@ -44,8 +44,11 @@ jobs:
       - name: Build NFL stats + contracts (standalone)
         run: node scripts/build-nfl-stats.mjs
 
-      - name: Build college stats database
+      - name: Build college stats database + draft history
         run: node scripts/build-college-stats.mjs
+
+      - name: Build coaching staff history (Wikipedia)
+        run: node scripts/build-coaching-staff.mjs
 
       - name: Commit updated data
         run: |
