@@ -348,19 +348,49 @@ async function loadAllContext(){
       }));
       // Deduplicate roster IDs
       const uniqueRosterIds=[...new Set(allRosterIds)];
-      const players=uniqueRosterIds.map(id=>{
-        const pval=CTX.isSF?(CTX.sfVals[id]||0):(CTX.qbVals[id]||0);
-        const onIR=(r.reserve||[]).includes(id);
-        const onTaxi=(r.taxi||[]).includes(id);
-        return{id,name:CTX.playerNames[id]||id,pos:CTX.playerPos[id]||'?',value:pval,
-               slot:onIR?'IR':onTaxi?'Taxi':'Active'};
-      }).filter(p=>['QB','RB','WR','TE'].includes(p.pos)&&p.name!==p.id).sort((a,b)=>b.value-a.value);
+
+      // Sleeper stores picks as non-numeric IDs in r.players (e.g. "2026_1_10_4035_4032")
+      // Real players always have purely numeric IDs like "4046534"
+      const rosterPicks=uniqueRosterIds
+        .filter(id=>!/^\d+$/.test(id))
+        .map(id=>{
+          const name=CTX.playerNames[id]||id;
+          // Parse season and round from ID or name
+          const seasonM=(name+' '+id).match(/20(\d\d)/);
+          const roundM=(name+' '+id).match(/[_\s](\d)[_\s]/);
+          const season=seasonM?2000+parseInt(seasonM[1]):null;
+          const round=roundM?parseInt(roundM[1]):null;
+          return{id,name,season,round,
+            label:season&&round?season+' Round '+round:(name||id),
+            isPick:true};
+        })
+        .filter(p=>p.season&&p.season>=2026);
+
+      const players=uniqueRosterIds
+        .filter(id=>/^\d+$/.test(id))
+        .map(id=>{
+          const pval=CTX.isSF?(CTX.sfVals[id]||0):(CTX.qbVals[id]||0);
+          const onIR=(r.reserve||[]).includes(id);
+          const onTaxi=(r.taxi||[]).includes(id);
+          return{id,name:CTX.playerNames[id]||id,pos:CTX.playerPos[id]||'?',value:pval,
+                 slot:onIR?'IR':onTaxi?'Taxi':'Active'};
+        }).filter(p=>['QB','RB','WR','TE'].includes(p.pos)&&p.name!==p.id)
+          .sort((a,b)=>b.value-a.value);
+
       const total=players.reduce((s,p)=>s+p.value,0);
-      if(isMe){CTX.myRoster=players;CTX.myTeam={username:u.display_name||u.username,total,roster_id:r.roster_id};}
+      if(isMe){
+        CTX.myRoster=players;
+        CTX.myTeam={username:u.display_name||u.username,total,roster_id:r.roster_id};
+        CTX.myPicks=[...draftPicks,...rosterPicks];
+        console.log('My picks from roster:',rosterPicks.map(p=>p.label).join(', ')||'none');
+        console.log('My picks from traded_picks:',draftPicks.map(p=>p.label).join(', ')||'none');
+      }
+
       return{roster_id:r.roster_id,owner_id:r.owner_id,isMe,
         username:u.display_name||u.username||'Unknown',
         players,total,wins:r.settings?.wins||0,losses:r.settings?.losses||0,
-        picks:draftPicks};
+        picks:[...draftPicks,...rosterPicks],
+        rosterPicks};
     }).sort((a,b)=>b.total-a.total);
 
     setLoad(38,'PULLING TRADE HISTORY...');
