@@ -408,6 +408,88 @@ async function loadAllContext(){
     }
     CTX.tRec=tRec;
 
+    setLoad(65,'LOADING DRAFT PICKS...');
+    // Fetch all draft picks for the league - both traded and natural
+    try {
+      // Get all drafts for this league
+      const drafts = await gFetch(`${API_URL}/league/${CTX.league.league_id}/drafts`);
+      
+      // Find the upcoming/active rookie draft (not startup)
+      // Startup drafts have rounds >= 20, rookie drafts have rounds <= 5
+      const rookieDrafts = (drafts||[]).filter(d => 
+        (d.settings?.rounds||0) <= 7 && 
+        (d.settings?.rounds||0) >= 1 &&
+        (d.status === 'pre_draft' || d.status === 'drafting' || d.status === 'complete')
+      );
+
+      // Also get traded picks from the league endpoint
+      const tradedPicks = await gFetch(`${API_URL}/league/${CTX.league.league_id}/traded_picks`);
+      
+      // Build pick ownership map
+      // tradedPicks format: [{season, round, roster_id (original), owner_id (current), previous_owner_id}]
+      CTX.allPicks = {};
+      
+      // First establish natural picks - every team owns their own picks by default
+      for (const team of CTX.allTeams) {
+        CTX.allPicks[team.roster_id] = CTX.allPicks[team.roster_id] || [];
+        // Natural picks for upcoming seasons
+        for (const season of [2026, 2027, 2028]) {
+          for (const round of [1, 2, 3, 4, 5]) {
+            CTX.allPicks[team.roster_id].push({
+              season, round,
+              original_roster_id: team.roster_id,
+              current_roster_id: team.roster_id,
+              is_traded: false,
+              label: `${season} ${round===1?'1st':round===2?'2nd':round===3?'3rd':round===4?'4th':'5th'} (own)`
+            });
+          }
+        }
+      }
+      
+      // Apply traded picks - move picks from original owner to current owner
+      for (const tp of (tradedPicks||[])) {
+        const season = parseInt(tp.season);
+        if (season < 2026) continue; // only future picks matter
+        
+        const origRid = tp.roster_id;
+        const curRid = tp.owner_id;
+        const round = parseInt(tp.round);
+        
+        if (origRid === curRid) continue; // hasn't actually been traded
+        
+        // Remove from original owner
+        if (CTX.allPicks[origRid]) {
+          CTX.allPicks[origRid] = CTX.allPicks[origRid].filter(p => 
+            !(p.season === season && p.round === round && p.original_roster_id === origRid)
+          );
+        }
+        
+        // Add to current owner
+        if (!CTX.allPicks[curRid]) CTX.allPicks[curRid] = [];
+        const origTeam = CTX.allTeams.find(t => t.roster_id === origRid);
+        CTX.allPicks[curRid].push({
+          season, round,
+          original_roster_id: origRid,
+          original_owner: origTeam?.username || '?',
+          current_roster_id: curRid,
+          is_traded: true,
+          label: `${season} ${round===1?'1st':round===2?'2nd':round===3?'3rd':round===4?'4th':'5th'} (${origTeam?.username||'?'})`
+        });
+      }
+      
+      // Attach picks to each team
+      for (const team of CTX.allTeams) {
+        team.picks = (CTX.allPicks[team.roster_id]||[]).sort((a,b) => a.season-b.season || a.round-b.round);
+      }
+      
+      // Log my picks
+      const myTeam = CTX.allTeams.find(t => t.isMe);
+      if (myTeam?.picks?.length) {
+        console.log('My draft picks:', myTeam.picks.map(p=>p.label).join(', '));
+      }
+      
+    } catch(e) { console.warn('Pick loading error:', e); }
+
     setLoad(68,'LOADING CROSS-LEAGUE INTEL...');
     // Load cross-league data for every opponent
     CTX.crossLeague={};
