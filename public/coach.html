@@ -471,23 +471,16 @@ async function loadAllContext(){
     CTX.tRec=tRec;
 
     setLoad(65,'LOADING DRAFT PICKS...');
-    // Fetch all draft picks for the league - both traded and natural
     try {
-      // Get all drafts for this league
       const drafts = await gFetch(`${API_URL}/league/${CTX.league.league_id}/drafts`);
-      
-      // Find the upcoming/active rookie draft (not startup)
-      // Startup drafts have rounds >= 20, rookie drafts have rounds <= 5
-      const rookieDrafts = (drafts||[]).filter(d => 
-        (d.settings?.rounds||0) <= 7 && 
-        (d.settings?.rounds||0) >= 1 &&
-        (d.status === 'pre_draft' || d.status === 'drafting' || d.status === 'complete')
-      );
-
-      // Also get traded picks from the league endpoint
       const tradedPicks = await gFetch(`${API_URL}/league/${CTX.league.league_id}/traded_picks`);
       
-      // pickOwnership built after draft order loads (see below)
+      // Store tradedPicks in CTX so pickOwnership block can access it later
+      CTX.tradedPicksRaw = tradedPicks || [];
+      CTX.tradedPicksData = CTX.tradedPicksRaw;
+      
+      // Store rookie drafts for later
+      CTX.leagueAllDrafts = drafts || [];
       
     } catch(e) { console.warn('Pick loading error:', e); }
 
@@ -799,55 +792,45 @@ async function loadAllContext(){
         CTX.leagueRookieDraftOrder=draftInfo?.draft_order||{};
 
             // Build complete pick ownership map using traded_picks + draft_order
-      CTX.tradedPicksData = tradedPicks || [];
       CTX.pickTrades = [];
       
-      // Get draft order from the rookie draft object (slot → roster_id mapping)
-      // leagueRookieDraftOrder is {owner_id: slot_number}
       const draftOrder = CTX.leagueRookieDraftOrder || {};
-      // Invert to slot → team
       const slotToTeam = {};
       for(const [ownerId, slot] of Object.entries(draftOrder)){
         const team = CTX.allTeams.find(t => t.owner_id === ownerId);
         if(team) slotToTeam[parseInt(slot)] = team;
       }
       
-      // Build complete pick grid: for each year/round, start with natural ownership (by draft slot)
-      // then apply traded picks on top
       const SEASONS = [2026, 2027, 2028];
       const ROUNDS = [1,2,3,4];
-      const numTeams = CTX.allTeams.length || 10;
       
-      // Initialize: each team owns their own picks
-      const pickOwnership = {}; // 'YYYY_R_SLOT' → {owner_team, original_team, is_traded}
-      const teamSlots = {}; // team.roster_id → their slot number
+      const pickOwnership = {};
+      const teamSlots = {};
       
       for(const [slot, team] of Object.entries(slotToTeam)){
         teamSlots[team.roster_id] = parseInt(slot);
         for(const season of SEASONS){
           for(const round of ROUNDS){
             const key = `${season}_${round}_${slot}`;
+            const rdLabel=round===1?'1st':round===2?'2nd':round===3?'3rd':'4th';
             pickOwnership[key] = {
               season, round, slot: parseInt(slot),
-              owner: team,
-              original: team,
-              is_traded: false,
-              label: `${season} ${round===1?'1st':round===2?'2nd':round===3?'3rd':'4th'} (${team.username})`
+              owner: team, original: team, is_traded: false,
+              label: `${round}.${String(parseInt(slot)).padStart(2,'0')} (${season}) ${team.username}`
             };
           }
         }
       }
       
-      // Apply traded picks
-      for(const tp of (tradedPicks||[])){
+      // Apply traded picks — use CTX.tradedPicksRaw (stored before this block runs)
+      for(const tp of (CTX.tradedPicksRaw||[])){
         const season = parseInt(tp.season);
         if(season < 2026) continue;
         const round = parseInt(tp.round);
         const origTeam = CTX.allTeams.find(t => t.roster_id === tp.roster_id);
         const curTeam = CTX.allTeams.find(t => t.roster_id === tp.owner_id);
-        if(!origTeam || !curTeam || origTeam === curTeam) continue;
+        if(!origTeam || !curTeam || origTeam.roster_id === curTeam.roster_id) continue;
         
-        // Find this pick's slot (original owner's slot)
         const slot = teamSlots[tp.roster_id];
         if(!slot) continue;
         
@@ -855,35 +838,28 @@ async function loadAllContext(){
         if(pickOwnership[key]){
           pickOwnership[key] = {
             ...pickOwnership[key],
-            owner: curTeam,
-            is_traded: true,
-            label: `${season} ${round===1?'1st':round===2?'2nd':round===3?'3rd':'4th'} (${origTeam.username}→${curTeam.username})`
+            owner: curTeam, is_traded: true,
+            label: `${round}.${String(slot).padStart(2,'0')} (${season}) ${origTeam.username}→${curTeam.username}`
           };
         }
-        
-        CTX.pickTrades.push({
-          season, round, slot,
-          from: origTeam.username,
-          to: curTeam.username,
-          label: `${season} ${round===1?'1st':round===2?'2nd':round===3?'3rd':'4th'}`
+        CTX.pickTrades.push({season, round, slot,
+          from: origTeam.username, to: curTeam.username,
+          label: `${round}.${String(slot).padStart(2,'0')} (${season})`
         });
       }
       
       CTX.pickOwnership = pickOwnership;
       
-      // Update each team's picks array with the complete resolved picks
       for(const team of CTX.allTeams){
         team.picks = Object.values(pickOwnership)
           .filter(p => p.owner.roster_id === team.roster_id)
           .sort((a,b) => a.season-b.season || a.round-b.round || a.slot-b.slot);
         if(team.isMe){
           CTX.myPicks = team.picks;
-          console.log('My picks (resolved from draft order + traded_picks):',
-            CTX.myPicks.map(p=>`${p.season}.R${p.round}.S${p.slot}${p.is_traded?' (traded)':''}`).join(', ')||'none');
+          console.log('My picks:', CTX.myPicks.map(p=>p.label).join(', ')||'none (draft order not set)');
         }
       }
-      
-      console.log('Pick trades loaded:', CTX.pickTrades.length, '| Pick grid:', Object.keys(pickOwnership).length, 'picks');
+      console.log('Pick grid:', Object.keys(pickOwnership).length, 'picks |', CTX.pickTrades.length, 'traded');
         
         const completedPicks=(draftPicks||[]).filter(pk=>pk.player_id);
         CTX.leagueRookieDraft={
@@ -1166,6 +1142,7 @@ async function loadDynastyData(){
     // Sleeper player map for names/positions
     try{
       const sp=await gFetch(`${API_URL}/players/nfl`);
+      CTX.sleeperPlayerMap = sp || {}; // store for ID wiring later
       for(const[id,p]of Object.entries(sp)){
         if(!p?.full_name||!['QB','RB','WR','TE'].includes(p.position))continue;
         CTX.playerNames[id]=p.full_name;
@@ -1224,9 +1201,8 @@ async function loadDynastyData(){
         }
       }
       // Wire Sleeper IDs → consensus values so ID-based lookups work for ALL players
-      // This fixes the issue where sfVals[id]=0 even though sfVals[normName]=4719
       let wired=0;
-      for(const[id,p]of Object.entries(sp||{})){
+      for(const[id,p]of Object.entries(CTX.sleeperPlayerMap||sp||{})){
         if(!p?.full_name||!['QB','RB','WR','TE'].includes(p.position))continue;
         const nm=n(p.full_name);
         if(CTX.sfVals[nm]&&!CTX.sfVals[id]){
