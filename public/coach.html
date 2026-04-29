@@ -457,69 +457,26 @@ async function loadAllContext(){
       // Also get traded picks from the league endpoint
       const tradedPicks = await gFetch(`${API_URL}/league/${CTX.league.league_id}/traded_picks`);
       
-      // Build pick ownership map
-      // tradedPicks format: [{season, round, roster_id (original), owner_id (current), previous_owner_id}]
-      CTX.allPicks = {};
+      // Store traded picks context for opponent analysis
+      CTX.tradedPicksData = tradedPicks || [];
       
-      // First establish natural picks - every team owns their own picks by default
-      for (const team of CTX.allTeams) {
-        CTX.allPicks[team.roster_id] = CTX.allPicks[team.roster_id] || [];
-        // Natural picks for upcoming seasons
-        for (const season of [2026, 2027, 2028]) {
-          for (const round of [1, 2, 3, 4]) { // cap at 4 rounds (standard)
-            const rdLabel=round===1?'1st':round===2?'2nd':round===3?'3rd':'4th';
-            CTX.allPicks[team.roster_id].push({
-              season, round,
-              original_roster_id: team.roster_id,
-              current_roster_id: team.roster_id,
-              is_traded: false,
-              label: `${season} ${rdLabel} (own)`
-            });
-          }
-        }
-      }
-      
-      // Apply traded picks - move picks from original owner to current owner
-      for (const tp of (tradedPicks||[])) {
-        const season = parseInt(tp.season);
-        if (season < 2026) continue; // only future picks matter
-        
-        const origRid = tp.roster_id;
-        const curRid = tp.owner_id;
-        const round = parseInt(tp.round);
-        
-        if (origRid === curRid) continue; // hasn't actually been traded
-        
-        // Remove from original owner
-        if (CTX.allPicks[origRid]) {
-          CTX.allPicks[origRid] = CTX.allPicks[origRid].filter(p => 
-            !(p.season === season && p.round === round && p.original_roster_id === origRid)
-          );
-        }
-        
-        // Add to current owner
-        if (!CTX.allPicks[curRid]) CTX.allPicks[curRid] = [];
-        const origTeam = CTX.allTeams.find(t => t.roster_id === origRid);
-        CTX.allPicks[curRid].push({
-          season, round,
-          original_roster_id: origRid,
-          original_owner: origTeam?.username || '?',
-          current_roster_id: curRid,
-          is_traded: true,
-          label: `${season} ${round===1?'1st':round===2?'2nd':round===3?'3rd':'4th'} (${origTeam?.username||'?'})`
+      // Build opponent pick context from traded_picks
+      // This tells us who traded what to whom
+      CTX.pickTrades = (tradedPicks||[])
+        .filter(tp => parseInt(tp.season) >= 2026)
+        .map(tp => {
+          const origTeam = CTX.allTeams.find(t => t.roster_id === tp.roster_id);
+          const curTeam = CTX.allTeams.find(t => t.roster_id === tp.owner_id);
+          return {
+            season: parseInt(tp.season),
+            round: parseInt(tp.round),
+            from: origTeam?.username || '?',
+            to: curTeam?.username || '?',
+            label: tp.season+' '+(parseInt(tp.round)===1?'1st':parseInt(tp.round)===2?'2nd':parseInt(tp.round)===3?'3rd':'4th')
+          };
         });
-      }
       
-      // Attach picks to each team
-      for (const team of CTX.allTeams) {
-        team.picks = (CTX.allPicks[team.roster_id]||[]).sort((a,b) => a.season-b.season || a.round-b.round);
-      }
-      
-      // Log my picks
-      const myTeam = CTX.allTeams.find(t => t.isMe);
-      if (myTeam?.picks?.length) {
-        console.log('My draft picks:', myTeam.picks.map(p=>p.label).join(', '));
-      }
+      console.log('Pick trades loaded:', CTX.pickTrades.length);
       
     } catch(e) { console.warn('Pick loading error:', e); }
 
@@ -752,6 +709,98 @@ async function loadAllContext(){
         console.log('Contract data loaded:',Object.keys(CTX.contractData).length,'players');
       }
     }catch(e){}
+
+    setLoad(88,'LOADING ROOKIE DRAFT ADP...');
+    try{
+      CTX.rookieADP={};
+      CTX.leagueRookieDraft=null;
+      CTX.myDraftSlot=null;
+      
+      // Get this league's rookie draft
+      const lgDrafts2=await gFetch(`${API_URL}/league/${CTX.league.league_id}/drafts`).catch(()=>[]);
+      const rookieDraft=(lgDrafts2||[]).find(d=>
+        parseInt(d.season||0)===2026&&(d.settings?.rounds||0)<=6&&
+        ['pre_draft','drafting','complete'].includes(d.status)
+      );
+      
+      if(rookieDraft){
+        const [draftInfo,draftPicks]=await Promise.all([
+          gFetch(`${API_URL}/draft/${rookieDraft.draft_id}`).catch(()=>null),
+          gFetch(`${API_URL}/draft/${rookieDraft.draft_id}/picks`).catch(()=>[])
+        ]);
+        
+        const myTeam2=CTX.allTeams.find(t=>t.isMe);
+        CTX.myDraftSlot=draftInfo?.draft_order?.[myTeam2?.owner_id]||null;
+        CTX.leagueRookieDraftOrder=draftInfo?.draft_order||{};
+        
+        const completedPicks=(draftPicks||[]).filter(pk=>pk.player_id);
+        CTX.leagueRookieDraft={
+          status:rookieDraft.status,
+          draft_id:rookieDraft.draft_id,
+          rounds:rookieDraft.settings?.rounds,
+          teams:rookieDraft.settings?.teams,
+          picks:completedPicks.map(pk=>{
+            const nm=CTX.playerNames[pk.player_id]||
+              (pk.metadata?.first_name&&pk.metadata?.last_name?pk.metadata.first_name+' '+pk.metadata.last_name:null);
+            return{
+              slot:`${pk.round}.${String(pk.draft_slot||'?').padStart(2,'0')}`,
+              pick_no:pk.pick_no,
+              player_name:nm,
+              pos:CTX.playerPos[pk.player_id]||pk.metadata?.position||'?',
+              owner:(CTX.allTeams||[]).find(t=>t.owner_id===pk.picked_by)?.username||'?'
+            };
+          }).filter(p=>p.player_name)
+        };
+        
+        // Build ADP from this draft
+        for(const pk of completedPicks){
+          const nm=CTX.playerNames[pk.player_id]||
+            (pk.metadata?.first_name&&pk.metadata?.last_name?pk.metadata.first_name+' '+pk.metadata.last_name:null);
+          if(nm&&pk.pick_no){
+            if(!CTX.rookieADP[nm])CTX.rookieADP[nm]={total:0,count:0,adp:0};
+            CTX.rookieADP[nm].total+=pk.pick_no;
+            CTX.rookieADP[nm].count++;
+            CTX.rookieADP[nm].adp=Math.round(CTX.rookieADP[nm].total/CTX.rookieADP[nm].count*10)/10;
+          }
+        }
+        console.log(`Rookie draft: ${rookieDraft.status}, ${completedPicks.length} picks made, my slot: ${CTX.myDraftSlot}`);
+      }
+      
+      // Broaden ADP with other leagues' completed rookie drafts
+      const broadIds=new Set();
+      for(const opp of (CTX.allTeams||[]).filter(t=>!t.isMe).slice(0,6)){
+        try{
+          const oLgs=await gFetch(`${API_URL}/user/${opp.owner_id}/leagues/nfl/2026`).catch(()=>[]);
+          for(const lg of (oLgs||[]).filter(l=>l.settings?.type===2&&l.league_id!==CTX.league.league_id).slice(0,2)){
+            const lgD2=await gFetch(`${API_URL}/league/${lg.league_id}/drafts`).catch(()=>[]);
+            for(const d of (lgD2||[])){
+              if(parseInt(d.season||0)===2026&&(d.settings?.rounds||0)<=6&&d.status==='complete'){
+                broadIds.add(d.draft_id);
+              }
+            }
+          }
+        }catch(e){}
+        await S(150);
+      }
+      
+      for(const did of [...broadIds].slice(0,15)){
+        try{
+          const bPks=await gFetch(`${API_URL}/draft/${did}/picks`).catch(()=>[]);
+          for(const pk of (bPks||[]).filter(p=>p.player_id)){
+            const nm=CTX.playerNames[pk.player_id]||
+              (pk.metadata?.first_name&&pk.metadata?.last_name?pk.metadata.first_name+' '+pk.metadata.last_name:null);
+            if(nm&&pk.pick_no){
+              if(!CTX.rookieADP[nm])CTX.rookieADP[nm]={total:0,count:0,adp:0};
+              CTX.rookieADP[nm].total+=pk.pick_no;
+              CTX.rookieADP[nm].count++;
+              CTX.rookieADP[nm].adp=Math.round(CTX.rookieADP[nm].total/CTX.rookieADP[nm].count*10)/10;
+            }
+          }
+          await S(100);
+        }catch(e){}
+      }
+      console.log(`Broad rookie ADP: ${Object.keys(CTX.rookieADP).length} players from ${broadIds.size} drafts`);
+    }catch(e){console.warn('Rookie ADP error:',e);}
 
     setLoad(92,'LOADING LIVE MARKET DATA...');
     // Live market — what's being added/dropped across Sleeper right now
@@ -1032,12 +1081,19 @@ THIS MANAGER (@${CTX.myTeam?.username||'?'}): ${CTX.myTeam?.wins||0}W-${CTX.myTe
 
 ⚠️ DYNASTY ROSTER (players THIS MANAGER owns in BYX Dynasty — NOT the same as NFL team rosters):
 PLAYERS: ${(CTX.myRoster||[]).slice(0,25).map(p=>p.name+'('+p.pos+',val='+p.value+')').join(' | ')}
-DRAFT PICKS OWNED IN BYX DYNASTY (from Sleeper traded_picks endpoint):
+MY DRAFT PICKS IN BYX DYNASTY (pulled directly from Sleeper roster — these are what literally appear on my roster):
 ${(()=>{
-  const myTeam=(CTX.allTeams||[]).find(t=>t.isMe);
-  const picks=(myTeam?.picks||[]);
-  if(!picks.length)return 'No picks loaded — Sleeper pick data unavailable';
-  return picks.map(p=>p.label||(p.season+' Round '+p.round+(p.is_traded?' (from '+p.original_owner+')':' (own)'))).join(', ');
+  // Use myPicks which comes from rosterPicks (non-numeric IDs in r.players)
+  // These are the picks that literally show on the Sleeper roster screen
+  const picks=(CTX.myPicks||[]);
+  if(!picks.length){
+    // Fallback: check allTeams picks
+    const myTeam=(CTX.allTeams||[]).find(t=>t.isMe);
+    const teamPicks=(myTeam?.rosterPicks||[]);
+    if(!teamPicks.length)return 'PICKS NOT LOADED - Sleeper roster pick data unavailable';
+    return teamPicks.map(p=>p.label).join(', ');
+  }
+  return picks.map(p=>p.label).join(', ');
 })()}
 
 IMPORTANT: If a player is NOT in the above roster list, they are NOT owned by this manager in BYX Dynasty. That does NOT mean they are a free agent in the NFL — they have an NFL team which you can find in the team context data above. Never confuse dynasty league ownership with NFL team assignment.
@@ -1073,6 +1129,47 @@ ${(CTX.allTrades||[]).slice(-12).map(t=>{const sides=(t.roster_ids||[]).map(rid=
 LIVE SLEEPER MARKET (48hrs):
 ADDS: ${(CTX.trendingAdds||[]).slice(0,12).map(p=>p.name+'('+p.pos+',+'+p.adds+')').join(', ')||'Loading'}
 DROPS: ${(CTX.trendingDrops||[]).slice(0,8).map(p=>p.name+'('+p.pos+',-'+p.drops+')').join(', ')||''}
+
+2026 ROOKIE DRAFT — LEAGUE DRAFT STATUS:
+${(()=>{
+  const rd = CTX.leagueRookieDraft;
+  if(!rd) return 'Rookie draft not yet created in this league';
+  const picks = rd.picks||[];
+  const completed = picks.filter(p=>p.player_name&&p.player_name!=='undefined undefined');
+  const slot = CTX.myDraftSlot;
+  let out = `Status: ${rd.status} | Rounds: ${rd.rounds} | Teams: ${rd.teams}`;
+  if(slot) out += ` | MY SLOT: ${slot}`;
+  if(completed.length){
+    out += `\nPICKS MADE (${completed.length}): `;
+    out += completed.map(p=>`${p.slot} ${p.player_name}(${p.pos}) by ${p.owner}`).join(', ');
+  }
+  // Show who picks before/after me
+  if(slot && rd.teams){
+    const before = [];
+    const after = [];
+    for(const t of (CTX.allTeams||[])){
+      const tSlot = CTX.leagueRookieDraft?.draft_order?.[t.owner_id];
+      if(tSlot && !t.isMe){
+        if(tSlot < slot) before.push(t.username+'(slot '+tSlot+')');
+        else after.push(t.username+'(slot '+tSlot+')');
+      }
+    }
+    if(before.length) out += '\nDRAFTING BEFORE ME: '+before.join(', ');
+    if(after.length) out += '\nDRAFTING AFTER ME: '+after.join(', ');
+  }
+  return out;
+})()}
+
+2026 ROOKIE ADP (from live Sleeper rookie drafts — use this to know who will be gone before your pick):
+${(()=>{
+  const adp = CTX.rookieADP||{};
+  const sorted = Object.entries(adp)
+    .filter(([,v])=>v.count>=1)
+    .sort((a,b)=>a[1].adp-b[1].adp)
+    .slice(0,40);
+  if(!sorted.length) return 'No ADP data loaded yet — rookie drafts may not have started';
+  return sorted.map(([name,v],i)=>`${i+1}.${name}(ADP:${v.adp},n=${v.count})`).join(', ');
+})()}
 
 NFL COACHING (HC/OC/scheme all 32):
 ${Object.entries(CTX.coaching||{}).slice(0,16).map(([t,c])=>t+':'+c.hc+'/'+c.oc+'('+c.scheme+')').join(', ')}
