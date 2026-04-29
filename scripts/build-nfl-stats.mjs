@@ -225,16 +225,21 @@ async function buildContracts() {
 
   let csv = null;
 
-  // Try plain CSV first, then gz
-  for (const [url, isGzip] of [
+  // Try multiple possible nflverse contract URLs
+  const contractUrls = [
     [`${BASE}/contracts/contracts.csv`, false],
     [`${BASE}/contracts/contracts.csv.gz`, true],
-  ]) {
+    [`${BASE}/nflverse_contracts/contracts.csv`, false],
+    [`${BASE}/nflverse_contracts/contracts.csv.gz`, true],
+    ['https://raw.githubusercontent.com/nflverse/nflverse-data/main/data/contracts/contracts.csv', false],
+  ];
+
+  for (const [url, isGzip] of contractUrls) {
     try {
       csv = isGzip ? await fetchGzipCSV(url) : await fetchCSV(url);
-      console.log(`  Fetched from ${isGzip ? 'csv.gz' : 'csv'}`);
+      console.log(`  ✓ Contracts fetched from: ${url}`);
       break;
-    } catch(e) { console.warn(`  Tried ${url}: ${e.message}`); }
+    } catch(e) { console.warn(`  ✗ Tried ${url}: ${e.message}`); }
   }
 
   if (!csv) {
