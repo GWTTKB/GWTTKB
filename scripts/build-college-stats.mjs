@@ -338,4 +338,97 @@ async function buildCollegeStats() {
   return output;
 }
 
-buildCollegeStats().catch(console.error);
+
+// ── NFL DRAFT HISTORY (2015-2026, all rounds, from NFLverse) ──
+async function buildDraftHistory() {
+  console.log('\n=== Building NFL Draft History ===');
+  fs.mkdirSync('public/data', { recursive: true });
+
+  try {
+    const url = `${BASE}/draft_picks/draft_picks.csv`;
+    const res = await fetch(url, { redirect: 'follow', headers: {'User-Agent': 'GWTTKB/1.0'} });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const csv = await res.text();
+    const rows = parseCSV(csv);
+    console.log(`  Total draft picks in NFLverse: ${rows.length}`);
+
+    const SKILL = new Set(['QB','RB','WR','TE']);
+    const START_YEAR = 2015;
+    const byYear = {};
+    let skillCount = 0;
+
+    for (const row of rows) {
+      const season = parseInt(row.season || row.draft_year || 0);
+      if (season < START_YEAR) continue;
+      const pos = (row.position || row.pos || '').toUpperCase();
+      const round = parseInt(row.round || 0);
+      const pick = parseInt(row.pick || row.overall_pick || 0);
+      const player = (row.player_name || row.full_name || row.player || '').trim();
+      const team = (row.team || row.nfl_team || '').trim();
+      const college = (row.college || row.school || '').trim();
+      if (!player || !season || !round || !pick) continue;
+
+      if (!byYear[season]) byYear[season] = { year: season, all_picks: [], dynasty_skill_picks: [] };
+
+      const n = v => { const x = parseInt(v); return isNaN(x) ? undefined : x; };
+      const d = v => { const x = parseFloat(v); return isNaN(x) ? undefined : Math.round(x*100)/100; };
+
+      const entry = {
+        round, pick, team, player, pos, college,
+        dynasty_relevant: SKILL.has(pos),
+        height: n(row.ht || row.height),
+        weight: n(row.wt || row.weight),
+        forty: d(row.forty || row.forty_yard),
+        college_rec_yds: n(row.college_rec_yds),
+        college_rush_yds: n(row.college_rush_yds),
+        college_pass_yds: n(row.college_pass_yds),
+        college_rec_tds: n(row.college_rec_tds),
+        college_rush_tds: n(row.college_rush_tds),
+        college_pass_tds: n(row.college_pass_tds),
+      };
+      Object.keys(entry).forEach(k => entry[k] === undefined && delete entry[k]);
+
+      byYear[season].all_picks.push(entry);
+      if (SKILL.has(pos)) { byYear[season].dynasty_skill_picks.push(entry); skillCount++; }
+    }
+
+    for (const yr of Object.values(byYear)) {
+      yr.all_picks.sort((a,b) => a.pick - b.pick);
+      yr.dynasty_skill_picks.sort((a,b) => a.pick - b.pick);
+    }
+
+    const years = Object.keys(byYear).sort();
+    console.log(`  Years: ${years.join(', ')}`);
+    for (const yr of years) {
+      console.log(`    ${yr}: ${byYear[yr].dynasty_skill_picks.length} skill picks`);
+    }
+
+    const output = {
+      generated: new Date().toISOString(),
+      source: 'NFLverse draft_picks.csv — authoritative NFL draft data',
+      years_covered: years,
+      total_skill_picks: skillCount,
+      drafts: byYear,
+      college_breakout_profiles: {
+        WR: { elite_profile: '80+ catches OR 1000+ yards final season. 15+ YPR. 20%+ team target share.', breakout_timing: 'Year 2-3 typical.' },
+        RB: { elite_profile: '800+ rush yards AND 40+ receptions. 4.5+ YPC. Pass protection shown.', breakout_timing: 'Can break out year 1. Peak 23-26.' },
+        QB: { elite_profile: '65%+ completion. 8.0+ YPA. Mobility big in SF.', breakout_timing: 'Need 2-3 years typically.' },
+        TE: { elite_profile: 'Receiving TE, 600+ college yards, good routes and hands, elite athleticism.', breakout_timing: 'Latest position — year 3-4.' }
+      }
+    };
+
+    fs.writeFileSync('public/data/nfl-draft-history.json', JSON.stringify(output));
+    const mb = (fs.statSync('public/data/nfl-draft-history.json').size / 1024 / 1024).toFixed(1);
+    console.log(`\n✓ nfl-draft-history.json: ${years.length} years, ${skillCount} skill picks, ${mb}MB`);
+
+  } catch(e) {
+    console.error('Draft history FAILED:', e.message);
+  }
+}
+async function runAll() {
+  await buildCollegeStats().catch(e => console.error('College stats FAILED:', e.message));
+  await buildDraftHistory().catch(e => console.error('Draft history FAILED:', e.message));
+  console.log('\n=== All builds complete ===');
+}
+
+runAll().catch(console.error);
