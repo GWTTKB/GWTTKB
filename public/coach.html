@@ -1213,6 +1213,36 @@ async function loadDynastyData(){
           console.log('My picks resolved:',CTX.myPicks.map(p=>p.label).join(', ')||'none');
         }
       }
+      // Wire Sleeper IDs → consensus values so ID-based lookups work for ALL players
+      // This fixes the issue where sfVals[id]=0 even though sfVals[normName]=4719
+      let wired=0;
+      for(const[id,p]of Object.entries(sp||{})){
+        if(!p?.full_name||!['QB','RB','WR','TE'].includes(p.position))continue;
+        const nm=n(p.full_name);
+        if(CTX.sfVals[nm]&&!CTX.sfVals[id]){
+          CTX.sfVals[id]=CTX.sfVals[nm];
+          CTX.qbVals[id]=CTX.qbVals[nm]||0;
+          wired++;
+        }
+      }
+      console.log('Value IDs wired:',wired,'players');
+
+      // Re-resolve all roster values now IDs are wired
+      for(const team of CTX.allTeams){
+        let changed=false;
+        for(const p of (team.players||[])){
+          if((p.value===0||!p.value)&&CTX.sfVals[p.id]){
+            p.value=CTX.isSF?CTX.sfVals[p.id]:(CTX.qbVals[p.id]||CTX.sfVals[p.id]);
+            changed=true;
+          }
+        }
+        if(changed){
+          team.players.sort((a,b)=>b.value-a.value);
+          team.total=team.players.reduce((s,p)=>s+p.value,0);
+          if(team.isMe){CTX.myRoster=team.players;CTX.myTeam.total=team.total;}
+        }
+      }
+
       console.log('Player map loaded + rosters + picks resolved');
     }catch(e){ console.warn('Player map error:',e); }
 
