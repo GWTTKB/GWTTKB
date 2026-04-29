@@ -431,18 +431,28 @@ async function loadAllContext(){
     // Fetch trades
     const allTrades=[];
     for(const{id:lgId,season}of chain){
-      for(let wk=0;wk<=22;wk++){  // week 0 = offseason
-        let txns;
-        try{txns=await gFetch(`${API_URL}/league/${lgId}/transactions/${wk}`);}
-        catch(e){break;}
-        if(!txns?.length)break;
-        for(const t of txns){
-          if(t.type==='trade'&&t.status==='complete')allTrades.push({...t,week:wk,season});
+      // Fetch ALL weeks in parallel — don't break on empty weeks
+      // Offseason trades are week 0, regular season spans weeks 1-18
+      try{
+        const weekBatches=await Promise.all(
+          [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18].map(wk=>
+            gFetch(`${API_URL}/league/${lgId}/transactions/${wk}`).catch(()=>[])
+          )
+        );
+        for(let wk=0;wk<weekBatches.length;wk++){
+          const txns=weekBatches[wk]||[];
+          for(const t of txns){
+            if(t.type==='trade'&&t.status==='complete'){
+              const txDate=t.created?new Date(t.created).toISOString().split('T')[0]:null;
+              allTrades.push({...t,week:wk,season,date:txDate});
+            }
+          }
         }
-        await S(30);
-      }
+      }catch(e){console.warn('Trade fetch error for league',lgId,e);}
+      await S(200);
     }
     CTX.allTrades=allTrades;
+    console.log(`Trades loaded: ${allTrades.length} across ${chain.length} seasons`);
 
     setLoad(60,'ANALYZING MANAGERS...');
     // Build trade records
