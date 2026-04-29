@@ -335,6 +335,17 @@ async function loadAllContext(){
         ...(r.reserve||[]),   // IR players
         ...(r.taxi||[])       // Taxi squad
       ];
+
+      // Draft picks owned by this manager
+      const draftPicks=(r.picks||[]).map(pk=>({
+        season: pk.season,
+        round: pk.round,
+        roster_id: pk.roster_id,       // original owner
+        previous_owner_id: pk.previous_owner_id,
+        owner_id: pk.owner_id,         // current owner
+        slot: pk.season+'.'+(pk.round<10?'0':'')+pk.round,
+        label: (pk.season||'?')+' Round '+(pk.round||'?')+' Pick'
+      }));
       const players=allRosterIds.map(id=>{
         const pval=CTX.isSF?(CTX.sfVals[id]||0):(CTX.qbVals[id]||0);
         const onIR=(r.reserve||[]).includes(id);
@@ -346,7 +357,8 @@ async function loadAllContext(){
       if(isMe){CTX.myRoster=players;CTX.myTeam={username:u.display_name||u.username,total,roster_id:r.roster_id};}
       return{roster_id:r.roster_id,owner_id:r.owner_id,isMe,
         username:u.display_name||u.username||'Unknown',
-        players,total,wins:r.settings?.wins||0,losses:r.settings?.losses||0};
+        players,total,wins:r.settings?.wins||0,losses:r.settings?.losses||0,
+        picks:draftPicks};
     }).sort((a,b)=>b.total-a.total);
 
     setLoad(38,'PULLING TRADE HISTORY...');
@@ -866,15 +878,19 @@ LEAGUE: ${CTX.league?.name||'Dynasty League'} | ${CTX.allTeams?.length||0} teams
 THIS MANAGER (@${CTX.myTeam?.username||'?'}): ${CTX.myTeam?.wins||0}W-${CTX.myTeam?.losses||0}L | Value: ${(CTX.myTeam?.total||0).toLocaleString()} | Rank: #${(CTX.allTeams?.findIndex(t=>t.isMe)||0)+1} of ${CTX.allTeams?.length||0}
 
 ⚠️ DYNASTY ROSTER (players THIS MANAGER owns in BYX Dynasty — NOT the same as NFL team rosters):
-${(CTX.myRoster||[]).slice(0,25).map(p=>p.name+'('+p.pos+',val='+p.value+')').join(' | ')}
+PLAYERS: ${(CTX.myRoster||[]).slice(0,25).map(p=>p.name+'('+p.pos+',val='+p.value+')').join(' | ')}
+DRAFT PICKS: ${(CTX.allTeams||[]).find(t=>t.isMe)?.picks?.map(p=>p.season+' Round '+p.round+(p.previous_owner_id&&p.previous_owner_id!==p.owner_id?' [traded pick]':'')).join(', ')||'None showing — check Sleeper directly'}
 
 IMPORTANT: If a player is NOT in the above roster list, they are NOT owned by this manager in BYX Dynasty. That does NOT mean they are a free agent in the NFL — they have an NFL team which you can find in the team context data above. Never confuse dynasty league ownership with NFL team assignment.
 
 ALL MANAGERS (name: record, value, top 4 players):
 ${(CTX.allTeams||[]).map(t=>{
   const roster=(t.players||[]).slice(0,25).map(p=>p.name+'('+p.pos+(p.slot&&p.slot!=='Active'?','+p.slot:'')+')').join(', ');
-  return t.username+(t.isMe?' [YOU]':'')+' [BYX DYNASTY ROSTER ONLY]: '+t.wins+'W-'+t.losses+'L val='+t.total+' | '+roster;
-}).join('\n')}
+  const picks=(t.picks||[]).map(p=>p.season+' R'+p.round).join(', ');
+  return t.username+(t.isMe?' [YOU]':'')+' [BYX DYNASTY ROSTER ONLY]: '+t.wins+'W-'+t.losses+'L val='+t.total+
+    '\nPLAYERS: '+roster+
+    (picks?'\nDRAFT PICKS OWNED: '+picks:'\nDRAFT PICKS OWNED: none');
+}).join('\n\n')}
 
 CROSS-LEAGUE INTEL — OTHER LEAGUES ONLY (NOT BYX Dynasty — these are separate leagues this manager plays in):
 ⚠️ Do NOT mix cross-league rosters with BYX Dynasty rosters above. Each manager's BYX roster is in ALL MANAGERS above.
