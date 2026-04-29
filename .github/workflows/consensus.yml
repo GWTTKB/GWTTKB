@@ -44,6 +44,9 @@ jobs:
       - name: Build NFL stats + contracts (standalone)
         run: node scripts/build-nfl-stats.mjs
 
+      - name: Build depth charts + target share redistribution
+        run: node scripts/build-depth-charts.mjs
+
       - name: Build college stats database + draft history
         run: node scripts/build-college-stats.mjs
 
