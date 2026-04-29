@@ -19,7 +19,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
 
     steps:
       - name: Checkout repo
@@ -49,6 +49,12 @@ jobs:
 
       - name: Build coaching staff history (Wikipedia)
         run: node scripts/build-coaching-staff.mjs
+
+      - name: Build 2026 rookie draft ADP (live Sleeper drafts)
+        run: node scripts/build-rookie-adp.mjs
+
+      - name: Build market intelligence (trade trends, waiver signals)
+        run: node scripts/build-market-intel.mjs
 
       - name: Commit updated data
         run: |
