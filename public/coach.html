@@ -635,11 +635,38 @@ async function loadAllContext(){
                   const lgRosters2=await gFetch(`${API_URL}/league/${lg.league_id}/rosters`).catch(()=>[]);
                   const oppLgRoster=(lgRosters2||[]).find(r=>r.owner_id===opp.owner_id);
                   if(oppLgRoster){
+                    // Get this league's draft order to determine slots
+                    let lgDraftOrder={};
+                    let lgNumTeams=(lgRosters2||[]).length||10;
+                    try{
+                      const lgDrafts2=await gFetch(`${API_URL}/league/${lg.league_id}/drafts`).catch(()=>[]);
+                      const lgRookieDraft=(lgDrafts2||[]).find(d=>
+                        parseInt(d.season||0)===2026&&(d.settings?.rounds||0)<=7&&
+                        ['pre_draft','drafting','complete'].includes(d.status)
+                      );
+                      if(lgRookieDraft?.draft_order){
+                        lgDraftOrder=lgRookieDraft.draft_order;
+                        lgNumTeams=lgRookieDraft.settings?.teams||lgNumTeams;
+                      }
+                    }catch(e){}
+                    // Determine opp's slot in this league
+                    const oppSlot=lgDraftOrder[opp.owner_id]||null;
+                    const tierLabel=(slot,n)=>{
+                      if(!slot||!n)return null;
+                      if(slot<=Math.ceil(n*0.3))return 'Early';
+                      if(slot<=Math.ceil(n*0.7))return 'Mid';
+                      return 'Late';
+                    };
                     const lgPicks=[];
                     for(const season of [2026,2027,2028]){
                       for(const round of [1,2,3,4]){
-                        lgPicks.push({season,round,
-                          label:season+' '+(round===1?'1st':round===2?'2nd':round===3?'3rd':'4th')+' (own)',
+                        const rdLabel=round===1?'1st':round===2?'2nd':round===3?'3rd':'4th';
+                        const tier=oppSlot?tierLabel(oppSlot,lgNumTeams):null;
+                        const slotLabel=oppSlot?round+'.'+String(oppSlot).padStart(2,'0'):null;
+                        lgPicks.push({season,round,slot:oppSlot,
+                          label:season+' '+(slotLabel||((tier?tier+' ':'')+rdLabel)),
+                          slot_label:slotLabel,
+                          tier,
                           is_traded:false});
                       }
                     }
