@@ -346,7 +346,9 @@ async function loadAllContext(){
         slot: pk.season+'.'+(pk.round<10?'0':'')+pk.round,
         label: (pk.season||'?')+' Round '+(pk.round||'?')+' Pick'
       }));
-      const players=allRosterIds.map(id=>{
+      // Deduplicate roster IDs
+      const uniqueRosterIds=[...new Set(allRosterIds)];
+      const players=uniqueRosterIds.map(id=>{
         const pval=CTX.isSF?(CTX.sfVals[id]||0):(CTX.qbVals[id]||0);
         const onIR=(r.reserve||[]).includes(id);
         const onTaxi=(r.taxi||[]).includes(id);
@@ -743,12 +745,18 @@ async function loadDynastyData(){
       const sfp=c.formats?.sf_ppr?.players||c.players||[];
       const qp=c.formats?.qb1_ppr?.players||[];
       for(const p of sfp){
+        // Store by normalized name always
         CTX.sfVals[n(p.name)]=p.value;
-        if(p.id){CTX.sfVals[p.id]=p.value;CTX.playerNames[p.id]=p.name;CTX.playerPos[p.id]=p.pos||p.position;}
+        // Store by ID if available
+        if(p.id){
+          CTX.sfVals[p.id]=p.value;
+          CTX.playerNames[p.id]=p.name;
+          CTX.playerPos[p.id]=p.pos||p.position;
+        }
         CTX.consensusTop.push({name:p.name,sf:p.value,pos:p.pos||p.position,id:p.id});
       }
       for(const p of qp)CTX.qbVals[n(p.name)]=p.value;
-      CTX.consensusTop=CTX.consensusTop.slice(0,150);
+      CTX.consensusTop=CTX.consensusTop.slice(0,600); // all players
     }
 
     // GWTTKB
@@ -784,8 +792,8 @@ function buildSystemPrompt(){
   const me=CTX.myTeam;
   const myRoster=CTX.myRoster||[];
 
-  // Top 60 consensus (compact)
-  const top60=CTX.consensusTop.slice(0,60).map((p,i)=>`${i+1}.${p.name}(${p.pos})${CTX.isSF?p.sf:(CTX.qbVals[n(p.name)]||p.sf)}`).join(', ');
+  // Top 150 consensus (expanded - all major players)
+  const top60=CTX.consensusTop.slice(0,150).map((p,i)=>`${i+1}.${p.name}(${p.pos},${CTX.isSF?p.sf:(CTX.qbVals[n(p.name)]||p.sf)})`).join(', ');
 
   // GWTTKB top 40
   const gwttkbSummary=CTX.gwttkbTop.slice(0,40).map((p,i)=>`${i+1}.${p.name}:${p.value}`).join(', ');
@@ -961,7 +969,13 @@ THIS MANAGER (@${CTX.myTeam?.username||'?'}): ${CTX.myTeam?.wins||0}W-${CTX.myTe
 
 ⚠️ DYNASTY ROSTER (players THIS MANAGER owns in BYX Dynasty — NOT the same as NFL team rosters):
 PLAYERS: ${(CTX.myRoster||[]).slice(0,25).map(p=>p.name+'('+p.pos+',val='+p.value+')').join(' | ')}
-DRAFT PICKS: ${(CTX.allTeams||[]).find(t=>t.isMe)?.picks?.map(p=>p.season+' Round '+p.round+(p.previous_owner_id&&p.previous_owner_id!==p.owner_id?' [traded pick]':'')).join(', ')||'None showing — check Sleeper directly'}
+DRAFT PICKS OWNED IN BYX DYNASTY (from Sleeper traded_picks endpoint):
+${(()=>{
+  const myTeam=(CTX.allTeams||[]).find(t=>t.isMe);
+  const picks=(myTeam?.picks||[]);
+  if(!picks.length)return 'No picks loaded — Sleeper pick data unavailable';
+  return picks.map(p=>p.label||(p.season+' Round '+p.round+(p.is_traded?' (from '+p.original_owner+')':' (own)'))).join(', ');
+})()}
 
 IMPORTANT: If a player is NOT in the above roster list, they are NOT owned by this manager in BYX Dynasty. That does NOT mean they are a free agent in the NFL — they have an NFL team which you can find in the team context data above. Never confuse dynasty league ownership with NFL team assignment.
 
@@ -1109,29 +1123,57 @@ function buildPatternsContext(){
 // Called when Coach detects a player name in the conversation
 async function fetchPlayerStats(playerName){
   try{
-    const res=await fetch('/data/nfl-stats.json');
-    if(!res.ok)return null;
-    const data=await res.json();
-    // Find player by normalized name
-    const norm=s=>s.toLowerCase().replace(/[^a-z]/g,'');
-    const match=Object.values(data.players||{}).find(p=>
-      norm(p.name||'')===norm(playerName)||
-      norm(p.name||'').includes(norm(playerName))
-    );
-    return match||null;
+    // First check consensus for value data (always available)
+    const norm=s=>(s||'').toLowerCase().replace(/[^a-z]/g,'');
+    const consensusPlayer=(CTX.consensusTop||[]).find(p=>norm(p.name)===norm(playerName));
+    
+    // Then try nfl-stats.json for detailed metrics
+    let statsData=null;
+    if(CTX.statsAvailable){
+      try{
+        const res=await fetch('/data/nfl-stats.json');
+        if(res.ok){
+          const data=await res.json();
+          statsData=Object.values(data.players||{}).find(p=>
+            norm(p.name||'')===norm(playerName)||
+            norm(p.name||'').includes(norm(playerName))
+          );
+        }
+      }catch(e){}
+    }
+    
+    // Combine consensus value with stats data
+    if(consensusPlayer||statsData){
+      return {
+        name: playerName,
+        sf_value: CTX.sfVals[norm(playerName)]||consensusPlayer?.sf||0,
+        qb1_value: CTX.qbVals[norm(playerName)]||0,
+        pos: consensusPlayer?.pos||statsData?.pos||'?',
+        consensus_rank: consensusPlayer?CTX.consensusTop.indexOf(consensusPlayer)+1:null,
+        ...(statsData||{})
+      };
+    }
+    return null;
   }catch(e){return null;}
 }
 
 // Extract player names mentioned in a message
 function extractPlayerNames(text){
-  // Match known players from consensus
   const names=[];
+  const textLower=text.toLowerCase();
+  // Check ALL consensus players (all 600)
   for(const p of (CTX.consensusTop||[])){
-    if(p.name&&text.toLowerCase().includes(p.name.toLowerCase())){
+    if(p.name&&textLower.includes(p.name.toLowerCase())){
       names.push(p.name);
     }
   }
-  return [...new Set(names)].slice(0,5); // max 5 players per message
+  // Also check player names map from Sleeper (covers any active NFL player)
+  for(const[id,name]of Object.entries(CTX.playerNames||{})){
+    if(name&&textLower.includes(name.toLowerCase())&&!names.includes(name)){
+      names.push(name);
+    }
+  }
+  return [...new Set(names)].slice(0,5);
 }
 
 // Format player stats for system prompt injection
