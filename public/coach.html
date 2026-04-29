@@ -369,13 +369,33 @@ async function loadAllContext(){
       const players=uniqueRosterIds
         .filter(id=>/^\d+$/.test(id))
         .map(id=>{
-          const pval=CTX.isSF?(CTX.sfVals[id]||0):(CTX.qbVals[id]||0);
+          // Try value lookup by ID first, then by normalized name
+          const nameFromMap=CTX.playerNames[id];
+          const posFromMap=CTX.playerPos[id];
+          const n=s=>(s||'').toLowerCase().replace(/[^a-z]/g,'');
+          const nameNorm=nameFromMap?n(nameFromMap):'';
+          const pval=CTX.isSF?
+            (CTX.sfVals[id]||CTX.sfVals[nameNorm]||0):
+            (CTX.qbVals[id]||CTX.qbVals[nameNorm]||0);
           const onIR=(r.reserve||[]).includes(id);
           const onTaxi=(r.taxi||[]).includes(id);
-          return{id,name:CTX.playerNames[id]||id,pos:CTX.playerPos[id]||'?',value:pval,
-                 slot:onIR?'IR':onTaxi?'Taxi':'Active'};
-        }).filter(p=>['QB','RB','WR','TE'].includes(p.pos)&&p.name!==p.id)
-          .sort((a,b)=>b.value-a.value);
+          // Use name from map, fall back to id (will get resolved when player map loads)
+          return{
+            id,
+            name:nameFromMap||id,
+            pos:posFromMap||'?',
+            value:pval,
+            slot:onIR?'IR':onTaxi?'Taxi':'Active',
+            needsLookup:!nameFromMap // flag for post-load resolution
+          };
+        })
+        // Keep all skill players — filter by pos if known, keep unknowns for resolution
+        .filter(p=>{
+          if(['QB','RB','WR','TE'].includes(p.pos)) return true;
+          if(p.pos==='?'&&p.needsLookup) return true; // keep for resolution
+          return false;
+        })
+        .sort((a,b)=>b.value-a.value);
 
       const total=players.reduce((s,p)=>s+p.value,0);
       if(isMe){
@@ -990,7 +1010,58 @@ async function loadDynastyData(){
         if(!CTX.sfVals[id])CTX.sfVals[id]=CTX.sfVals[n(p.full_name)]||0;
         if(!CTX.qbVals[id])CTX.qbVals[id]=CTX.qbVals[n(p.full_name)]||0;
       }
-    }catch(e){}
+
+      // Resolve any players that were loaded before player map was ready
+      for(const team of CTX.allTeams){
+        let changed=false;
+        team.players=(team.players||[]).map(p=>{
+          if(p.needsLookup&&CTX.playerNames[p.id]){
+            const nm=CTX.playerNames[p.id];
+            const pos=CTX.playerPos[p.id]||'?';
+            const val=CTX.isSF?(CTX.sfVals[p.id]||CTX.sfVals[n(nm)]||0):(CTX.qbVals[p.id]||CTX.qbVals[n(nm)]||0);
+            changed=true;
+            return{...p,name:nm,pos,value:val,needsLookup:false};
+          }
+          // Re-resolve value with name now available
+          if(p.value===0&&CTX.playerNames[p.id]){
+            const nm=CTX.playerNames[p.id];
+            const val=CTX.isSF?(CTX.sfVals[p.id]||CTX.sfVals[n(nm)]||0):(CTX.qbVals[p.id]||CTX.qbVals[n(nm)]||0);
+            if(val>0){changed=true;return{...p,name:nm,value:val};}
+          }
+          return p;
+        }).filter(p=>['QB','RB','WR','TE'].includes(p.pos));
+        if(changed){
+          team.players.sort((a,b)=>b.value-a.value);
+          team.total=team.players.reduce((s,p)=>s+p.value,0);
+          if(team.isMe){
+            CTX.myRoster=team.players;
+            CTX.myTeam.total=team.total;
+          }
+        }
+      }
+      // Also resolve picks - CTX.playerNames now has pick name lookups too
+      for(const team of CTX.allTeams){
+        team.picks=(team.picks||[]).map(pk=>{
+          // If pick label is just the raw ID, try to resolve it now
+          if(pk.id&&pk.label===pk.id&&CTX.playerNames[pk.id]){
+            const nm=CTX.playerNames[pk.id];
+            const seasonM=nm.match(/20\d\d/)||pk.id.match(/^(20\d\d)/);
+            const roundM=nm.match(/[Rr]ound\s*(\d)/)||pk.id.match(/_(\d)_/);
+            const season=seasonM?parseInt(seasonM[0]||seasonM[1]):pk.season;
+            const round=roundM?parseInt(roundM[1]):pk.round;
+            return{...pk,name:nm,season,round,
+              label:season&&round?season+' Round '+round:nm};
+          }
+          return pk;
+        });
+        // Re-attach to myPicks if this is me
+        if(team.isMe){
+          CTX.myPicks=team.picks;
+          console.log('My picks resolved:',CTX.myPicks.map(p=>p.label).join(', ')||'none');
+        }
+      }
+      console.log('Player map loaded + rosters + picks resolved');
+    }catch(e){ console.warn('Player map error:',e); }
 
   }catch(e){console.warn('Dynasty data:',e);}
 }
