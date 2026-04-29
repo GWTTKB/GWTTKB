@@ -6,8 +6,8 @@ import fs from 'fs';
 
 const SLEEPER = 'https://api.sleeper.app/v1';
 const SEED_USER = '605943364277321728';
-const TARGET_STARTUP = 150;
-const TARGET_ROOKIE = 200;
+const TARGET_STARTUP = 50;  // 50 drafts gives solid ADP signal
+const TARGET_ROOKIE = 75;   // 75 rookie drafts for 2026 class ADP
 const YEAR = 2026;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
