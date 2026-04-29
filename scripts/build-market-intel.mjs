@@ -7,7 +7,7 @@ import fs from 'fs';
 
 const SLEEPER = 'https://api.sleeper.app/v1';
 const SEED_USER = '605943364277321728';
-const TARGET_LEAGUES = 300;
+const TARGET_LEAGUES = 150; // 150 leagues gives solid transaction signal
 const CURRENT_YEAR = 2026;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
