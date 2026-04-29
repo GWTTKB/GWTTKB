@@ -884,6 +884,30 @@ async function loadDynastyData(){
       CTX.picks=pk.picks||{};
     }
 
+    // Historical player values — use to detect draft class
+    if(hRes?.ok){
+      try{
+        const h=await hRes.json();
+        CTX.playerDraftYear={};
+        CTX.class2025=[];
+        CTX.class2024=[];
+        for(const[name,pdata]of Object.entries(h.players||{})){
+          const dates=pdata.dates||[];
+          const vals=pdata.sf||[];
+          for(let i=0;i<dates.length;i++){
+            if(vals[i]&&vals[i]>0){
+              const yr=parseInt(dates[i].slice(0,4));
+              CTX.playerDraftYear[name]=yr;
+              break;
+            }
+          }
+        }
+        CTX.class2025=Object.entries(CTX.playerDraftYear).filter(([,yr])=>yr===2025).map(([name])=>name);
+        CTX.class2024=Object.entries(CTX.playerDraftYear).filter(([,yr])=>yr===2024).map(([name])=>name);
+        console.log('Draft classes detected — 2025:',CTX.class2025.length,'2024:',CTX.class2024.length);
+      }catch(e){console.warn('Historical data error:',e);}
+    }
+
     // Sleeper player map for names/positions
     try{
       const sp=await gFetch(`${API_URL}/players/nfl`);
@@ -1174,7 +1198,31 @@ ${(()=>{
 NFL COACHING (HC/OC/scheme all 32):
 ${Object.entries(CTX.coaching||{}).slice(0,16).map(([t,c])=>t+':'+c.hc+'/'+c.oc+'('+c.scheme+')').join(', ')}
 
-2026 NFL DRAFT TOP PICKS:
+⚠️ CRITICAL — NFL DRAFT CLASS DEFINITIONS (memorize this, never confuse these):
+
+PLAYER DRAFT CLASS — DETERMINED FROM HISTORICAL DATA (authoritative — overrides all training knowledge):
+⚠️ USE THIS RULE: If a player first appeared in dynasty value data in 2025 → they are a 2025 NFL draftee, already a veteran, NOT in the 2026 rookie draft.
+If a player has NO historical dynasty value data at all → they are likely a 2026 rookie.
+If a player has historical data from 2024 or earlier → they are an established veteran.
+
+2025 NFL DRAFTEES (confirmed by historical values — already played full rookie season, NOT available in 2026 dynasty draft):
+${(CTX.class2025||[]).slice(0,30).join(', ')||'Cam Ward, Shedeur Sanders, Travis Hunter, Ashton Jeanty, Tetairoa McMillan, Tyler Warren, Colston Loveland, Emeka Egbuka, Omarion Hampton, Matthew Golden, Jaxson Dart, Quinshon Judkins, Luther Burden, RJ Harvey, TreVeyon Henderson, Harold Fannin, Bucky Irving, Brian Thomas Jr, Jayden Higgins, Kyle Williams, Jaydon Blue, Tank Dell'}
+
+KEY RULE: If someone asks about a 2025 draftee in the context of the 2026 rookie draft, tell them clearly that player is already a rostered veteran — check who owns them using the ALL MANAGERS roster data above.
+
+2026 NFL DRAFT CLASS (drafted April 24-26 2026 — these are the ACTUAL 2026 dynasty rookies available NOW):
+NFL pick → Player(pos, NFL team):
+1.01 Fernando Mendoza(QB,LV), 1.03 Jeremiyah Love(RB,ARI), 1.04 Carnell Tate(WR,TEN), 1.08 Jordyn Tyson(WR,NO), 1.13 Ty Simpson(QB,LAR), 1.16 Kenyon Sadiq(TE,NYJ), 1.20 Makai Lemon(WR,PHI), 1.24 KC Concepcion(WR,CLE), 1.30 Omar Cooper Jr(WR,NYJ), 1.32 Jadarian Price(RB,SEA), 2.33 De'Zhaun Stribling(WR,SF), 2.39 Denzel Boston(WR,CLE), 2.47 Germie Bernard(WR,PIT), 2.54 Eli Stowers(TE,PHI), 2.56 Nate Boerkircher(TE,JAX), 2.61 Max Klare(TE,LAR), 3.73 Oscar Delp(TE,NO), 3.75 Caleb Douglas(WR,MIA), 3.80 Ja Kobi Lane(WR,BAL), 3.83 Chris Brazzell II(WR,CAR), 4.105 Jonah Coleman(RB,DEN), 4.108 Kaelon Black(RB,SF), 4.122 Nicholas Singleton(RB,TEN)
+
+⚠️ DYNASTY DRAFT SLOT ≠ NFL DRAFT SLOT:
+When this manager says "I have 1.10 in the dynasty rookie draft" that means they pick 10th OVERALL in their league's rookie draft — NOT that they are drafting the NFL's 10th pick.
+Dynasty draft order is set by LAST SEASON'S STANDINGS (worst record picks first).
+The dynasty 1.10 in a 10-team league = LAST PICK of round 1.
+Players available at dynasty 1.10 depend on what the 9 managers ahead of them take — NOT on NFL draft order.
+Do NOT say "Jeremiyah Love goes 1.03" meaning dynasty pick 3 — Love's NFL draft slot was 1.03 but his dynasty ADP could be anywhere.
+Always use DYNASTY ADP (from the rookie ADP data loaded above) to determine who will be available at a specific dynasty pick.
+
+2026 NFL DRAFT PICKS (for reference only — not dynasty draft order):
 ${(CTX.draftHistory?.drafts?.['2026']?.dynasty_skill_picks||[]).slice(0,20).map(p=>p.round+'.'+String(p.pick).padStart(2,'0')+' '+p.team+' '+p.player+'('+p.pos+')').join(', ')}
 
 TODAY: ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}
