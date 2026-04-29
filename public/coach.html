@@ -431,7 +431,7 @@ async function loadAllContext(){
     // Fetch trades
     const allTrades=[];
     for(const{id:lgId,season}of chain){
-      for(let wk=1;wk<=22;wk++){
+      for(let wk=0;wk<=22;wk++){  // week 0 = offseason
         let txns;
         try{txns=await gFetch(`${API_URL}/league/${lgId}/transactions/${wk}`);}
         catch(e){break;}
@@ -596,7 +596,7 @@ async function loadAllContext(){
           };
 
           // Load their rosters in other leagues
-          await Promise.all(dynastyLeagues.slice(0,4).map(async lg=>{
+          await Promise.all(dynastyLeagues.map(async lg=>{
             try{
               const roster=await gFetch(`${API_URL}/league/${lg.league_id}/rosters`);
               const myRoster=(roster||[]).find(r=>r.owner_id===opp.owner_id);
@@ -607,7 +607,29 @@ async function loadAllContext(){
                   value:CTX.isSF?(CTX.sfVals[id]||0):(CTX.qbVals[id]||0)
                 })).filter(p=>['QB','RB','WR','TE'].includes(p.pos)&&p.name!==p.id)
                   .sort((a,b)=>b.value-a.value);
-                // Load traded picks for this league too
+
+                // Fetch ALL transactions for this league including offseason (week 0)
+                let lgRecentTrades=[];
+                try{
+                  const lgTxAll=(await Promise.all(
+                    [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18].map(w=>
+                      gFetch(`${API_URL}/league/${lg.league_id}/transactions/${w}`).catch(()=>[])
+                    )
+                  )).flat().filter(Boolean);
+                  lgRecentTrades=lgTxAll
+                    .filter(tx=>tx.type==='trade')
+                    .slice(0,15)
+                    .map(tx=>{
+                      const sides=(tx.roster_ids||[]).map(rid=>{
+                        const adds=Object.keys(tx.adds||{}).filter(id=>tx.adds[id]===rid).map(id=>CTX.playerNames[id]||id);
+                        const picks=(tx.draft_picks||[]).filter(pk=>pk.owner_id===rid).map(pk=>pk.season+' R'+pk.round);
+                        return{gets:[...adds,...picks]};
+                      });
+                      return{week:tx.leg||0,sides};
+                    });
+                }catch(e){}
+
+                profile.rosters.push({league:lg.name,players:players,trades:lgRecentTrades});
                 try{
                   const lgTradedPicks=await gFetch(`${API_URL}/league/${lg.league_id}/traded_picks`).catch(()=>[]);
                   const lgRosters2=await gFetch(`${API_URL}/league/${lg.league_id}/rosters`).catch(()=>[]);
@@ -668,7 +690,7 @@ async function loadAllContext(){
           profile.fav_players.sort((a,b)=>b.leagues-a.leagues||b.value-a.value);
 
           // Check for active drafts in each league
-          await Promise.all(dynastyLeagues.slice(0,4).map(async lg=>{
+          await Promise.all(dynastyLeagues.map(async lg=>{
             try{
               const drafts=await gFetch(`${API_URL}/league/${lg.league_id}/drafts`);
               for(const draft of (drafts||[])){
@@ -891,11 +913,13 @@ async function loadAllContext(){
     setLoad(90,'LOADING LEAGUE TRANSACTIONS...');
     // League transactions — all waiver adds, drops, trades in this league
     try{
-      const transactions = await gFetch(`${API_URL}/league/${CTX.league.league_id}/transactions/1`).catch(()=>[]);
-      // Get last 3 weeks of transactions
-      const txWeeks = await Promise.all([1,2,3].map(w=>
-        gFetch(`${API_URL}/league/${CTX.league.league_id}/transactions/${w}`).catch(()=>[])
-      ));
+      // Fetch ALL weeks including offseason (week 0)
+      const txWeeks = await Promise.all(
+        [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18].map(w=>
+          gFetch(`${API_URL}/league/${CTX.league.league_id}/transactions/${w}`).catch(()=>[])
+        )
+      );
+      const transactions = txWeeks.flat().filter(Boolean);
       const allTx = txWeeks.flat().filter(Boolean);
       
       // Categorize
@@ -956,7 +980,7 @@ async function loadDynastyData(){
   CTX.sfVals={};CTX.qbVals={};CTX.playerNames={};CTX.playerPos={};
 
   try{
-    const[cRes,gRes,hRes,pkRes,contractsRes,patternsRes,statsMetaRes,rookieAdpRes,mktRes,dcRes]=await Promise.all([
+    const[cRes,gRes,hRes,pkRes,contractsRes,patternsRes,statsMetaRes,startupAdpRes,mktRes,dcRes]=await Promise.all([
       fetch('/data/consensus.json'),
       fetch('/data/leland-rankings.json'),
       fetch('/data/historical-players.json').catch(()=>null),
@@ -964,7 +988,7 @@ async function loadDynastyData(){
       fetch('/data/nfl-contracts.json').catch(()=>null),
       fetch('/data/nfl-patterns.json').catch(()=>null),
       fetch('/data/nfl-stats.json').catch(()=>null),
-      fetch('/data/rookie-adp.json').catch(()=>null),
+      fetch('/data/startup-adp.json').catch(()=>null),
       fetch('/data/market-intel.json').catch(()=>null),
       fetch('/data/depth-charts.json').catch(()=>null)
     ]);
@@ -1064,25 +1088,34 @@ async function loadDynastyData(){
       }catch(e){console.warn('Market intel error:',e);}
     }
 
-    // Rookie ADP from nightly build (fallback if live session has no data yet)
-    if(rookieAdpRes?.ok){
+    // Startup + Rookie ADP from nightly build
+    if(startupAdpRes?.ok){
       try{
-        const radp=await rookieAdpRes.json();
-        if(!CTX.rookieADP)CTX.rookieADP={};
-        // Only use file data if live session hasn't loaded any
-        if(Object.keys(CTX.rookieADP).length===0){
-          for(const p of (radp.overall||[])){
+        const adpData=await startupAdpRes.json();
+
+        // Startup ADP
+        CTX.startupADP={};
+        for(const p of (adpData.startup?.players||[])){
+          CTX.startupADP[p.name]={
+            adp:p.adp_12team, adp_slot:p.adp_slot,
+            count:p.draft_count, min:p.min_pick, max:p.max_pick
+          };
+        }
+
+        // Rookie ADP — merge with live session data (live takes priority)
+        if(Object.keys(CTX.rookieADP||{}).length===0){
+          CTX.rookieADP={};
+          for(const p of (adpData.rookie?.players||[])){
             CTX.rookieADP[p.name]={
-              adp:p.adp_normalized,
-              adp_slot:p.adp_slot,
-              count:p.draft_count,
-              pct_round1:p.pct_round1,
-              total:p.adp_normalized*(p.draft_count||1)
+              adp:p.adp_12team, adp_slot:p.adp_slot,
+              count:p.draft_count, min:p.min_pick, max:p.max_pick
             };
           }
-          console.log('Rookie ADP from file:',Object.keys(CTX.rookieADP).length,'players from',radp.source);
         }
-      }catch(e){console.warn('Rookie ADP file error:',e);}
+
+        console.log('Startup ADP:',Object.keys(CTX.startupADP).length,'players |',
+          'Rookie ADP:',Object.keys(CTX.rookieADP).length,'players');
+      }catch(e){console.warn('ADP file error:',e);}
     }
 
     // Sleeper player map for names/positions
@@ -1194,7 +1227,7 @@ function buildSystemPrompt(){
     Object.entries(CTX.dynasty.breakout_signals).map(([pos,sigs])=>`${pos.toUpperCase()}: ${sigs.join('; ')}`).join(' | '):'';
 
   // NFL contract data for my roster (from OTC via nflverse)
-  const myRosterContracts=(CTX.myRoster||[]).slice(0,20).map(p=>{
+  const myRosterContracts=(CTX.myRoster||[]).map(p=>{
     const c=CTX.nflContractData?.[p.name]||CTX.nflContractData?.[p.name?.toLowerCase()];
     if(!c)return null;
     return`${p.name}(${c.team},$${c.apy}M/yr,${c.years_remaining}yrs_left,${c.status},guaranteed:$${c.guaranteed}M)`;
@@ -1335,7 +1368,7 @@ ${Object.entries(CTX.teamContext||{}).slice(0,32).map(([team,d])=>{
 }).filter(Boolean).join('\n')}
 
 NFL CONTRACTS (per OverTheCap via nflverse — cite this source):
-${(CTX.myRoster||[]).slice(0,20).map(p=>{const c=CTX.nflContractData?.[p.name];return c?p.name+'($'+c.apy+'M/yr,'+c.years_remaining+'yrs,'+c.status+')':null;}).filter(Boolean).join(' | ')||'Loading...'}
+${(CTX.myRoster||[]).map(p=>{const c=CTX.nflContractData?.[p.name];return c?p.name+'($'+c.apy+'M/yr,'+c.years_remaining+'yrs,'+c.status+')':null;}).filter(Boolean).join(' | ')||'Loading...'}
 
 EXPIRING CONTRACTS LEAGUE-WIDE (dynasty sell signals):
 ${Object.values(CTX.nflContractData||{}).filter((c,i,a)=>i===a.findIndex(x=>x.name===c.name)&&c.status==='expiring'&&['QB','RB','WR','TE'].includes(c.pos)).sort((a,b)=>b.apy-a.apy).slice(0,12).map(c=>c.name+'('+c.pos+','+c.team+',$'+c.apy+'M)').join(', ')||''}
@@ -1346,8 +1379,8 @@ LEAGUE: ${CTX.league?.name||'Dynasty League'} | ${CTX.allTeams?.length||0} teams
 THIS MANAGER (@${CTX.myTeam?.username||'?'}): ${CTX.myTeam?.wins||0}W-${CTX.myTeam?.losses||0}L | Value: ${(CTX.myTeam?.total||0).toLocaleString()} | Rank: #${(CTX.allTeams?.findIndex(t=>t.isMe)||0)+1} of ${CTX.allTeams?.length||0}
 
 ⚠️ DYNASTY ROSTER (players THIS MANAGER owns in BYX Dynasty — NOT the same as NFL team rosters):
-PLAYERS: ${(CTX.myRoster||[]).slice(0,25).map(p=>p.name+'('+p.pos+',val='+p.value+')').join(' | ')}
-MY DRAFT PICKS IN BYX DYNASTY (pulled directly from Sleeper roster — these are what literally appear on my roster):
+PLAYERS: ${(CTX.myRoster||[]).map(p=>p.name+'('+p.pos+',val='+p.value+')').join(' | ')}
+MY DRAFT PICKS IN BYX DYNASTY (exact slots where known, Early/Mid/Late for future unknowns — these are what literally appear on my roster):
 ${(()=>{
   // Use myPicks which comes from rosterPicks (non-numeric IDs in r.players)
   // These are the picks that literally show on the Sleeper roster screen
@@ -1366,7 +1399,7 @@ IMPORTANT: If a player is NOT in the above roster list, they are NOT owned by th
 
 ALL MANAGERS (name: record, value, top 4 players):
 ${(CTX.allTeams||[]).map(t=>{
-  const roster=(t.players||[]).slice(0,25).map(p=>p.name+'('+p.pos+(p.slot&&p.slot!=='Active'?','+p.slot:'')+')').join(', ');
+  const roster=(t.players||[]).slice(0,35).map(p=>p.name+'('+p.pos+(p.slot&&p.slot!=='Active'?','+p.slot:'')+')').join(', ');
   const picks=(t.picks||[]).map(p=>p.season+' R'+p.round).join(', ');
   return t.username+(t.isMe?' [YOU]':'')+' [BYX DYNASTY ROSTER ONLY]: '+t.wins+'W-'+t.losses+'L val='+t.total+
     '\nPLAYERS: '+roster+
@@ -1378,8 +1411,12 @@ CROSS-LEAGUE INTEL — OTHER LEAGUES ONLY (NOT BYX Dynasty — these are separat
 ${Object.entries(CTX.crossLeague||{}).map(([un,p])=>{
   const rosters=(p.rosters||[]).map(r=>{
     const picks=(r.picks||[]).map(pk=>pk.label).join(',');
-    return r.league+': '+(r.players||[]).slice(0,6).map(x=>x.name).join(',')+
-      (picks?' | PICKS: '+picks:'');
+    const trades=(r.trades||[]).slice(0,5).map(t=>
+      'WK'+t.week+': '+t.sides.map(s=>s.gets.slice(0,3).join('+')).join(' / ')
+    ).join(' | ');
+    return r.league+': '+(r.players||[]).map(x=>x.name).join(',')+
+      (picks?' PICKS:'+picks:'')+
+      (trades?' TRADES:'+trades:'');
   }).join(' || ');
   const multi=(p.fav_players||[]).filter(x=>x.leagues>1).map(x=>x.name+'('+x.leagues+'L)').join(',');
   const drafts=(p.draft_patterns||[]).map(d=>d.league+'('+d.status+'): '+(d.picks||[]).map(pk=>pk.slot+' '+pk.player).join(',')).join(' | ');
@@ -1515,6 +1552,14 @@ ${(()=>{
 5. If no ADP data exists yet, say "ADP data not yet available — my projections are based on consensus values and positional need, not confirmed market behavior." Do NOT fabricate ADP.
 6. Never suggest a player is "likely available" at a pick without checking both consensus rank AND ADP.
 
+STARTUP DRAFT ADP (where players go in live Sleeper dynasty startup drafts — this is the TRUE market ADP, use to know what any player is actually worth in the market right now):
+${(()=>{
+  const adp=CTX.startupADP||{};
+  const sorted=Object.entries(adp).sort((a,b)=>a[1].adp-b[1].adp).slice(0,80);
+  if(!sorted.length)return 'Startup ADP loading — run workflow to generate';
+  return sorted.map(([name,v],i)=>`${i+1}.${name}(slot:${v.adp_slot},n=${v.count})`).join(', ');
+})()}
+
 2026 ROOKIE ADP (from live Sleeper rookie drafts):
 ${(()=>{
   const adp = CTX.rookieADP||{};
@@ -1561,6 +1606,33 @@ TODAY: ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:
 GWTTKB PREMIUM TRADE FORMULA (top asset only gets multiplier):
 Top 10 players: x1.60 | 8000-8999: x1.45 | 6000-7999: x1.30 | 4000-5999: x1.10 | 2000-3999: x1.02 | below 2000: x1.0
 Always apply this formula and show adjusted values when analyzing any trade.
+
+DRAFT PICK VALUES (use these when evaluating any trade involving picks):
+${(()=>{
+  const picks=CTX.picks||{};
+  if(!Object.keys(picks).length)return 'Pick values not loaded';
+  const entries=Object.entries(picks)
+    .filter(([k])=>!k.startsWith('2024')&&!k.startsWith('2025'))
+    .sort(([a],[b])=>{
+      const ya=parseInt(a),yb=parseInt(b);
+      if(ya!==yb)return ya-yb;
+      const ti={'Early':0,'Mid':1,'Late':2};
+      const ta=ti[a.split(' ')[1]]??1,tb=ti[b.split(' ')[1]]??1;
+      if(ta!==tb)return ta-tb;
+      const ra=a.includes('1st')?1:a.includes('2nd')?2:a.includes('3rd')?3:4;
+      const rb=b.includes('1st')?1:b.includes('2nd')?2:b.includes('3rd')?3:4;
+      return ra-rb;
+    });
+  return entries.map(([name,val])=>{
+    const v=Array.isArray(val.sf)?val.sf[val.sf.length-1]:(val.value||val.sf||0);
+    return name+'='+v;
+  }).join(' | ');
+})()}
+
+PICK TIERS in ${CTX.allTeams?.length||10}-team league: Early=slots 1-${Math.ceil((CTX.allTeams?.length||10)*0.3)} | Mid=slots ${Math.ceil((CTX.allTeams?.length||10)*0.3)+1}-${Math.ceil((CTX.allTeams?.length||10)*0.7)} | Late=slots ${Math.ceil((CTX.allTeams?.length||10)*0.7)+1}-${CTX.allTeams?.length||10}
+2026 picks: EXACT SLOT KNOWN from draft order above — always use exact slot, cross-ref startup ADP to project which player that slot gets
+2027+ picks: use Early/Mid/Late tiers — slot determined by final standings
+2024/2025 picks: COMPLETED — those are now real players, reference for trade history only
 
 HOW TO ANSWER:
 TRADES: Apply premium formula. State winner definitively. Explain with data. Give the counter-offer angle.
