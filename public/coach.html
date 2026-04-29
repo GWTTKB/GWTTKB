@@ -466,13 +466,14 @@ async function loadAllContext(){
         CTX.allPicks[team.roster_id] = CTX.allPicks[team.roster_id] || [];
         // Natural picks for upcoming seasons
         for (const season of [2026, 2027, 2028]) {
-          for (const round of [1, 2, 3, 4, 5]) {
+          for (const round of [1, 2, 3, 4]) { // cap at 4 rounds (standard)
+            const rdLabel=round===1?'1st':round===2?'2nd':round===3?'3rd':'4th';
             CTX.allPicks[team.roster_id].push({
               season, round,
               original_roster_id: team.roster_id,
               current_roster_id: team.roster_id,
               is_traded: false,
-              label: `${season} ${round===1?'1st':round===2?'2nd':round===3?'3rd':round===4?'4th':'5th'} (own)`
+              label: `${season} ${rdLabel} (own)`
             });
           }
         }
@@ -505,7 +506,7 @@ async function loadAllContext(){
           original_owner: origTeam?.username || '?',
           current_roster_id: curRid,
           is_traded: true,
-          label: `${season} ${round===1?'1st':round===2?'2nd':round===3?'3rd':round===4?'4th':'5th'} (${origTeam?.username||'?'})`
+          label: `${season} ${round===1?'1st':round===2?'2nd':round===3?'3rd':'4th'} (${origTeam?.username||'?'})`
         });
       }
       
@@ -563,7 +564,39 @@ async function loadAllContext(){
                   value:CTX.isSF?(CTX.sfVals[id]||0):(CTX.qbVals[id]||0)
                 })).filter(p=>['QB','RB','WR','TE'].includes(p.pos)&&p.name!==p.id)
                   .sort((a,b)=>b.value-a.value);
-                profile.rosters.push({league:lg.name,players:players.slice(0,8)});
+                // Load traded picks for this league too
+                try{
+                  const lgTradedPicks=await gFetch(`${API_URL}/league/${lg.league_id}/traded_picks`).catch(()=>[]);
+                  const lgRosters2=await gFetch(`${API_URL}/league/${lg.league_id}/rosters`).catch(()=>[]);
+                  const oppLgRoster=(lgRosters2||[]).find(r=>r.owner_id===opp.owner_id);
+                  if(oppLgRoster){
+                    const lgPicks=[];
+                    for(const season of [2026,2027,2028]){
+                      for(const round of [1,2,3,4]){
+                        lgPicks.push({season,round,
+                          label:season+' '+(round===1?'1st':round===2?'2nd':round===3?'3rd':'4th')+' (own)',
+                          is_traded:false});
+                      }
+                    }
+                    for(const tp of (lgTradedPicks||[])){
+                      const s=parseInt(tp.season);
+                      if(s<2026)continue;
+                      const r2=parseInt(tp.round);
+                      if(tp.owner_id===oppLgRoster.roster_id&&tp.roster_id!==oppLgRoster.roster_id){
+                        lgPicks.push({season:s,round:r2,
+                          label:s+' '+(r2===1?'1st':r2===2?'2nd':r2===3?'3rd':'4th')+' (traded in)',
+                          is_traded:true});
+                      }
+                      if(tp.roster_id===oppLgRoster.roster_id&&tp.owner_id!==oppLgRoster.roster_id){
+                        const idx2=lgPicks.findIndex(p=>p.season===s&&p.round===r2&&!p.is_traded);
+                        if(idx2>=0)lgPicks.splice(idx2,1);
+                      }
+                    }
+                    if(profile.rosters.length>0){
+                      profile.rosters[profile.rosters.length-1].picks=lgPicks.sort((a,b)=>a.season-b.season||a.round-b.round);
+                    }
+                  }
+                }catch(e){}
 
                 // Track player ownership across leagues
                 for(const p of players){
@@ -1020,7 +1053,16 @@ ${(CTX.allTeams||[]).map(t=>{
 
 CROSS-LEAGUE INTEL — OTHER LEAGUES ONLY (NOT BYX Dynasty — these are separate leagues this manager plays in):
 ⚠️ Do NOT mix cross-league rosters with BYX Dynasty rosters above. Each manager's BYX roster is in ALL MANAGERS above.
-${Object.entries(CTX.crossLeague||{}).map(([un,p])=>{const rosters=(p.rosters||[]).map(r=>r.league+': '+(r.players||[]).slice(0,5).map(x=>x.name).join(',')).join(' | ');const multi=(p.fav_players||[]).filter(x=>x.leagues>1).map(x=>x.name+'('+x.leagues+'L)').join(',');const drafts=(p.draft_patterns||[]).map(d=>d.league+'('+d.status+'): '+(d.picks||[]).map(pk=>pk.slot+' '+pk.player).join(',')).join(' | ');return '@'+un+': '+rosters+(multi?' MULTI='+multi:'')+(drafts?' DRAFTS='+drafts:'');}).join('\n')||'Cross-league loading...'}
+${Object.entries(CTX.crossLeague||{}).map(([un,p])=>{
+  const rosters=(p.rosters||[]).map(r=>{
+    const picks=(r.picks||[]).map(pk=>pk.label).join(',');
+    return r.league+': '+(r.players||[]).slice(0,6).map(x=>x.name).join(',')+
+      (picks?' | PICKS: '+picks:'');
+  }).join(' || ');
+  const multi=(p.fav_players||[]).filter(x=>x.leagues>1).map(x=>x.name+'('+x.leagues+'L)').join(',');
+  const drafts=(p.draft_patterns||[]).map(d=>d.league+'('+d.status+'): '+(d.picks||[]).map(pk=>pk.slot+' '+pk.player).join(',')).join(' | ');
+  return '@'+un+': '+rosters+(multi?' | MULTI-LEAGUE: '+multi:'')+(drafts?' | ACTIVE DRAFTS: '+drafts:'');
+}).join('\n')||'Cross-league loading...'}
 
 MANAGER TENDENCIES:
 ${Object.entries(CTX.tRec||{}).map(([un,r])=>un+': '+r.trades+'trades posFlow='+JSON.stringify(r.posFlow)).join(' | ')||'Loading...'}
