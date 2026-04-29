@@ -477,92 +477,7 @@ async function loadAllContext(){
       // Also get traded picks from the league endpoint
       const tradedPicks = await gFetch(`${API_URL}/league/${CTX.league.league_id}/traded_picks`);
       
-      // Build complete pick ownership map using traded_picks + draft_order
-      CTX.tradedPicksData = tradedPicks || [];
-      CTX.pickTrades = [];
-      
-      // Get draft order from the rookie draft object (slot → roster_id mapping)
-      // leagueRookieDraftOrder is {owner_id: slot_number}
-      const draftOrder = CTX.leagueRookieDraftOrder || {};
-      // Invert to slot → team
-      const slotToTeam = {};
-      for(const [ownerId, slot] of Object.entries(draftOrder)){
-        const team = CTX.allTeams.find(t => t.owner_id === ownerId);
-        if(team) slotToTeam[parseInt(slot)] = team;
-      }
-      
-      // Build complete pick grid: for each year/round, start with natural ownership (by draft slot)
-      // then apply traded picks on top
-      const SEASONS = [2026, 2027, 2028];
-      const ROUNDS = [1,2,3,4];
-      const numTeams = CTX.allTeams.length || 10;
-      
-      // Initialize: each team owns their own picks
-      const pickOwnership = {}; // 'YYYY_R_SLOT' → {owner_team, original_team, is_traded}
-      const teamSlots = {}; // team.roster_id → their slot number
-      
-      for(const [slot, team] of Object.entries(slotToTeam)){
-        teamSlots[team.roster_id] = parseInt(slot);
-        for(const season of SEASONS){
-          for(const round of ROUNDS){
-            const key = `${season}_${round}_${slot}`;
-            pickOwnership[key] = {
-              season, round, slot: parseInt(slot),
-              owner: team,
-              original: team,
-              is_traded: false,
-              label: `${season} ${round===1?'1st':round===2?'2nd':round===3?'3rd':'4th'} (${team.username})`
-            };
-          }
-        }
-      }
-      
-      // Apply traded picks
-      for(const tp of (tradedPicks||[])){
-        const season = parseInt(tp.season);
-        if(season < 2026) continue;
-        const round = parseInt(tp.round);
-        const origTeam = CTX.allTeams.find(t => t.roster_id === tp.roster_id);
-        const curTeam = CTX.allTeams.find(t => t.roster_id === tp.owner_id);
-        if(!origTeam || !curTeam || origTeam === curTeam) continue;
-        
-        // Find this pick's slot (original owner's slot)
-        const slot = teamSlots[tp.roster_id];
-        if(!slot) continue;
-        
-        const key = `${season}_${round}_${slot}`;
-        if(pickOwnership[key]){
-          pickOwnership[key] = {
-            ...pickOwnership[key],
-            owner: curTeam,
-            is_traded: true,
-            label: `${season} ${round===1?'1st':round===2?'2nd':round===3?'3rd':'4th'} (${origTeam.username}→${curTeam.username})`
-          };
-        }
-        
-        CTX.pickTrades.push({
-          season, round, slot,
-          from: origTeam.username,
-          to: curTeam.username,
-          label: `${season} ${round===1?'1st':round===2?'2nd':round===3?'3rd':'4th'}`
-        });
-      }
-      
-      CTX.pickOwnership = pickOwnership;
-      
-      // Update each team's picks array with the complete resolved picks
-      for(const team of CTX.allTeams){
-        team.picks = Object.values(pickOwnership)
-          .filter(p => p.owner.roster_id === team.roster_id)
-          .sort((a,b) => a.season-b.season || a.round-b.round || a.slot-b.slot);
-        if(team.isMe){
-          CTX.myPicks = team.picks;
-          console.log('My picks (resolved from draft order + traded_picks):',
-            CTX.myPicks.map(p=>`${p.season}.R${p.round}.S${p.slot}${p.is_traded?' (traded)':''}`).join(', ')||'none');
-        }
-      }
-      
-      console.log('Pick trades loaded:', CTX.pickTrades.length, '| Pick grid:', Object.keys(pickOwnership).length, 'picks');
+      // pickOwnership built after draft order loads (see below)
       
     } catch(e) { console.warn('Pick loading error:', e); }
 
@@ -616,16 +531,21 @@ async function loadAllContext(){
                       gFetch(`${API_URL}/league/${lg.league_id}/transactions/${w}`).catch(()=>[])
                     )
                   )).flat().filter(Boolean);
+                  // CRITICAL: Only show trades where THIS manager was involved
                   lgRecentTrades=lgTxAll
-                    .filter(tx=>tx.type==='trade')
+                    .filter(tx=>tx.type==='trade' && 
+                      tx.roster_ids?.includes(oppLgRoster?.roster_id))
                     .slice(0,15)
                     .map(tx=>{
+                      const txDate=tx.created?new Date(tx.created).toISOString().split('T')[0]:'unknown';
                       const sides=(tx.roster_ids||[]).map(rid=>{
                         const adds=Object.keys(tx.adds||{}).filter(id=>tx.adds[id]===rid).map(id=>CTX.playerNames[id]||id);
-                        const picks=(tx.draft_picks||[]).filter(pk=>pk.owner_id===rid).map(pk=>pk.season+' R'+pk.round);
-                        return{gets:[...adds,...picks]};
+                        const picks=(tx.draft_picks||[]).filter(pk=>pk.owner_id===rid)
+                          .map(pk=>pk.season+' '+pk.round+'.??');
+                        return{roster_id:rid,gets:[...adds,...picks]};
                       });
-                      return{week:tx.leg||0,sides};
+                      // Label which side is our target manager
+                      return{date:txDate,week:tx.leg||0,sides};
                     });
                 }catch(e){}
 
@@ -867,6 +787,93 @@ async function loadAllContext(){
         const myTeam2=CTX.allTeams.find(t=>t.isMe);
         CTX.myDraftSlot=draftInfo?.draft_order?.[myTeam2?.owner_id]||null;
         CTX.leagueRookieDraftOrder=draftInfo?.draft_order||{};
+
+            // Build complete pick ownership map using traded_picks + draft_order
+      CTX.tradedPicksData = tradedPicks || [];
+      CTX.pickTrades = [];
+      
+      // Get draft order from the rookie draft object (slot → roster_id mapping)
+      // leagueRookieDraftOrder is {owner_id: slot_number}
+      const draftOrder = CTX.leagueRookieDraftOrder || {};
+      // Invert to slot → team
+      const slotToTeam = {};
+      for(const [ownerId, slot] of Object.entries(draftOrder)){
+        const team = CTX.allTeams.find(t => t.owner_id === ownerId);
+        if(team) slotToTeam[parseInt(slot)] = team;
+      }
+      
+      // Build complete pick grid: for each year/round, start with natural ownership (by draft slot)
+      // then apply traded picks on top
+      const SEASONS = [2026, 2027, 2028];
+      const ROUNDS = [1,2,3,4];
+      const numTeams = CTX.allTeams.length || 10;
+      
+      // Initialize: each team owns their own picks
+      const pickOwnership = {}; // 'YYYY_R_SLOT' → {owner_team, original_team, is_traded}
+      const teamSlots = {}; // team.roster_id → their slot number
+      
+      for(const [slot, team] of Object.entries(slotToTeam)){
+        teamSlots[team.roster_id] = parseInt(slot);
+        for(const season of SEASONS){
+          for(const round of ROUNDS){
+            const key = `${season}_${round}_${slot}`;
+            pickOwnership[key] = {
+              season, round, slot: parseInt(slot),
+              owner: team,
+              original: team,
+              is_traded: false,
+              label: `${season} ${round===1?'1st':round===2?'2nd':round===3?'3rd':'4th'} (${team.username})`
+            };
+          }
+        }
+      }
+      
+      // Apply traded picks
+      for(const tp of (tradedPicks||[])){
+        const season = parseInt(tp.season);
+        if(season < 2026) continue;
+        const round = parseInt(tp.round);
+        const origTeam = CTX.allTeams.find(t => t.roster_id === tp.roster_id);
+        const curTeam = CTX.allTeams.find(t => t.roster_id === tp.owner_id);
+        if(!origTeam || !curTeam || origTeam === curTeam) continue;
+        
+        // Find this pick's slot (original owner's slot)
+        const slot = teamSlots[tp.roster_id];
+        if(!slot) continue;
+        
+        const key = `${season}_${round}_${slot}`;
+        if(pickOwnership[key]){
+          pickOwnership[key] = {
+            ...pickOwnership[key],
+            owner: curTeam,
+            is_traded: true,
+            label: `${season} ${round===1?'1st':round===2?'2nd':round===3?'3rd':'4th'} (${origTeam.username}→${curTeam.username})`
+          };
+        }
+        
+        CTX.pickTrades.push({
+          season, round, slot,
+          from: origTeam.username,
+          to: curTeam.username,
+          label: `${season} ${round===1?'1st':round===2?'2nd':round===3?'3rd':'4th'}`
+        });
+      }
+      
+      CTX.pickOwnership = pickOwnership;
+      
+      // Update each team's picks array with the complete resolved picks
+      for(const team of CTX.allTeams){
+        team.picks = Object.values(pickOwnership)
+          .filter(p => p.owner.roster_id === team.roster_id)
+          .sort((a,b) => a.season-b.season || a.round-b.round || a.slot-b.slot);
+        if(team.isMe){
+          CTX.myPicks = team.picks;
+          console.log('My picks (resolved from draft order + traded_picks):',
+            CTX.myPicks.map(p=>`${p.season}.R${p.round}.S${p.slot}${p.is_traded?' (traded)':''}`).join(', ')||'none');
+        }
+      }
+      
+      console.log('Pick trades loaded:', CTX.pickTrades.length, '| Pick grid:', Object.keys(pickOwnership).length, 'picks');
         
         const completedPicks=(draftPicks||[]).filter(pk=>pk.player_id);
         CTX.leagueRookieDraft={
@@ -963,7 +970,8 @@ async function loadAllContext(){
             name:CTX.playerNames[id]||id,
             pos:CTX.playerPos[id]||'?'
           }));
-          return{adds,drops,week:tx.leg};
+          const txDate=tx.created?new Date(tx.created).toISOString().split('T')[0]:'unknown';
+          return{adds,drops,week:tx.leg,date:txDate,type:tx.type};
         });
       console.log('League transactions loaded:', allTx.length);
     }catch(e){ console.warn('Transactions error:',e); }
@@ -1452,9 +1460,11 @@ CROSS-LEAGUE INTEL — OTHER LEAGUES ONLY (NOT BYX Dynasty — these are separat
 ${Object.entries(CTX.crossLeague||{}).map(([un,p])=>{
   const rosters=(p.rosters||[]).map(r=>{
     const picks=(r.picks||[]).map(pk=>pk.label).join(',');
-    const trades=(r.trades||[]).slice(0,5).map(t=>
-      'WK'+t.week+': '+t.sides.map(s=>s.gets.slice(0,3).join('+')).join(' / ')
-    ).join(' | ');
+    const trades=(r.trades||[]).slice(0,8).map(t=>{
+      const dateStr=t.date||('WK'+t.week);
+      const sides=t.sides.map(s=>s.gets.slice(0,4).join('+')).join(' / ');
+      return dateStr+': '+sides;
+    }).join(' | ');
     return r.league+': '+(r.players||[]).map(x=>x.name).join(',')+
       (picks?' PICKS:'+picks:'')+
       (trades?' TRADES:'+trades:'');
@@ -1468,7 +1478,16 @@ MANAGER TENDENCIES:
 ${Object.entries(CTX.tRec||{}).map(([un,r])=>un+': '+r.trades+'trades posFlow='+JSON.stringify(r.posFlow)).join(' | ')||'Loading...'}
 
 RECENT TRADES (last 12):
-${(CTX.allTrades||[]).slice(-12).map(t=>{const sides=(t.roster_ids||[]).map(rid=>{const team=(CTX.allTeams||[]).find(tm=>tm.roster_id===rid);const adds=Object.entries(t.adds||{}).filter(([,r])=>r===rid).map(([id])=>CTX.playerNames[id]||id);const picks=(t.draft_picks||[]).filter(pk=>pk.owner_id===rid).map(pk=>pk.season+' '+pk.round+'rd');return(team?.username||'?')+' got ['+ [...adds,...picks].join(',')+']';});return 'WK'+(t.week||'?')+' '+sides.join(' / ');}).join(' | ')||'No trades'}
+${(CTX.allTrades||[]).slice(-20).map(t=>{
+  const date=t.date||(t.week?'WK'+t.week:'?');
+  const sides=(t.roster_ids||[]).map(rid=>{
+    const team=(CTX.allTeams||[]).find(tm=>tm.roster_id===rid);
+    const adds=Object.entries(t.adds||{}).filter(([,r])=>r===rid).map(([id])=>CTX.playerNames[id]||id);
+    const picks=(t.draft_picks||[]).filter(pk=>pk.owner_id===rid).map(pk=>pk.season+' '+pk.round+'rd');
+    return(team?.username||'?')+' got ['+ [...adds,...picks].join(',')+']';
+  });
+  return date+' '+sides.join(' / ');
+}).join(' | ')||'No trades'}
 
 DYNASTY MARKET INTELLIGENCE (aggregated from ${CTX.marketIntel?.leagues_sampled||0} Sleeper leagues, ${CTX.marketIntel?.trades_analyzed||0} trades):
 MOST TRADED (high buy/sell activity = market is moving on these):
