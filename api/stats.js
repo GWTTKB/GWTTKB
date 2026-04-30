@@ -1,18 +1,25 @@
 const BASE = 'https://github.com/nflverse/nflverse-data/releases/download';
 
 const FILES = {
-  player_stats_week:   (season) => `${BASE}/player_stats/player_stats_${season}.csv`,
-  player_stats_reg:    (season) => `${BASE}/player_stats/player_stats_${season}.csv`,
-  player_stats_post:   (season) => `${BASE}/stats_player/stats_player_post_${season}.csv`,
+  // Player stats — nflverse release: stats_player
+  player_stats_week:   (season) => `${BASE}/stats_player/player_stats_offense_${season}.csv`,
+  player_stats_reg:    (season) => `${BASE}/stats_player/player_stats_offense_${season}.csv`,
+  player_stats_post:   (season) => `${BASE}/stats_player/player_stats_offense_post_${season}.csv`,
+  // Snap counts
   snap_counts:         (season) => `${BASE}/snap_counts/snap_counts_${season}.csv`,
+  // Injuries
   injuries:            (season) => `${BASE}/injuries/injuries_${season}.csv`,
+  // Depth charts
   depth_charts:        (season) => `${BASE}/depth_charts/depth_charts_${season}.csv`,
+  // PFR advanced stats
   pfr_pass:            (season) => `${BASE}/pfr_advstats/advstats_season_pass_${season}.csv`,
   pfr_rush:            (season) => `${BASE}/pfr_advstats/advstats_season_rush_${season}.csv`,
   pfr_rec:             (season) => `${BASE}/pfr_advstats/advstats_season_rec_${season}.csv`,
+  // NGS stats
   ngs_pass:            (season) => `${BASE}/nextgen_stats/nextgen_stats_passing_${season}.csv`,
   ngs_rush:            (season) => `${BASE}/nextgen_stats/nextgen_stats_rushing_${season}.csv`,
   ngs_rec:             (season) => `${BASE}/nextgen_stats/nextgen_stats_receiving_${season}.csv`,
+  // Players
   players:             () => `${BASE}/players/players.csv`,
 };
 
