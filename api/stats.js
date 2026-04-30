@@ -1,10 +1,10 @@
 const BASE = 'https://github.com/nflverse/nflverse-data/releases/download';
 
 const FILES = {
-  // Player stats — nflverse release: stats_player
-  player_stats_week:   (season) => `${BASE}/stats_player/player_stats_offense_${season}.csv`,
-  player_stats_reg:    (season) => `${BASE}/stats_player/player_stats_offense_${season}.csv`,
-  player_stats_post:   (season) => `${BASE}/stats_player/player_stats_offense_post_${season}.csv`,
+  // Player stats — nflverse release: stats_player (combined offense/defense/kicking as of 2024+)
+  player_stats_week:   (season) => `${BASE}/stats_player/player_stats_${season}.csv`,
+  player_stats_reg:    (season) => `${BASE}/stats_player/player_stats_${season}.csv`,
+  player_stats_post:   (season) => `${BASE}/stats_player/player_stats_post_${season}.csv`,
   // Snap counts
   snap_counts:         (season) => `${BASE}/snap_counts/snap_counts_${season}.csv`,
   // Injuries
