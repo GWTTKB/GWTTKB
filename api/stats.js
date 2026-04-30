@@ -1,10 +1,16 @@
 const BASE = 'https://github.com/nflverse/nflverse-data/releases/download';
 
 const FILES = {
-  // Player stats — nflverse release: player_stats
-  player_stats_week:   (season) => `${BASE}/player_stats/player_stats_${season}.csv`,
-  player_stats_reg:    (season) => `${BASE}/player_stats/player_stats_${season}.csv`,
-  player_stats_post:   (season) => `${BASE}/player_stats/player_stats_post_${season}.csv`,
+  // Player stats — try both URL formats (nflverse changed format for 2025+)
+  player_stats_week:   (season) => parseInt(season) >= 2025
+    ? `${BASE}/stats_player/stats_player_week_${season}.csv`
+    : `${BASE}/player_stats/player_stats_${season}.csv`,
+  player_stats_reg:    (season) => parseInt(season) >= 2025
+    ? `${BASE}/stats_player/stats_player_week_${season}.csv`
+    : `${BASE}/player_stats/player_stats_${season}.csv`,
+  player_stats_post:   (season) => parseInt(season) >= 2025
+    ? `${BASE}/stats_player/stats_player_week_post_${season}.csv`
+    : `${BASE}/player_stats/player_stats_post_${season}.csv`,
   // Snap counts
   snap_counts:         (season) => `${BASE}/snap_counts/snap_counts_${season}.csv`,
   // Injuries
