@@ -78,32 +78,16 @@ export default async function handler(req, res) {
 
   try {
     const url = FILES[file](season);
-    
-    // Try primary URL, then fallback patterns
-    const urlsToTry = [
-      url,
-      // Fallback: old player_stats release name
-      url.replace('/stats_player/', '/player_stats/'),
-      // Fallback: offense-specific
-      url.replace(`player_stats_${season}`, `player_stats_offense_${season}`),
-    ];
-    
-    let response = null;
-    let triedUrl = url;
-    for (const tryUrl of urlsToTry) {
-      response = await fetch(tryUrl, {
-        headers: { 'User-Agent': 'GWTTKB/1.0' },
-        redirect: 'follow'
-      });
-      triedUrl = tryUrl;
-      if (response.ok) break;
-    }
+    const response = await fetch(url, {
+      headers: { 'User-Agent': 'GWTTKB/1.0' },
+      redirect: 'follow'
+    });
 
     if (!response.ok) {
       return res.status(404).json({
         error: `File not found: ${file} ${season}`,
-        tried_url: triedUrl,
-        status: response.status,
+        url_tried: url,
+        nflverse_status: response.status,
         url
       });
     }
