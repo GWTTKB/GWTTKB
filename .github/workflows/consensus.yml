@@ -19,7 +19,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 75
+    timeout-minutes: 90
 
     steps:
       - name: Checkout repo
@@ -50,8 +50,10 @@ jobs:
       - name: Build depth charts + target share redistribution
         run: node scripts/build-depth-charts.mjs
 
-      - name: Build college stats database + draft history
+      - name: Build college stats + draft capital + combine (NFLverse + CFBD API)
         run: node scripts/build-college-stats.mjs
+        env:
+          CFBD_API_KEY: ${{ secrets.CFBD_API_KEY }}
 
       - name: Build coaching staff history (Wikipedia)
         run: node scripts/build-coaching-staff.mjs
