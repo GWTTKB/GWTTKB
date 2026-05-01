@@ -19,7 +19,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 75
 
     steps:
       - name: Checkout repo
@@ -41,8 +41,11 @@ jobs:
         # run: node scripts/build-consensus.mjs
         run: echo "Consensus build paused - manually maintained"
 
-      - name: Build NFL stats + contracts (standalone)
+      - name: Build NFL stats (season + weekly data)
         run: node scripts/build-nfl-stats.mjs
+
+      - name: Build analytics engine (correlations + comps + trajectories)
+        run: node scripts/build-analytics.mjs
 
       - name: Build depth charts + target share redistribution
         run: node scripts/build-depth-charts.mjs
