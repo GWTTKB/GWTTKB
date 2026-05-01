@@ -48,17 +48,24 @@ async function fetchNFL(url){
 async function fetchCFBD(path, params={}){
   const url = new URL(`${CFBD}${path}`);
   for(const[k,v]of Object.entries(params)) url.searchParams.set(k,v);
-  const r = await fetch(url.toString(), {
-    headers:{
-      'Authorization': `Bearer ${CFBD_KEY}`,
-      'Accept': 'application/json'
+  try{
+    const r = await fetch(url.toString(), {
+      headers:{
+        'Authorization': `Bearer ${CFBD_KEY}`,
+        'Accept': 'application/json'
+      }
+    });
+    if(!r.ok){
+      if(r.status===429){ await sleep(2000); return null; }
+      // Log first few failures
+      if(Math.random()<0.05) console.warn(`  CFBD ${r.status}: ${url.toString().slice(0,100)}`);
+      return null;
     }
-  });
-  if(!r.ok){
-    if(r.status===429){ await sleep(2000); return null; }
+    return r.json();
+  }catch(e){
+    if(Math.random()<0.05) console.warn(`  CFBD error: ${e.message} — ${url.toString().slice(0,80)}`);
     return null;
   }
-  return r.json();
 }
 
 function norm(s){ return (s||'').toLowerCase().replace(/[^a-z]/g,''); }
@@ -67,6 +74,15 @@ function num(v){ const n=parseFloat(v); return isNaN(n)?null:Math.round(n*100)/1
 async function build(){
   console.log('=== Building College Stats + Draft Capital + Combine ===');
   fs.mkdirSync('public/data',{recursive:true});
+
+  // Test CFBD API connection first
+  console.log(`\nCFBD key: ${CFBD_KEY?CFBD_KEY.slice(0,10)+'...':'NOT SET'}`);
+  const testRes = await fetchCFBD('/stats/player/season',{year:2024,school:'Alabama'});
+  if(!testRes){
+    console.error('CFBD API test FAILED — check key and connectivity');
+  } else {
+    console.log(`CFBD API OK — ${Array.isArray(testRes)?testRes.length:0} rows for Alabama 2024`);
+  }
 
   // ── STEP 1: NFLverse Draft Picks (all rounds 1-7, 2020-2026) ──
   console.log('\n[1] Fetching NFLverse draft picks...');
