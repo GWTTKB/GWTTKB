@@ -1,311 +1,376 @@
-// ── GWTTKB NFL Stats + Contracts Builder ──
-// Standalone script - runs independently of consensus builder
-// Writes: public/data/nfl-stats.json, public/data/nfl-contracts.json
-// node scripts/build-nfl-stats.mjs
+// ── GWTTKB NFL Stats Builder ──
+// Pulls NFLverse season + weekly stats, NGS, PFR advanced metrics
+// Preserves weekly data for correlation analysis
+// Writes: public/data/nfl-stats.json
 
 import fs from 'fs';
-import zlib from 'zlib';
-import { promisify } from 'util';
 
-const gunzip = promisify(zlib.gunzip);
 const BASE = 'https://github.com/nflverse/nflverse-data/releases/download';
-const HEADERS = { 'User-Agent': 'GWTTKB/1.0' };
-const YEARS = [2020, 2021, 2022, 2023, 2024, 2025];
 const SKILL = new Set(['QB','RB','WR','TE']);
+const YEARS = [2020,2021,2022,2023,2024,2025];
+const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-function parseCSV(text) {
-  const lines = text.split('\n').filter(l => l.trim());
-  if (!lines.length) return [];
-  const headers = lines[0].split(',').map(h => h.replace(/"/g,'').trim());
-  return lines.slice(1).map(line => {
-    const cols = [];
-    let cur = '', inQ = false;
-    for (const c of line) {
-      if (c === '"') { inQ = !inQ; }
-      else if (c === ',' && !inQ) { cols.push(cur); cur = ''; }
-      else cur += c;
+function num(v){ const n=parseFloat(v); return isNaN(n)?0:Math.round(n); }
+function dec(v){ const n=parseFloat(v); return isNaN(n)?0:Math.round(n*100)/100; }
+function pct(v){ const n=parseFloat(v); return isNaN(n)?0:Math.round(n*1000)/10; }
+
+function parseCSV(text){
+  const lines=text.split('\n').filter(l=>l.trim());
+  if(!lines.length)return [];
+  const headers=lines[0].split(',').map(h=>h.replace(/"/g,'').trim());
+  return lines.slice(1).map(line=>{
+    const cols=[]; let cur='',inQ=false;
+    for(const c of line){
+      if(c==='"'){inQ=!inQ;}
+      else if(c===','&&!inQ){cols.push(cur);cur='';}
+      else cur+=c;
     }
     cols.push(cur);
-    const row = {};
-    headers.forEach((h, i) => row[h] = (cols[i] || '').replace(/"/g,'').trim());
+    const row={};
+    headers.forEach((h,i)=>row[h]=(cols[i]||'').replace(/"/g,'').trim());
     return row;
   });
 }
 
-function num(v) { const n = parseInt(v); return isNaN(n) ? null : n; }
-function dec(v) { const n = parseFloat(v); return isNaN(n) ? null : Math.round(n * 100) / 100; }
-function pct(v) { const n = parseFloat(v); return isNaN(n) ? null : Math.round(n * 1000) / 10; }
-function pct2(v) {
-  const n = parseFloat(v);
-  if (isNaN(n)) return null;
-  return n > 1 ? Math.round(n * 10) / 10 : Math.round(n * 1000) / 10;
-}
-function normName(s) { return (s||'').toLowerCase().replace(/[^a-z]/g,''); }
-
-async function fetchCSV(url) {
-  const res = await fetch(url, { redirect: 'follow', headers: HEADERS });
-  if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
-  return res.text();
+async function fetchCSV(url){
+  const r=await fetch(url,{headers:{'User-Agent':'GWTTKB/1.0'},redirect:'follow'});
+  if(!r.ok)throw new Error(`HTTP ${r.status}: ${url}`);
+  return parseCSV(await r.text());
 }
 
-async function fetchGzipCSV(url) {
-  const res = await fetch(url, { redirect: 'follow', headers: HEADERS });
-  if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
-  const buf = Buffer.from(await res.arrayBuffer());
-  const decompressed = await gunzip(buf);
-  return decompressed.toString('utf8');
+async function tryFetch(urls){
+  for(const url of urls){
+    try{ return await fetchCSV(url); }
+    catch(e){ continue; }
+  }
+  return null;
 }
 
-// ── NFL STATS ──
-async function buildStats() {
-  console.log('\n=== Building NFL Stats ===');
-  fs.mkdirSync('public/data', { recursive: true });
+async function buildStats(){
+  console.log('=== Building NFL Stats (Season + Weekly) ===');
+  fs.mkdirSync('public/data',{recursive:true});
 
-  const allStats = {};
+  // players[pid] = {
+  //   name, pos, seasons: {2025: {season_totals:{...}, weeks:[{week,stats},...]}},
+  //   career: {computed from all seasons}
+  // }
+  const players = {};
 
-  // Layer 1: Season stats
-  for (const yr of YEARS) {
-    try {
-      // Try new format first, fall back to old
-      let csv = null;
-      for (const url of [
-        `${BASE}/player_stats/player_stats_${yr}.csv`,
-        `${BASE}/stats_player/stats_player_week_${yr}.csv`,
-      ]) {
-        try {
-          csv = await fetchCSV(url);
-          console.log(`  ✓ Season stats ${yr} from ${url.includes('player_stats/') ? 'new' : 'old'} format`);
-          break;
-        } catch(e) { /* try next */ }
+  const getPlayer = (pid, name, pos) => {
+    if(!players[pid]) players[pid] = {
+      player_id: pid, name, pos,
+      seasons: {}, career: {}
+    };
+    if(name && !players[pid].name) players[pid].name = name;
+    return players[pid];
+  };
+
+  const getSeason = (pid, yr) => {
+    if(!players[pid]) return null;
+    if(!players[pid].seasons[yr]) players[pid].seasons[yr] = {
+      season: yr, team: '', games: 0,
+      totals: {}, weeks: []
+    };
+    return players[pid].seasons[yr];
+  };
+
+  // ── SEASON TOTALS ──
+  console.log('\n[1] Season totals...');
+  for(const yr of YEARS){
+    const rows = await tryFetch([
+      `${BASE}/player_stats/player_stats_${yr}.csv`,
+      `${BASE}/stats_player/stats_player_week_${yr}.csv`,
+    ]);
+    if(!rows){ console.log(`  ✗ ${yr}: not found`); continue; }
+
+    // If this is weekly data we need to aggregate it
+    const isWeekly = rows[0]?.week !== undefined || rows[0]?.game_id !== undefined;
+    
+    if(isWeekly){
+      // Aggregate weekly rows into season totals
+      const seasonMap = {};
+      for(const row of rows){
+        const pid = row.player_id || row.gsis_id; if(!pid) continue;
+        const pos = (row.position||row.fantasy_position||'').toUpperCase();
+        if(!SKILL.has(pos)) continue;
+        if(!seasonMap[pid]){
+          seasonMap[pid] = {
+            player_id:pid,
+            player_name:row.player_display_name||row.player_name||'',
+            pos, season:yr, team:row.recent_team||row.team||'',
+            games:0, passing_yards:0, passing_tds:0, interceptions:0,
+            completions:0, attempts:0, passing_epa:0,
+            carries:0, rushing_yards:0, rushing_tds:0, rushing_epa:0,
+            targets:0, receptions:0, receiving_yards:0, receiving_tds:0,
+            receiving_epa:0, fantasy_points_ppr:0,
+            target_share_sum:0, air_yards_share_sum:0, wopr_sum:0, week_count:0
+          };
+        }
+        const s = seasonMap[pid];
+        s.games++;
+        s.passing_yards += num(row.passing_yards);
+        s.passing_tds += num(row.passing_tds);
+        s.interceptions += num(row.interceptions);
+        s.completions += num(row.completions);
+        s.attempts += num(row.attempts);
+        s.passing_epa += dec(row.passing_epa);
+        s.carries += num(row.carries);
+        s.rushing_yards += num(row.rushing_yards);
+        s.rushing_tds += num(row.rushing_tds);
+        s.rushing_epa += dec(row.rushing_epa);
+        s.targets += num(row.targets);
+        s.receptions += num(row.receptions);
+        s.receiving_yards += num(row.receiving_yards);
+        s.receiving_tds += num(row.receiving_tds);
+        s.receiving_epa += dec(row.receiving_epa);
+        s.fantasy_points_ppr += dec(row.fantasy_points_ppr);
+        if(parseFloat(row.target_share)>0){
+          s.target_share_sum += parseFloat(row.target_share);
+          s.air_yards_share_sum += parseFloat(row.air_yards_share||0);
+          s.wopr_sum += parseFloat(row.wopr||0);
+          s.week_count++;
+        }
       }
-      if (!csv) { console.warn(`  ✗ Season stats ${yr}: not found`); continue; }
-
-      const rows = parseCSV(csv);
-      let added = 0;
-      for (const row of rows) {
-        const pid = row.player_id || row.gsis_id;
-        if (!pid) continue;
-        const pos = (row.position || row.fantasy_position || '').toUpperCase();
-        if (!SKILL.has(pos)) continue;
-
-        const key = `${pid}_${yr}`;
-        allStats[key] = {
-          player_id: pid,
-          player_name: row.player_display_name || row.player_name || '',
-          pos, season: yr,
-          team: row.recent_team || row.team || '',
-          games: num(row.games),
-          // Passing
-          passing_yards: num(row.passing_yards),
-          passing_tds: num(row.passing_tds),
-          interceptions: num(row.interceptions),
-          completions: num(row.completions),
-          attempts: num(row.attempts),
-          passing_epa: dec(row.passing_epa),
-          // Rushing
-          carries: num(row.carries),
-          rushing_yards: num(row.rushing_yards),
-          rushing_tds: num(row.rushing_tds),
-          rushing_epa: dec(row.rushing_epa),
-          // Receiving
-          targets: num(row.targets),
-          receptions: num(row.receptions),
-          receiving_yards: num(row.receiving_yards),
-          receiving_tds: num(row.receiving_tds),
-          receiving_epa: dec(row.receiving_epa),
-          target_share: pct2(row.target_share),
-          air_yards_share: pct2(row.air_yards_share),
-          wopr: dec(row.wopr),
-          racr: dec(row.racr),
-          fantasy_points_ppr: dec(row.fantasy_points_ppr),
+      // Store aggregated season totals
+      for(const [pid, s] of Object.entries(seasonMap)){
+        const p = getPlayer(pid, s.player_name, s.pos);
+        const season = getSeason(pid, yr);
+        season.team = s.team;
+        season.games = s.games;
+        season.totals = {
+          passing_yards:s.passing_yards, passing_tds:s.passing_tds,
+          interceptions:s.interceptions, completions:s.completions,
+          attempts:s.attempts, passing_epa:dec(s.passing_epa),
+          carries:s.carries, rushing_yards:s.rushing_yards,
+          rushing_tds:s.rushing_tds, rushing_epa:dec(s.rushing_epa),
+          targets:s.targets, receptions:s.receptions,
+          receiving_yards:s.receiving_yards, receiving_tds:s.receiving_tds,
+          receiving_epa:dec(s.receiving_epa),
+          fantasy_points_ppr:dec(s.fantasy_points_ppr),
+          fantasy_ppg:s.games>0?dec(s.fantasy_points_ppr/s.games):0,
+          target_share:s.week_count>0?pct(s.target_share_sum/s.week_count):0,
+          air_yards_share:s.week_count>0?pct(s.air_yards_share_sum/s.week_count):0,
+          wopr:s.week_count>0?dec(s.wopr_sum/s.week_count):0,
         };
-        if (allStats[key].games > 0 && allStats[key].fantasy_points_ppr) {
-          allStats[key].fantasy_ppg = dec(allStats[key].fantasy_points_ppr / allStats[key].games);
-        }
-        added++;
       }
-      console.log(`    ${added} skill players`);
-    } catch(e) { console.warn(`  ✗ Season stats ${yr}:`, e.message); }
+    } else {
+      // Season-level data
+      for(const row of rows){
+        const pid = row.player_id||row.gsis_id; if(!pid) continue;
+        const pos = (row.position||row.fantasy_position||'').toUpperCase();
+        if(!SKILL.has(pos)) continue;
+        const p = getPlayer(pid, row.player_display_name||row.player_name||'', pos);
+        const season = getSeason(pid, yr);
+        season.team = row.recent_team||row.team||'';
+        season.games = num(row.games);
+        season.totals = {
+          passing_yards:num(row.passing_yards), passing_tds:num(row.passing_tds),
+          interceptions:num(row.interceptions), completions:num(row.completions),
+          attempts:num(row.attempts), passing_epa:dec(row.passing_epa),
+          carries:num(row.carries), rushing_yards:num(row.rushing_yards),
+          rushing_tds:num(row.rushing_tds), rushing_epa:dec(row.rushing_epa),
+          targets:num(row.targets), receptions:num(row.receptions),
+          receiving_yards:num(row.receiving_yards), receiving_tds:num(row.receiving_tds),
+          receiving_epa:dec(row.receiving_epa),
+          fantasy_points_ppr:dec(row.fantasy_points_ppr),
+          fantasy_ppg:num(row.games)>0?dec(parseFloat(row.fantasy_points_ppr)/num(row.games)):0,
+          target_share:pct(row.target_share),
+          air_yards_share:pct(row.air_yards_share),
+          wopr:dec(row.wopr), racr:dec(row.racr),
+        };
+      }
+    }
+    console.log(`  ✓ ${yr}: ${Object.keys(players).length} players`);
+    await sleep(300);
   }
 
-  // Layer 2: NGS stats
-  for (const statType of ['passing', 'rushing', 'receiving']) {
-    for (const yr of YEARS) {
-      try {
-        const url = `${BASE}/nextgen_stats/nextgen_stats_${statType}_${yr}.csv`;
-        const csv = await fetchCSV(url);
-        const rows = parseCSV(csv);
-        let matched = 0;
-        for (const row of rows) {
-          if (row.week !== '0' && row.week !== '') continue;
-          const pid = row.player_gsis_id || row.player_id;
-          if (!pid) continue;
-          const key = `${pid}_${yr}`;
-          if (!allStats[key]) continue;
-          if (statType === 'passing') {
-            allStats[key].avg_time_to_throw = dec(row.avg_time_to_throw);
-            allStats[key].aggressiveness = pct2(row.aggressiveness);
-            allStats[key].under_pressure_pct = pct2(row.under_pressure_pct);
-            allStats[key].cpoe = dec(row.completion_percentage_above_expectation);
-          } else if (statType === 'rushing') {
-            allStats[key].rush_yards_oe_att = dec(row.rush_yards_over_expected_per_att);
-            allStats[key].rush_pct_oe = pct2(row.rush_pct_over_expected);
-            allStats[key].stacked_box_rate = pct2(row.percent_attempts_gte_eight_defenders);
-          } else {
-            allStats[key].avg_separation = dec(row.avg_separation);
-            allStats[key].avg_cushion = dec(row.avg_cushion);
-            allStats[key].avg_yac_oe = dec(row.avg_yac_above_expectation);
-          }
-          matched++;
+  // ── WEEKLY DATA ──
+  console.log('\n[2] Weekly data...');
+  for(const yr of YEARS){
+    const rows = await tryFetch([
+      `${BASE}/stats_player/stats_player_week_${yr}.csv`,
+      `${BASE}/player_stats/player_stats_${yr}.csv`,
+    ]);
+    if(!rows){ console.log(`  ✗ ${yr} weekly: not found`); continue; }
+
+    // Check if this is actually weekly (has week column)
+    const hasWeek = rows.length > 0 && (rows[0].week !== undefined || rows[0].season_type !== undefined);
+    if(!hasWeek){ console.log(`  ~ ${yr}: no week column, skipping weekly`); continue; }
+
+    let weekCount = 0;
+    for(const row of rows){
+      const pid = row.player_id||row.gsis_id; if(!pid) continue;
+      if(!players[pid]) continue; // only players we already have season data for
+      const week = parseInt(row.week||0); if(!week) continue;
+      const seasonType = row.season_type||'REG';
+      if(seasonType !== 'REG') continue; // regular season only
+
+      const season = getSeason(pid, yr);
+      if(!season) continue;
+
+      season.weeks.push({
+        week,
+        team: row.recent_team||row.team||'',
+        // Passing
+        passing_yards: num(row.passing_yards),
+        passing_tds: num(row.passing_tds),
+        interceptions: num(row.interceptions),
+        attempts: num(row.attempts),
+        completions: num(row.completions),
+        passing_epa: dec(row.passing_epa),
+        // Rushing
+        carries: num(row.carries),
+        rushing_yards: num(row.rushing_yards),
+        rushing_tds: num(row.rushing_tds),
+        rushing_epa: dec(row.rushing_epa),
+        // Receiving
+        targets: num(row.targets),
+        receptions: num(row.receptions),
+        receiving_yards: num(row.receiving_yards),
+        receiving_tds: num(row.receiving_tds),
+        receiving_epa: dec(row.receiving_epa),
+        target_share: pct(row.target_share),
+        air_yards_share: pct(row.air_yards_share),
+        wopr: dec(row.wopr),
+        fantasy_points_ppr: dec(row.fantasy_points_ppr),
+      });
+      weekCount++;
+    }
+    // Sort weeks
+    for(const p of Object.values(players)){
+      if(p.seasons[yr]?.weeks){
+        p.seasons[yr].weeks.sort((a,b)=>a.week-b.week);
+      }
+    }
+    console.log(`  ✓ ${yr}: ${weekCount} weekly rows stored`);
+    await sleep(300);
+  }
+
+  // ── NGS STATS (season level) ──
+  console.log('\n[3] NGS advanced stats...');
+  for(const yr of YEARS){
+    for(const [statType, posGroup] of [['passing','QB'],['rushing','RB'],['receiving','WR_TE']]){
+      const rows = await tryFetch([
+        `${BASE}/nextgen_stats/nextgen_stats_${statType}_${yr}.csv`
+      ]);
+      if(!rows) continue;
+      let matched = 0;
+      for(const row of rows){
+        const pid = row.player_gsis_id||row.player_id; if(!pid) continue;
+        if(!players[pid]?.seasons[yr]) continue;
+        const t = players[pid].seasons[yr].totals;
+        if(statType==='passing'){
+          t.avg_time_to_throw = dec(row.avg_time_to_throw);
+          t.avg_intended_air_yards = dec(row.avg_intended_air_yards);
+          t.avg_completed_air_yards = dec(row.avg_completed_air_yards);
+          t.completion_pct_above_expectation = dec(row.completion_pct_above_expectation);
+          t.passer_rating = dec(row.passer_rating);
+        } else if(statType==='rushing'){
+          t.avg_rush_yards_over_expected = dec(row.avg_rush_yards_over_expected);
+          t.avg_rush_yards_over_expected_pct = pct(row.avg_rush_yards_over_expected_per_att);
+          t.efficiency = dec(row.efficiency);
+          t.percent_attempts_gte_eight_defenders = pct(row.percent_attempts_gte_eight_defenders);
+        } else {
+          t.avg_separation = dec(row.avg_separation);
+          t.avg_cushion = dec(row.avg_cushion);
+          t.avg_yac_above_expectation = dec(row.avg_yac_above_expectation);
+          t.percent_share_of_intended_air_yards = pct(row.percent_share_of_intended_air_yards);
         }
-        console.log(`  ✓ NGS ${statType} ${yr}: ${matched} matched`);
-      } catch(e) { console.warn(`  ✗ NGS ${statType} ${yr}:`, e.message); }
+        matched++;
+      }
+      console.log(`  ✓ NGS ${yr} ${statType}: ${matched} matched`);
+      await sleep(200);
     }
   }
 
-  // Layer 3: PFR advanced stats
-  for (const statType of ['rec', 'rush']) {
-    for (const yr of YEARS) {
-      try {
-        const url = `${BASE}/pfr_advstats/advstats_season_${statType}_${yr}.csv`;
-        const csv = await fetchCSV(url);
-        const rows = parseCSV(csv);
-        let matched = 0;
-        for (const row of rows) {
-          const name = (row.player || row.player_name || '').trim();
-          if (!name) continue;
-          const match = Object.values(allStats).find(p =>
-            p.season === yr && normName(p.player_name) === normName(name)
-          );
-          if (!match) continue;
-          if (statType === 'rec') {
-            match.adot = dec(row.adot);
-            match.yac = num(row.yac);
-            match.drop_rate = pct2(row.drop_percent || row.drop_pct);
-            match.broken_tackles = num(row.broken_tackles || row.brk_tkl);
-          } else {
-            match.ybc_att = dec(row.ybc_att);
-            match.yac_att = dec(row.yac_att);
-            match.broken_tackles = num(row.broken_tackles || row.brk_tkl);
-          }
-          matched++;
+  // ── PFR ADVANCED STATS (season level) ──
+  console.log('\n[4] PFR advanced stats...');
+  for(const yr of YEARS){
+    for(const statType of ['pass','rush','rec']){
+      const rows = await tryFetch([
+        `${BASE}/pfr_advstats/advstats_season_${statType}_${yr}.csv`
+      ]);
+      if(!rows) continue;
+      let matched = 0;
+      for(const row of rows){
+        const pid = row.pfr_player_id||row.player_id||row.gsis_id; if(!pid) continue;
+        // Try matching by name if ID doesn't match
+        let p = players[pid];
+        if(!p){
+          const name = (row.player_display_name||row.player_name||'').toLowerCase().replace(/[^a-z]/g,'');
+          p = Object.values(players).find(pl=>pl.name.toLowerCase().replace(/[^a-z]/g,'')=== name);
         }
-        console.log(`  ✓ PFR ${statType} ${yr}: ${matched} matched`);
-      } catch(e) { console.warn(`  ✗ PFR ${statType} ${yr}:`, e.message); }
+        if(!p?.seasons[yr]) continue;
+        const t = p.seasons[yr].totals;
+        if(statType==='pass'){
+          t.pfr_passing_drops = num(row.drops); t.pfr_bad_throws = num(row.bad_throws);
+          t.pfr_blitzed_pct = pct(row.blitz); t.pfr_sacked = num(row.times_sacked);
+        } else if(statType==='rush'){
+          t.pfr_broke_tackles = num(row.broke_tackles); t.pfr_yco_contact = dec(row.yards_after_contact);
+          t.pfr_avoided_tackles = num(row.avoided_tackles);
+        } else {
+          t.pfr_drops = num(row.drops); t.pfr_drop_pct = pct(row.drop_pct);
+          t.pfr_int_tgt = num(row.interceptions); t.pfr_yac = num(row.yards_after_catch);
+          t.pfr_broke_tackles = num(row.broken_tackles);
+          t.pfr_contested_tgts = num(row.contested_targets);
+          t.pfr_contested_catch_pct = pct(row.contested_catch_pct);
+        }
+        matched++;
+      }
+      console.log(`  ✓ PFR ${yr} ${statType}: ${matched} matched`);
+      await sleep(200);
     }
   }
 
-  // Group by player
-  const byPlayer = {};
-  for (const stats of Object.values(allStats)) {
-    const pid = stats.player_id;
-    if (!byPlayer[pid]) byPlayer[pid] = { player_id: pid, name: stats.player_name, pos: stats.pos, seasons: {} };
-    byPlayer[pid].seasons[stats.season] = stats;
-    byPlayer[pid].name = stats.player_name || byPlayer[pid].name;
-    byPlayer[pid].team = stats.team;
+  // ── COMPUTE CAREER TRENDS ──
+  console.log('\n[5] Computing career trends...');
+  for(const p of Object.values(players)){
+    const yrs = Object.keys(p.seasons).map(Number).sort();
+    if(yrs.length < 2) continue;
+    const pos = p.pos;
+    
+    // Key metric by position for trend
+    const getMetric = (season) => {
+      const t = season?.totals||{};
+      if(pos==='QB') return t.passing_yards||0;
+      if(pos==='RB') return t.fantasy_ppg||0;
+      if(pos==='WR'||pos==='TE') return t.target_share||0;
+      return 0;
+    };
+
+    const metricsByYear = yrs.map(yr=>({yr, val:getMetric(p.seasons[yr])}));
+    const recent = metricsByYear.slice(-2);
+    if(recent.length>=2 && recent[0].val>0){
+      p.career.trend_pct = Math.round((recent[1].val-recent[0].val)/recent[0].val*1000)/10;
+      p.career.trend_dir = p.career.trend_pct>5?'rising':p.career.trend_pct<-5?'falling':'stable';
+    }
+    p.career.seasons_played = yrs.length;
+    p.career.years = yrs;
   }
 
-  const out = {
+  // ── OUTPUT ──
+  const skillPlayers = Object.values(players).filter(p=>SKILL.has(p.pos)&&p.name);
+  const output = {
     generated: new Date().toISOString(),
-    source: 'NFLverse — season stats + NGS + PFR',
-    total_players: Object.keys(byPlayer).length,
-    total_entries: Object.keys(allStats).length,
-    players: byPlayer
+    source: 'NFLverse (season totals + weekly splits + NGS + PFR)',
+    seasons_covered: YEARS,
+    total_players: skillPlayers.length,
+    players: Object.fromEntries(skillPlayers.map(p=>[p.player_id, p]))
   };
 
-  fs.writeFileSync('public/data/nfl-stats.json', JSON.stringify(out));
-  const mb = (fs.statSync('public/data/nfl-stats.json').size / 1024 / 1024).toFixed(1);
-  console.log(`\n✓ nfl-stats.json: ${out.total_players} players, ${out.total_entries} entries, ${mb}MB`);
-}
+  fs.writeFileSync('public/data/nfl-stats.json', JSON.stringify(output));
+  const mb = (fs.statSync('public/data/nfl-stats.json').size/1024/1024).toFixed(1);
+  console.log(`\n✓ nfl-stats.json: ${skillPlayers.length} players, ${mb}MB`);
 
-// ── CONTRACTS ──
-async function buildContracts() {
-  console.log('\n=== Building NFL Contracts ===');
-  fs.mkdirSync('public/data', { recursive: true });
-
-  let csv = null;
-
-  // Try multiple possible nflverse contract URLs
-  const contractUrls = [
-    [`${BASE}/contracts/contracts.csv`, false],
-    [`${BASE}/contracts/contracts.csv.gz`, true],
-    [`${BASE}/nflverse_contracts/contracts.csv`, false],
-    [`${BASE}/nflverse_contracts/contracts.csv.gz`, true],
-    ['https://raw.githubusercontent.com/nflverse/nflverse-data/main/data/contracts/contracts.csv', false],
-  ];
-
-  for (const [url, isGzip] of contractUrls) {
-    try {
-      csv = isGzip ? await fetchGzipCSV(url) : await fetchCSV(url);
-      console.log(`  ✓ Contracts fetched from: ${url}`);
-      break;
-    } catch(e) { console.warn(`  ✗ Tried ${url}: ${e.message}`); }
-  }
-
-  if (!csv) {
-    console.error('  ✗ Could not fetch contracts');
-    return;
-  }
-
-  const lines = csv.split('\n').filter(l => l.trim());
-  const headers = lines[0].split(',').map(h => h.replace(/"/g,'').trim());
-
-  const contracts = [];
-  for (let i = 1; i < lines.length; i++) {
-    const cols = [];
-    let cur = '', inQ = false;
-    for (const c of lines[i]) {
-      if (c === '"') { inQ = !inQ; }
-      else if (c === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
-      else cur += c;
-    }
-    cols.push(cur.trim());
-    const row = {};
-    headers.forEach((h, idx) => row[h] = cols[idx] || '');
-
-    if (row.is_active !== 'TRUE') continue;
-    if (!SKILL.has(row.position)) continue;
-
-    const apy = parseFloat(row.apy) || 0;
-    const years = parseInt(row.years) || 0;
-    const yearSigned = parseInt(row.year_signed) || 0;
-    const yearsRemaining = Math.max(0, years - (2026 - yearSigned));
-
-    contracts.push({
-      name: row.player,
-      pos: row.position,
-      team: row.team,
-      year_signed: yearSigned,
-      years, years_remaining: yearsRemaining,
-      total_value: Math.round(parseFloat(row.value) || 0),
-      apy: Math.round(apy),
-      guaranteed: Math.round(parseFloat(row.guaranteed) || 0),
-      status: yearsRemaining <= 1 ? 'expiring' : yearsRemaining <= 2 ? 'short' : 'locked',
-    });
-  }
-
-  contracts.sort((a, b) => b.apy - a.apy);
-
-  const out = {
-    generated: new Date().toISOString(),
-    source: 'nflverse/OverTheCap (overthecap.com)',
-    credit: 'Contract data via nflverse and OverTheCap.com',
-    total_players: contracts.length,
-    players: contracts
-  };
-
-  fs.writeFileSync('public/data/nfl-contracts.json', JSON.stringify(out));
-  console.log(`\n✓ nfl-contracts.json: ${contracts.length} active skill players`);
-  if (contracts.length > 0) {
-    console.log(`  Top 5 APY: ${contracts.slice(0,5).map(c => `${c.name} $${c.apy}M`).join(', ')}`);
+  // Sample output
+  const sampleWR = skillPlayers.find(p=>p.pos==='WR'&&p.seasons[2025]?.weeks?.length>5);
+  if(sampleWR){
+    console.log(`\nSample WR: ${sampleWR.name}`);
+    console.log(`  2025 totals: targets=${sampleWR.seasons[2025].totals.targets} target_share=${sampleWR.seasons[2025].totals.target_share}%`);
+    console.log(`  Weekly weeks: ${sampleWR.seasons[2025].weeks.length}`);
+    console.log(`  Week 1: targets=${sampleWR.seasons[2025].weeks[0]?.targets} ts=${sampleWR.seasons[2025].weeks[0]?.target_share}%`);
+    console.log(`  Trend: ${sampleWR.career.trend_dir} (${sampleWR.career.trend_pct}%)`);
   }
 }
 
-// ── RUN ──
-async function run() {
-  try { await buildStats(); } catch(e) { console.error('Stats FAILED:', e.message, e.stack); }
-  try { await buildContracts(); } catch(e) { console.error('Contracts FAILED:', e.message, e.stack); }
-  console.log('\n=== Done ===');
-}
-
-run().catch(console.error);
+buildStats().catch(e=>{ console.error('FATAL:',e); process.exit(1); });
