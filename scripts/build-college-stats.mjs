@@ -1,434 +1,423 @@
-// ── BUILD COLLEGE STATS ──
-// Pulls from NFLverse draft_picks (has college production for all drafted players)
-// + supplements with CFB Reference data via nflreadr
-// Runs nightly via GitHub Actions, writes public/data/college-stats.json
+// ── GWTTKB College Stats + Draft Capital + Combine Builder ──
+// Sources:
+//   1. NFLverse draft_picks.csv — every pick rounds 1-7 since 2020 (PFR)
+//   2. NFLverse combine.csv — 40 time, bench, vertical, broad jump, cone, shuttle
+//   3. CFBD API — college stats by player/season + recruiting ratings
+// Writes:
+//   public/data/nfl-draft-history.json — complete accurate draft capital
+//   public/data/college-stats.json — college production + combine + recruiting
 
 import fs from 'fs';
 
 const BASE = 'https://github.com/nflverse/nflverse-data/releases/download';
+const CFBD = 'https://api.collegefootballdata.com';
+const CFBD_KEY = process.env.CFBD_API_KEY;
+const SKILL = new Set(['QB','RB','WR','TE']);
+const DRAFT_YEARS = [2020,2021,2022,2023,2024,2025,2026];
+const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-// ── CSV PARSER ──
-function parseCSV(text) {
-  const lines = text.split('\n').filter(l => l.trim());
-  if (!lines.length) return [];
-  const headers = lines[0].split(',').map(h => h.replace(/"/g,'').trim());
-  return lines.slice(1).map(line => {
-    const cols = [];
-    let cur = '', inQ = false;
-    for (const c of line) {
-      if (c === '"') { inQ = !inQ; }
-      else if (c === ',' && !inQ) { cols.push(cur); cur = ''; }
-      else cur += c;
+if(!CFBD_KEY){ console.error('CFBD_API_KEY not set'); process.exit(1); }
+
+function parseCSV(text){
+  const lines = text.split('\n').filter(l=>l.trim());
+  if(!lines.length) return [];
+  const headers = lines[0].split(',').map(h=>h.replace(/"/g,'').trim());
+  return lines.slice(1).map(line=>{
+    const cols=[]; let cur='',inQ=false;
+    for(const c of line){
+      if(c==='"'){inQ=!inQ;}
+      else if(c===','&&!inQ){cols.push(cur);cur='';}
+      else cur+=c;
     }
     cols.push(cur);
-    const row = {};
-    headers.forEach((h, i) => row[h] = (cols[i]||'').replace(/"/g,'').trim());
+    const row={};
+    headers.forEach((h,i)=>row[h]=(cols[i]||'').replace(/"/g,'').trim());
     return row;
   });
 }
 
-function num(v) { const n = parseInt(v); return isNaN(n) ? null : n; }
-function dec(v) { const n = parseFloat(v); return isNaN(n) ? null : Math.round(n*100)/100; }
-function pct(v) {
-  const n = parseFloat(v);
-  if (isNaN(n)) return null;
-  return n > 1 ? Math.round(n*10)/10 : Math.round(n*1000)/10;
+async function fetchNFL(url){
+  const r = await fetch(url, {
+    headers:{'User-Agent':'GWTTKB/1.0'},
+    redirect:'follow'
+  });
+  if(!r.ok) throw new Error(`HTTP ${r.status}: ${url}`);
+  return parseCSV(await r.text());
 }
 
-const SKILL = new Set(['QB','RB','WR','TE']);
-
-async function buildCollegeStats() {
-  console.log('\n=== Building College Stats Database ===');
-
-  const allPlayers = {}; // name → stats
-
-  // ── LAYER 1: NFLverse draft_picks ──
-  // Has: player, pos, college, round, pick, season (draft year)
-  // + cfb stats: college_rec_yds, college_rush_yds, college_pass_yds, etc.
-  try {
-    console.log('Fetching NFLverse draft picks...');
-    const res = await fetch(`${BASE}/draft_picks/draft_picks.csv`, { redirect:'follow', headers:{'User-Agent':'GWTTKB/1.0'} });
-    if (res.ok) {
-      const csv = await res.text();
-      const rows = parseCSV(csv);
-      const YEARS = [2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015];
-
-      for (const row of rows) {
-        const season = parseInt(row.season || row.draft_year || 0);
-        if (!YEARS.includes(season)) continue;
-        const pos = (row.position || row.pos || '').toUpperCase();
-        if (!SKILL.has(pos)) continue;
-
-        const name = row.player_name || row.full_name || row.player || '';
-        if (!name) continue;
-
-        const key = `${name}_${season}`;
-        allPlayers[key] = {
-          name,
-          pos,
-          draft_year: season,
-          draft_round: num(row.round),
-          draft_pick: num(row.pick),
-          draft_pick_label: row.round && row.pick ? `${row.round}.${String(row.pick).padStart(2,'0')}` : null,
-          team: row.team || row.nfl_team || '',
-          college: row.college || row.school || '',
-          // NFLverse college production fields
-          college_rec_yds: num(row.college_rec_yds || row.receiving_yards_college),
-          college_rush_yds: num(row.college_rush_yds || row.rushing_yards_college),
-          college_pass_yds: num(row.college_pass_yds || row.passing_yards_college),
-          college_rec_tds: num(row.college_rec_tds),
-          college_rush_tds: num(row.college_rush_tds),
-          college_pass_tds: num(row.college_pass_tds),
-          // Physical traits from combine
-          height: num(row.ht || row.height),
-          weight: num(row.wt || row.weight),
-          forty: dec(row.forty || row.forty_yard || row.X40yd),
-          vertical: dec(row.vertical || row.vert),
-          broad_jump: num(row.broad_jump || row.broad),
-          cone: dec(row.cone),
-          shuttle: dec(row.shuttle),
-          // PFF college grade if available
-          pff_college_grade: dec(row.pff_college_grade || row.college_grade),
-          // Dominator rating if available
-          dominator_rating: dec(row.dominator_rating),
-          // BMI/athleticism
-          bmi: row.ht && row.wt ? dec(parseInt(row.wt) / Math.pow(parseInt(row.ht)/100, 2)) : null,
-          // Draft capital score
-          draft_capital: row.round && row.pick ? 
-            Math.round(1000 / (parseInt(row.round) * parseInt(row.pick))) : null,
-        };
-      }
-      console.log(`✓ Draft picks loaded: ${Object.keys(allPlayers).length} skill players`);
+async function fetchCFBD(path, params={}){
+  const url = new URL(`${CFBD}${path}`);
+  for(const[k,v]of Object.entries(params)) url.searchParams.set(k,v);
+  const r = await fetch(url.toString(), {
+    headers:{
+      'Authorization': `Bearer ${CFBD_KEY}`,
+      'Accept': 'application/json'
     }
-  } catch(e) {
-    console.warn('Draft picks error:', e.message);
+  });
+  if(!r.ok){
+    if(r.status===429){ await sleep(2000); return null; }
+    return null;
+  }
+  return r.json();
+}
+
+function norm(s){ return (s||'').toLowerCase().replace(/[^a-z]/g,''); }
+function num(v){ const n=parseFloat(v); return isNaN(n)?null:Math.round(n*100)/100; }
+
+async function build(){
+  console.log('=== Building College Stats + Draft Capital + Combine ===');
+  fs.mkdirSync('public/data',{recursive:true});
+
+  // ── STEP 1: NFLverse Draft Picks (all rounds 1-7, 2020-2026) ──
+  console.log('\n[1] Fetching NFLverse draft picks...');
+  let allDraftRows = [];
+  try{
+    const rows = await fetchNFL(`${BASE}/draft_picks/draft_picks.csv`);
+    allDraftRows = rows.filter(r=>{
+      const yr = parseInt(r.season||r.draft_year||0);
+      const round = parseInt(r.round||0);
+      const pos = (r.position||r.pos||'').toUpperCase();
+      return yr >= 2020 && round >= 1 && round <= 7 && SKILL.has(pos);
+    });
+    console.log(`  ✓ ${allDraftRows.length} skill player picks (rounds 1-7, 2020-2026)`);
+  }catch(e){
+    console.error('  ✗ Draft picks failed:', e.message);
   }
 
-  // ── LAYER 2: NFLverse combine data (more combine fields) ──
-  try {
-    console.log('Fetching combine data...');
-    const res = await fetch(`${BASE}/combine/combine.csv`, { redirect:'follow', headers:{'User-Agent':'GWTTKB/1.0'} });
-    if (res.ok) {
-      const csv = await res.text();
-      const rows = parseCSV(csv);
-      let matched = 0;
-
-      for (const row of rows) {
-        const pos = (row.pos || row.position || '').toUpperCase();
-        if (!SKILL.has(pos)) continue;
-        const name = row.player_name || row.player || '';
-        const year = parseInt(row.draft_year || row.season || 0);
-        if (!name || !year) continue;
-
-        const key = `${name}_${year}`;
-        if (allPlayers[key]) {
-          // Augment with combine data
-          if (!allPlayers[key].forty && row.forty) allPlayers[key].forty = dec(row.forty);
-          if (!allPlayers[key].vertical && row.vertical) allPlayers[key].vertical = dec(row.vertical);
-          if (!allPlayers[key].broad_jump && row.broad_jump) allPlayers[key].broad_jump = num(row.broad_jump);
-          if (!allPlayers[key].cone && row.cone) allPlayers[key].cone = dec(row.cone);
-          if (!allPlayers[key].shuttle && row.shuttle) allPlayers[key].shuttle = dec(row.shuttle);
-          if (!allPlayers[key].weight && row.wt) allPlayers[key].weight = num(row.wt);
-          if (!allPlayers[key].height && row.ht) allPlayers[key].height = num(row.ht);
-          matched++;
-        }
-      }
-      console.log(`✓ Combine data matched: ${matched} players`);
-    }
-  } catch(e) {
-    console.warn('Combine error:', e.message);
-  }
-
-  // ── LAYER 3: NFLverse PFR college stats (advanced) ──
-  // PFR has per-year college stats including career totals
-  try {
-    console.log('Fetching PFR college stats...');
-    // nflreadr expose college stats through a separate endpoint
-    const urls = [
-      `${BASE}/pfr_advstats/college_stats.csv`,
-      `https://raw.githubusercontent.com/nflverse/nflverse-data/main/data/college_stats.csv`,
-    ];
-
-    for (const url of urls) {
-      try {
-        const res = await fetch(url, { redirect:'follow', headers:{'User-Agent':'GWTTKB/1.0'} });
-        if (!res.ok) continue;
-        const csv = await res.text();
-        const rows = parseCSV(csv);
-        console.log(`  PFR college rows: ${rows.length}`);
-
-        for (const row of rows) {
-          const pos = (row.pos || row.position || '').toUpperCase();
-          if (!SKILL.has(pos)) continue;
-          const name = row.player || row.player_name || '';
-          const draftYear = parseInt(row.draft_year || 0);
-          if (!name) continue;
-
-          // Find matching player in our dataset
-          const key = `${name}_${draftYear}`;
-          if (allPlayers[key]) {
-            allPlayers[key].college_career_games = num(row.g || row.games);
-            allPlayers[key].college_career_rec = num(row.rec || row.receptions);
-            allPlayers[key].college_career_rec_yds = num(row.rec_yds || row.receiving_yards);
-            allPlayers[key].college_career_rec_tds = num(row.rec_td || row.receiving_tds);
-            allPlayers[key].college_career_rush_att = num(row.rush_att || row.rush_attempts);
-            allPlayers[key].college_career_rush_yds = num(row.rush_yds || row.rushing_yards);
-            allPlayers[key].college_career_rush_tds = num(row.rush_td);
-            allPlayers[key].college_career_pass_cmp = num(row.pass_cmp || row.completions);
-            allPlayers[key].college_career_pass_att = num(row.pass_att || row.pass_attempts);
-            allPlayers[key].college_career_pass_yds = num(row.pass_yds || row.passing_yards);
-            allPlayers[key].college_career_pass_tds = num(row.pass_td);
-          }
-        }
-        console.log(`✓ PFR college stats matched`);
-        break;
-      } catch(e2) {}
-    }
-  } catch(e) {
-    console.warn('PFR college error:', e.message);
-  }
-
-  // ── COMPUTE DERIVED METRICS ──
-  for (const player of Object.values(allPlayers)) {
-    // Yards per carry (college)
-    if (player.college_rush_yds && player.college_career_rush_att) {
-      player.college_ypc = dec(player.college_rush_yds / player.college_career_rush_att);
-    }
-    // Catch rate (college)
-    if (player.college_rec_tds != null && player.college_career_rec != null) {
-      // TDs per reception
-      player.college_td_per_rec = player.college_career_rec > 0 ?
-        dec(player.college_rec_tds / player.college_career_rec) : null;
-    }
-    // Completion % (college QBs)
-    if (player.college_career_pass_cmp && player.college_career_pass_att && player.college_career_pass_att > 0) {
-      player.college_completion_pct = pct(player.college_career_pass_cmp / player.college_career_pass_att);
-    }
-    // Dominator rating approximation
-    // (player production / team production) - simplified
-    if (!player.dominator_rating && player.college_rec_yds && player.draft_round) {
-      // Proxy: round-adjusted production score
-      player.production_score = Math.round(
-        (player.college_rec_yds || 0) * 0.4 +
-        (player.college_rec_tds || 0) * 100 +
-        (player.college_rush_yds || 0) * 0.3
-      );
-    }
-    // Athleticism score (RAS-like, 1-10)
-    if (player.forty && player.weight) {
-      const w = player.weight;
-      const spd = player.forty;
-      // Simple score: faster and heavier = better
-      const speedScore = Math.max(0, Math.min(10, (4.9 - spd) * 20));
-      player.speed_score = dec(speedScore);
-      // Weight-adjusted speed score
-      player.weight_adj_speed = dec((w * Math.pow((4.6 - spd), 2)) / 100);
-    }
-  }
-
-  // ── GROUP BY DRAFT YEAR ──
-  const byYear = {};
-  for (const [key, player] of Object.entries(allPlayers)) {
-    const yr = player.draft_year;
-    if (!byYear[yr]) byYear[yr] = {};
-    byYear[yr][player.name] = player;
-  }
-
-  // ── BREAKOUT CORRELATION (from historical data if available) ──
-  // For players where we have both college stats AND NFL value history,
-  // compute which college metrics correlated with dynasty breakouts
-  let correlationData = null;
-  try {
-    const histData = JSON.parse(fs.readFileSync('public/data/historical-players.json', 'utf8'));
-    const patternsData = JSON.parse(fs.readFileSync('public/data/nfl-patterns.json', 'utf8'));
-    
-    const correlations = {
-      wr: { high_rec_yds: {broke_out: 0, total: 0}, high_forty: {broke_out: 0, total: 0} },
-      rb: { high_rush_yds: {broke_out: 0, total: 0}, high_ypc: {broke_out: 0, total: 0} },
+  // Build draft capital map: norm(name) → draft info
+  const draftMap = {};
+  const draftByYear = {};
+  for(const row of allDraftRows){
+    const yr = parseInt(row.season||row.draft_year);
+    const name = row.pfr_player_name || row.player_name || row.full_name || '';
+    if(!name) continue;
+    const entry = {
+      name,
+      season: yr,
+      round: parseInt(row.round),
+      pick: parseInt(row.pick),
+      overall: parseInt(row.pick_overall||row.pick||0),
+      team: row.team||row.draft_team||'',
+      pos: (row.position||row.pos||'').toUpperCase(),
+      college: row.college||row.school||'',
+      pfr_id: row.pfr_player_id||row.pfr_id||'',
+      cfb_id: row.cfb_player_id||row.cfb_id||'',
+      // Draft value context
+      draft_tier: parseInt(row.round)===1?(parseInt(row.pick)<=10?'elite':parseInt(row.pick)<=20?'top_20':'late_1st')
+        :parseInt(row.round)===2?'day2_early'
+        :parseInt(row.round)===3?'day2_late'
+        :'day3',
+      // Career AV from PFR if available
+      career_av: num(row.career_av||row.av||null),
+      w_av: num(row.w_av||null),
+      // Pro bowls
+      pro_bowls: parseInt(row.pro_bowl||0)||0,
+      // All pro
+      all_pro: parseInt(row.all_pro||0)||0,
     };
-
-    // For each player with college stats AND historical dynasty value
-    for (const [key, player] of Object.entries(allPlayers)) {
-      const histPlayer = histData.players[player.name];
-      if (!histPlayer) continue;
-
-      // Did they break out? (value above 5000 within 3 years of draft)
-      const draftYr = player.draft_year;
-      let brokeOut = false;
-      for (let yr = draftYr; yr <= draftYr + 3; yr++) {
-        const targetDate = `${yr}-12-01`;
-        let maxVal = 0;
-        for (let i = 0; i < histPlayer.dates.length; i++) {
-          if (histPlayer.dates[i] <= targetDate && histPlayer.sf[i] > maxVal) {
-            maxVal = histPlayer.sf[i];
-          }
-        }
-        if (maxVal >= 5000) { brokeOut = true; break; }
-      }
-
-      // WR correlations
-      if (player.pos === 'WR') {
-        correlations.wr.high_rec_yds.total++;
-        if (brokeOut) correlations.wr.high_rec_yds.broke_out++;
-        if (player.college_rec_yds >= 1000) {
-          if (!correlations.wr.high_rec_yds_1k) correlations.wr.high_rec_yds_1k = {broke_out:0,total:0};
-          correlations.wr.high_rec_yds_1k.total++;
-          if (brokeOut) correlations.wr.high_rec_yds_1k.broke_out++;
-        }
-        if (player.forty && player.forty <= 4.40) {
-          if (!correlations.wr.sub440_speed) correlations.wr.sub440_speed = {broke_out:0,total:0};
-          correlations.wr.sub440_speed.total++;
-          if (brokeOut) correlations.wr.sub440_speed.broke_out++;
-        }
-      }
-      // RB correlations
-      if (player.pos === 'RB') {
-        if (player.college_rush_yds >= 1000) {
-          if (!correlations.rb.rush_1k) correlations.rb.rush_1k = {broke_out:0,total:0};
-          correlations.rb.rush_1k.total++;
-          if (brokeOut) correlations.rb.rush_1k.broke_out++;
-        }
-      }
-    }
-
-    // Compute rates
-    const corrInsights = [];
-    for (const [pos, metrics] of Object.entries(correlations)) {
-      for (const [metric, data] of Object.entries(metrics)) {
-        if (data.total >= 5) {
-          const rate = Math.round(data.broke_out / data.total * 100);
-          corrInsights.push({
-            pos: pos.toUpperCase(), metric, 
-            breakout_rate: rate, sample: data.total,
-            insight: `${pos.toUpperCase()} with ${metric}: ${rate}% breakout rate within 3 yrs (n=${data.total})`
-          });
-        }
-      }
-    }
-    correlationData = corrInsights.sort((a,b) => b.breakout_rate - a.breakout_rate);
-    console.log(`✓ Breakout correlations: ${correlationData.length} metrics computed`);
-  } catch(e) {
-    console.warn('Correlation error:', e.message);
+    draftMap[norm(name)] = entry;
+    if(!draftByYear[yr]) draftByYear[yr] = [];
+    draftByYear[yr].push(entry);
   }
 
-  // ── OUTPUT ──
-  const output = {
+  // ── STEP 2: NFLverse Combine Data ──
+  console.log('\n[2] Fetching NFLverse combine data...');
+  const combineMap = {}; // norm(name) → combine data
+  try{
+    const rows = await fetchNFL(`${BASE}/combine/combine.csv`);
+    let matched = 0;
+    for(const row of rows){
+      const yr = parseInt(row.season||row.draft_year||0);
+      if(yr < 2020) continue;
+      const pos = (row.pos||row.position||'').toUpperCase();
+      if(!SKILL.has(pos)) continue;
+      const name = row.player_name||row.player||'';
+      if(!name) continue;
+      const entry = {
+        name,
+        season: yr,
+        pos,
+        school: row.school||row.college||'',
+        ht: row.ht||null, // height
+        wt: num(row.wt),  // weight lbs
+        forty: num(row.forty), // 40 yard dash
+        bench: num(row.bench), // bench press reps
+        vertical: num(row.vertical), // vertical jump inches
+        broad_jump: num(row.broad_jump), // broad jump inches
+        cone: num(row.cone), // 3 cone drill
+        shuttle: num(row.shuttle), // 20 yard shuttle
+        // Derived athleticism score (BMI-adjusted speed)
+        speed_score: row.forty&&row.wt?Math.round((num(row.wt)*200)/(Math.pow(num(row.forty),4))*10)/10:null,
+        burst_score: row.vertical&&row.broad_jump?Math.round((num(row.vertical)+num(row.broad_jump)*0.5)*10)/10:null,
+      };
+      combineMap[norm(name)] = entry;
+      // Also add to draft map
+      if(draftMap[norm(name)]){
+        draftMap[norm(name)].combine = entry;
+        matched++;
+      }
+    }
+    console.log(`  ✓ ${Object.keys(combineMap).length} combine entries, ${matched} matched to draft picks`);
+  }catch(e){
+    console.warn('  ✗ Combine failed:', e.message);
+  }
+
+  // ── STEP 3: CFBD College Stats ──
+  console.log('\n[3] Fetching college stats via CFBD API...');
+  const collegeStats = {}; // norm(name) → {seasons:[...], career:{...}, recruiting:{}}
+
+  // Get unique players to look up
+  const playersToFetch = Object.values(draftMap).filter(p=>p.pos&&SKILL.has(p.pos));
+  console.log(`  Fetching stats for ${playersToFetch.length} players...`);
+
+  let fetched = 0;
+  let failed = 0;
+
+  for(const player of playersToFetch){
+    const nameNorm = norm(player.name);
+    try{
+      // Search for player in CFBD
+      const searchRes = await fetchCFBD('/player/search', {
+        searchTerm: player.name,
+        position: player.pos === 'QB' ? 'QB' : player.pos === 'RB' ? 'RB' : player.pos === 'WR' ? 'WR' : 'TE',
+      });
+      if(!Array.isArray(searchRes)||!searchRes.length){
+        failed++;
+        await sleep(100);
+        continue;
+      }
+
+      // Find best match
+      const match = searchRes.find(p=>norm(p.name)===nameNorm||norm(p.name).includes(nameNorm.slice(0,8)))
+        || searchRes[0];
+      if(!match){ failed++; await sleep(100); continue; }
+
+      // Fetch their stats for last 3 seasons before draft
+      const draftYr = player.season;
+      const seasons = [];
+      for(const yr of [draftYr-1, draftYr-2, draftYr-3].filter(y=>y>=2017)){
+        const stats = await fetchCFBD('/stats/player/season', {
+          year: yr,
+          athleteId: match.id
+        });
+        if(Array.isArray(stats)&&stats.length){
+          const seasonStats = { year: yr, team: match.team||'', stats:{} };
+          for(const s of stats){
+            const cat = s.category?.toLowerCase()||'';
+            const type = s.statType?.toLowerCase()||'';
+            const val = num(s.stat);
+            if(val!==null) seasonStats.stats[`${cat}_${type}`] = val;
+          }
+          // Normalize to standard fields
+          const st = seasonStats.stats;
+          seasonStats.normalized = {
+            // Passing
+            pass_yards: st.passing_yds||st.passing_yards||null,
+            pass_tds: st.passing_td||st.passing_tds||null,
+            pass_attempts: st.passing_att||null,
+            completions: st.passing_completions||null,
+            interceptions: st.passing_int||null,
+            completion_pct: st.passing_att&&st.passing_completions?
+              Math.round(st.passing_completions/st.passing_att*1000)/10:null,
+            // Rushing
+            rush_yards: st.rushing_yds||st.rushing_yards||null,
+            rush_tds: st.rushing_td||st.rushing_tds||null,
+            rush_attempts: st.rushing_car||st.rushing_att||null,
+            ypc: st.rushing_car&&st.rushing_yds?Math.round(st.rushing_yds/st.rushing_car*100)/100:null,
+            // Receiving
+            rec_yards: st.receiving_yds||st.receiving_yards||null,
+            rec_tds: st.receiving_td||st.receiving_tds||null,
+            receptions: st.receiving_rec||null,
+            rec_ypr: st.receiving_rec&&st.receiving_yds?Math.round(st.receiving_yds/st.receiving_rec*100)/100:null,
+          };
+          seasons.push(seasonStats);
+        }
+        await sleep(150);
+      }
+
+      // Fetch recruiting info
+      const recruiting = await fetchCFBD('/recruiting/players', {
+        search: player.name,
+        position: player.pos,
+      });
+      let recruitingData = null;
+      if(Array.isArray(recruiting)&&recruiting.length){
+        const rec = recruiting.find(r=>norm(r.name)===nameNorm)||recruiting[0];
+        if(rec){
+          recruitingData = {
+            stars: rec.stars||null,
+            rating: num(rec.rating),
+            ranking: rec.ranking||null,
+            position_ranking: rec.positionRanking||null,
+            city: rec.city||'',
+            state_province: rec.stateProvince||'',
+            committed_to: rec.committedTo||'',
+          };
+        }
+      }
+
+      // Compute career college stats
+      const career = { seasons_tracked: seasons.length };
+      if(seasons.length > 0){
+        // Final season (year before draft)
+        const finalSeason = seasons[0];
+        career.final_season = finalSeason.normalized;
+        career.final_season_year = finalSeason.year;
+        career.final_season_team = finalSeason.team;
+
+        // Compute breakout age (first season with significant production)
+        // Breakout = first season with 700+ rushing/receiving yards or 2000+ passing yards
+        const breakoutSeason = [...seasons].reverse().find(s=>{
+          const n = s.normalized;
+          return (n.rush_yards&&n.rush_yards>=700)
+            ||(n.rec_yards&&n.rec_yards>=700)
+            ||(n.pass_yards&&n.pass_yards>=2000);
+        });
+        if(breakoutSeason){
+          // Approximate age: draft year - (draft year - breakout year) gives college year
+          const yearsBeforeDraft = draftYr - 1 - breakoutSeason.year;
+          career.breakout_year = breakoutSeason.year;
+          career.breakout_age_proxy = 21 - yearsBeforeDraft; // approx
+          career.breakout_season = breakoutSeason.normalized;
+        }
+
+        // Multi-year trajectory (was production rising or falling?)
+        if(seasons.length >= 2){
+          const latest = seasons[0].normalized;
+          const prev = seasons[1].normalized;
+          const keyMetric = player.pos==='QB'?'pass_yards':
+            player.pos==='RB'?'rush_yards':'rec_yards';
+          const latestVal = latest[keyMetric]||0;
+          const prevVal = prev[keyMetric]||0;
+          if(prevVal > 0){
+            career.production_trend_pct = Math.round((latestVal-prevVal)/prevVal*1000)/10;
+            career.production_trend = career.production_trend_pct > 10 ? 'rising'
+              : career.production_trend_pct < -10 ? 'falling' : 'stable';
+          }
+        }
+
+        // Dominator rating proxy (final season yards vs average for position)
+        const avgYards = player.pos==='QB'?3500:player.pos==='RB'?1000:800;
+        const finalYards = player.pos==='QB'?career.final_season.pass_yards:
+          player.pos==='RB'?career.final_season.rush_yards:career.final_season.rec_yards;
+        if(finalYards){
+          career.production_vs_avg_pct = Math.round(finalYards/avgYards*1000)/10;
+          career.elite_producer = finalYards > avgYards * 1.3;
+        }
+      }
+
+      collegeStats[nameNorm] = {
+        name: player.name,
+        pos: player.pos,
+        cfbd_id: match.id,
+        seasons,
+        career,
+        recruiting: recruitingData,
+      };
+
+      // Add to draft entry
+      if(draftMap[nameNorm]){
+        draftMap[nameNorm].college_stats = collegeStats[nameNorm].career;
+        draftMap[nameNorm].college_seasons = seasons;
+        draftMap[nameNorm].recruiting = recruitingData;
+      }
+
+      fetched++;
+      if(fetched % 20 === 0) console.log(`    ${fetched}/${playersToFetch.length} fetched`);
+      await sleep(200);
+    }catch(e){
+      failed++;
+      await sleep(200);
+    }
+  }
+
+  console.log(`  ✓ ${fetched} players fetched, ${failed} failed/not found`);
+
+  // ── OUTPUT 1: nfl-draft-history.json ──
+  console.log('\n[4] Writing nfl-draft-history.json...');
+
+  // Organize by year
+  const draftHistory = { generated: new Date().toISOString(), drafts: {} };
+  for(const yr of DRAFT_YEARS){
+    const picks = draftByYear[yr]||[];
+    draftHistory.drafts[yr] = {
+      year: yr,
+      total_skill_picks: picks.length,
+      by_round: {},
+      all_picks: picks.sort((a,b)=>a.overall-b.overall),
+    };
+    for(const p of picks){
+      if(!draftHistory.drafts[yr].by_round[p.round]){
+        draftHistory.drafts[yr].by_round[p.round] = [];
+      }
+      draftHistory.drafts[yr].by_round[p.round].push(p);
+    }
+  }
+
+  fs.writeFileSync('public/data/nfl-draft-history.json', JSON.stringify(draftHistory));
+  const draftKB = (fs.statSync('public/data/nfl-draft-history.json').size/1024).toFixed(0);
+  console.log(`  ✓ nfl-draft-history.json: ${draftKB}KB`);
+
+  // Print sample
+  const picks2025 = draftHistory.drafts[2025]?.all_picks||[];
+  console.log(`  2025 picks: ${picks2025.length}`);
+  const henderson = picks2025.find(p=>p.name.includes('Henderson'));
+  if(henderson) console.log(`  TreVeyon Henderson: Round ${henderson.round}, Pick ${henderson.pick}, Overall ${henderson.overall}, ${henderson.team}`);
+
+  // ── OUTPUT 2: college-stats.json ──
+  console.log('\n[5] Writing college-stats.json...');
+
+  const collegeOutput = {
     generated: new Date().toISOString(),
-    source: 'NFLverse draft_picks + combine + PFR college stats',
-    years_covered: Object.keys(byYear).sort(),
-    total_players: Object.keys(allPlayers).length,
-    breakout_correlations: correlationData,
-    by_year: byYear,
-    // Flat lookup by name for quick Coach access
-    by_name: Object.fromEntries(
-      Object.values(allPlayers).map(p => [p.name, p])
-    )
+    source: 'CFBD API (collegefootballdata.com) + NFLverse combine',
+    total_players: Object.keys(collegeStats).length,
+    by_draft_year: {},
+    players: collegeStats,
+    combine: combineMap,
   };
 
-  fs.writeFileSync('public/data/college-stats.json', JSON.stringify(output));
-  const sizeMB = (fs.statSync('public/data/college-stats.json').size / 1024 / 1024).toFixed(1);
-  console.log(`\n✓ College stats: ${output.total_players} players across ${output.years_covered.length} draft classes, ${sizeMB}MB`);
-
-  // Summary by year
-  for (const yr of output.years_covered.sort().reverse().slice(0, 7)) {
-    const cnt = Object.keys(byYear[yr] || {}).length;
-    console.log(`  ${yr}: ${cnt} skill players`);
+  // Organize by draft year
+  for(const yr of DRAFT_YEARS){
+    const yPicks = draftByYear[yr]||[];
+    collegeOutput.by_draft_year[yr] = yPicks
+      .filter(p=>collegeStats[norm(p.name)])
+      .map(p=>({
+        name: p.name,
+        pos: p.pos,
+        round: p.round,
+        pick: p.pick,
+        overall: p.overall,
+        team: p.team,
+        draft_tier: p.draft_tier,
+        combine: combineMap[norm(p.name)]||null,
+        college: collegeStats[norm(p.name)]?.career||null,
+        recruiting: collegeStats[norm(p.name)]?.recruiting||null,
+      }));
   }
 
-  return output;
-}
+  fs.writeFileSync('public/data/college-stats.json', JSON.stringify(collegeOutput));
+  const collegeKB = (fs.statSync('public/data/college-stats.json').size/1024).toFixed(0);
+  console.log(`  ✓ college-stats.json: ${collegeKB}KB, ${Object.keys(collegeStats).length} players`);
 
+  // ── SUMMARY ──
+  console.log('\n=== SUMMARY ===');
+  for(const yr of DRAFT_YEARS){
+    const picks = draftByYear[yr]||[];
+    const withCollege = picks.filter(p=>collegeStats[norm(p.name)]);
+    const withCombine = picks.filter(p=>combineMap[norm(p.name)]);
+    console.log(`${yr}: ${picks.length} picks | ${withCollege.length} w/college stats | ${withCombine.length} w/combine`);
+  }
 
-// ── NFL DRAFT HISTORY (2015-2026, all rounds, from NFLverse) ──
-async function buildDraftHistory() {
-  console.log('\n=== Building NFL Draft History ===');
-  fs.mkdirSync('public/data', { recursive: true });
-
-  try {
-    const url = `${BASE}/draft_picks/draft_picks.csv`;
-    const res = await fetch(url, { redirect: 'follow', headers: {'User-Agent': 'GWTTKB/1.0'} });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const csv = await res.text();
-    const rows = parseCSV(csv);
-    console.log(`  Total draft picks in NFLverse: ${rows.length}`);
-
-    const SKILL = new Set(['QB','RB','WR','TE']);
-    const START_YEAR = 2015;
-    const byYear = {};
-    let skillCount = 0;
-
-    for (const row of rows) {
-      const season = parseInt(row.season || row.draft_year || 0);
-      if (season < START_YEAR) continue;
-      const pos = (row.position || row.pos || '').toUpperCase();
-      const round = parseInt(row.round || 0);
-      const pick = parseInt(row.pick || row.overall_pick || 0);
-      const player = (row.player_name || row.full_name || row.player || '').trim();
-      const team = (row.team || row.nfl_team || '').trim();
-      const college = (row.college || row.school || '').trim();
-      if (!player || !season || !round || !pick) continue;
-
-      if (!byYear[season]) byYear[season] = { year: season, all_picks: [], dynasty_skill_picks: [] };
-
-      const n = v => { const x = parseInt(v); return isNaN(x) ? undefined : x; };
-      const d = v => { const x = parseFloat(v); return isNaN(x) ? undefined : Math.round(x*100)/100; };
-
-      const entry = {
-        round, pick, team, player, pos, college,
-        dynasty_relevant: SKILL.has(pos),
-        height: n(row.ht || row.height),
-        weight: n(row.wt || row.weight),
-        forty: d(row.forty || row.forty_yard),
-        college_rec_yds: n(row.college_rec_yds),
-        college_rush_yds: n(row.college_rush_yds),
-        college_pass_yds: n(row.college_pass_yds),
-        college_rec_tds: n(row.college_rec_tds),
-        college_rush_tds: n(row.college_rush_tds),
-        college_pass_tds: n(row.college_pass_tds),
-      };
-      Object.keys(entry).forEach(k => entry[k] === undefined && delete entry[k]);
-
-      byYear[season].all_picks.push(entry);
-      if (SKILL.has(pos)) { byYear[season].dynasty_skill_picks.push(entry); skillCount++; }
-    }
-
-    for (const yr of Object.values(byYear)) {
-      yr.all_picks.sort((a,b) => a.pick - b.pick);
-      yr.dynasty_skill_picks.sort((a,b) => a.pick - b.pick);
-    }
-
-    const years = Object.keys(byYear).sort();
-    console.log(`  Years: ${years.join(', ')}`);
-    for (const yr of years) {
-      console.log(`    ${yr}: ${byYear[yr].dynasty_skill_picks.length} skill picks`);
-    }
-
-    const output = {
-      generated: new Date().toISOString(),
-      source: 'NFLverse draft_picks.csv — authoritative NFL draft data',
-      years_covered: years,
-      total_skill_picks: skillCount,
-      drafts: byYear,
-      college_breakout_profiles: {
-        WR: { elite_profile: '80+ catches OR 1000+ yards final season. 15+ YPR. 20%+ team target share.', breakout_timing: 'Year 2-3 typical.' },
-        RB: { elite_profile: '800+ rush yards AND 40+ receptions. 4.5+ YPC. Pass protection shown.', breakout_timing: 'Can break out year 1. Peak 23-26.' },
-        QB: { elite_profile: '65%+ completion. 8.0+ YPA. Mobility big in SF.', breakout_timing: 'Need 2-3 years typically.' },
-        TE: { elite_profile: 'Receiving TE, 600+ college yards, good routes and hands, elite athleticism.', breakout_timing: 'Latest position — year 3-4.' }
-      }
-    };
-
-    fs.writeFileSync('public/data/nfl-draft-history.json', JSON.stringify(output));
-    const mb = (fs.statSync('public/data/nfl-draft-history.json').size / 1024 / 1024).toFixed(1);
-    console.log(`\n✓ nfl-draft-history.json: ${years.length} years, ${skillCount} skill picks, ${mb}MB`);
-
-  } catch(e) {
-    console.error('Draft history FAILED:', e.message);
+  // Sample output for a notable player
+  const testPlayer = Object.values(draftMap).find(p=>p.name.includes('Hampton')&&p.season===2025);
+  if(testPlayer){
+    console.log('\nSample — Omarion Hampton:');
+    console.log(`  Draft: Round ${testPlayer.round}, Pick ${testPlayer.pick}, ${testPlayer.team}`);
+    console.log(`  Tier: ${testPlayer.draft_tier}`);
+    if(testPlayer.combine) console.log(`  Combine: 40=${testPlayer.combine.forty}, wt=${testPlayer.combine.wt}, vertical=${testPlayer.combine.vertical}`);
+    if(testPlayer.college_stats?.final_season) console.log(`  Final college season: rush_yards=${testPlayer.college_stats.final_season.rush_yards}, ypc=${testPlayer.college_stats.final_season.ypc}`);
+    if(testPlayer.recruiting) console.log(`  Recruiting: ${testPlayer.recruiting.stars}★, rating=${testPlayer.recruiting.rating}`);
   }
 }
-async function runAll() {
-  await buildCollegeStats().catch(e => console.error('College stats FAILED:', e.message));
-  await buildDraftHistory().catch(e => console.error('Draft history FAILED:', e.message));
-  console.log('\n=== All builds complete ===');
-}
 
-runAll().catch(console.error);
+build().catch(e=>{ console.error('FATAL:',e); process.exit(1); });
