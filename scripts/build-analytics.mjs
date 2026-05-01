@@ -270,7 +270,9 @@ async function buildAnalytics(){
           best_r: [r_slope,r_level,r_momentum].filter(Boolean)
             .reduce((best,r)=>Math.abs(r)>Math.abs(best)?r:best, 0),
           interpretation: (() => {
-            const best=Math.max(...[r_slope,r_level,r_momentum].filter(Boolean).map(Math.abs));
+            const vals=[r_slope,r_level,r_momentum].filter(v=>v!==null&&!isNaN(v));
+            if(!vals.length)return 'no data';
+            const best=Math.max(...vals.map(Math.abs));
             if(best>0.4)return 'strong predictor';
             if(best>0.25)return 'moderate predictor';
             if(best>0.15)return 'weak predictor';
@@ -302,8 +304,14 @@ async function buildAnalytics(){
     };
 
     console.log(`\n${pos} top predictors (30d):`);
-    for(const{stat,r,interpretation}of ranked.slice(0,5)){
-      console.log(`  ${stat}: r=${r.toFixed(3)} (${interpretation})`);
+    for(const item of ranked.slice(0,8)){
+      const d=correlations[pos][item.stat]?.['30d']||{};
+      const bestType=item.stat.startsWith('_')?null:
+        ['r_slope','r_level','r_momentum'].filter(k=>d[k]!==null)
+        .reduce((best,k)=>Math.abs(d[k]||0)>Math.abs(d[best]||0)?k:best,'r_slope');
+      const bestVal=bestType?d[bestType]:0;
+      const typeLabel=bestType==='r_slope'?'trend':bestType==='r_level'?'level':'momentum';
+      console.log(`  ${item.stat}: r=${item.r.toFixed(3)} via ${typeLabel} signal (${d.interpretation||'?'}) n=${d.n||0}`);
     }
   }
 
