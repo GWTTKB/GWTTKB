@@ -77,7 +77,7 @@ async function build(){
       const yr = parseInt(r.season||r.draft_year||0);
       const round = parseInt(r.round||0);
       const pos = (r.position||r.pos||'').toUpperCase();
-      return yr >= 2020 && round >= 1 && round <= 7 && SKILL.has(pos);
+      return yr >= 2020 && round >= 1 && round <= 4 && SKILL.has(pos);
     });
     console.log(`  ✓ ${allDraftRows.length} skill player picks (rounds 1-7, 2020-2026)`);
   }catch(e){
@@ -173,7 +173,11 @@ async function build(){
   let fetched = 0;
   let failed = 0;
 
-  for(const player of playersToFetch){
+  // Process in batches of 5 in parallel
+  const BATCH = 5;
+  for(let bi=0; bi<playersToFetch.length; bi+=BATCH){
+    const batch = playersToFetch.slice(bi, bi+BATCH);
+    await Promise.all(batch.map(async player => {
     const nameNorm = norm(player.name);
     try{
       // Search for player in CFBD
@@ -183,19 +187,19 @@ async function build(){
       });
       if(!Array.isArray(searchRes)||!searchRes.length){
         failed++;
-        await sleep(100);
-        continue;
+        
+        return;
       }
 
       // Find best match
       const match = searchRes.find(p=>norm(p.name)===nameNorm||norm(p.name).includes(nameNorm.slice(0,8)))
         || searchRes[0];
-      if(!match){ failed++; await sleep(100); continue; }
+      if(!match){ failed++; return; }
 
       // Fetch their stats for last 3 seasons before draft
       const draftYr = player.season;
       const seasons = [];
-      for(const yr of [draftYr-1, draftYr-2, draftYr-3].filter(y=>y>=2017)){
+      for(const yr of [draftYr-1, draftYr-2].filter(y=>y>=2017)){
         const stats = await fetchCFBD('/stats/player/season', {
           year: yr,
           athleteId: match.id
@@ -232,7 +236,7 @@ async function build(){
           };
           seasons.push(seasonStats);
         }
-        await sleep(150);
+        await sleep(80);
       }
 
       // Fetch recruiting info
@@ -324,11 +328,12 @@ async function build(){
 
       fetched++;
       if(fetched % 20 === 0) console.log(`    ${fetched}/${playersToFetch.length} fetched`);
-      await sleep(200);
     }catch(e){
       failed++;
-      await sleep(200);
     }
+    })); // end batch
+    await sleep(300); // rate limit between batches
+    if(bi % 50 === 0) console.log(`  Batch ${bi}/${playersToFetch.length}...`);
   }
 
   console.log(`  ✓ ${fetched} players fetched, ${failed} failed/not found`);
