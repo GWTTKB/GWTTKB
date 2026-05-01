@@ -8,75 +8,69 @@ import fs from 'fs';
 
 const POSITIONS = ['QB','RB','WR','TE'];
 
-// Every available stat by position — weekly for trend analysis, season for comp engine
-const TREND_STATS = {
+// Every stat from the stats page dropdown — weekly where available, season-level for NGS/PFR
+const WEEKLY_STATS = {
   QB: [
-    // Volume
-    'passing_yards','passing_tds','interceptions','attempts','completions',
-    // Efficiency
-    'passing_epa','completion_pct','yards_per_attempt',
-    // Pressure/protection
-    'sacks','sack_yards',
-    // Rushing contribution
-    'carries','rushing_yards','rushing_tds','rushing_epa',
-    // Fantasy
-    'fantasy_points_ppr',
-    // NGS (season-level, used in comp engine)
-    'avg_time_to_throw','avg_intended_air_yards','avg_completed_air_yards',
-    'completion_pct_above_expectation','passer_rating',
-    // PFR (season-level)
-    'pfr_passing_drops','pfr_bad_throws','pfr_blitzed_pct','pfr_sacked',
+    'fantasy_points_ppr','passing_yards','passing_tds','completions','attempts',
+    'interceptions','rushing_yards','rushing_tds','carries','rushing_epa','passing_epa',
   ],
   RB: [
-    // Rushing
-    'carries','rushing_yards','rushing_tds','rushing_epa',
-    'rushing_yards_per_carry',
-    // Receiving
-    'targets','receptions','receiving_yards','receiving_tds',
-    'target_share','receiving_epa','yards_per_reception',
-    'catch_rate','yards_per_target',
-    // Overall
-    'wopr','fantasy_points_ppr',
-    // NGS (season-level)
-    'avg_rush_yards_over_expected','avg_rush_yards_over_expected_pct',
-    'efficiency','percent_attempts_gte_eight_defenders',
-    // PFR (season-level)
-    'pfr_broke_tackles','pfr_yco_contact','pfr_avoided_tackles',
+    'fantasy_points_ppr','rushing_yards','rushing_tds','carries','target_share',
+    'receptions','receiving_yards','receiving_tds','catch_rate','wopr',
+    'rushing_epa','receiving_epa','rushing_first_downs','receiving_first_downs',
   ],
   WR: [
-    // Volume
-    'targets','receptions','receiving_yards','receiving_tds',
-    // Share metrics
-    'target_share','air_yards_share','wopr','racr',
-    // Efficiency
-    'receiving_epa','yards_per_reception','yards_per_target','catch_rate',
-    // Overall
-    'fantasy_points_ppr',
-    // NGS (season-level)
-    'avg_separation','avg_cushion','avg_yac_above_expectation',
-    'percent_share_of_intended_air_yards',
-    // PFR (season-level)
-    'pfr_drops','pfr_drop_pct','pfr_yac','pfr_broke_tackles',
-    'pfr_contested_tgts','pfr_contested_catch_pct',
-    // QB rushing contribution (dual threats)
-    'carries','rushing_yards',
+    'fantasy_points_ppr','receiving_yards','receiving_tds','targets','receptions',
+    'catch_rate','target_share','air_yards_share','wopr','racr',
+    'receiving_epa','receiving_first_downs',
   ],
   TE: [
-    // Volume
-    'targets','receptions','receiving_yards','receiving_tds',
-    // Share metrics
-    'target_share','air_yards_share','wopr','racr',
-    // Efficiency
-    'receiving_epa','yards_per_reception','yards_per_target','catch_rate',
-    // Overall
-    'fantasy_points_ppr',
-    // NGS (season-level)
+    'fantasy_points_ppr','receiving_yards','receiving_tds','targets','receptions',
+    'catch_rate','target_share','air_yards_share','wopr','racr',
+    'receiving_epa','receiving_first_downs',
+  ],
+};
+
+// Season-level advanced stats (NGS + PFR) — correlate season value against end-of-season value
+const SEASON_STATS = {
+  QB: [
+    'avg_time_to_throw','avg_intended_air_yards','avg_completed_air_yards',
+    'completion_pct_above_expectation','passer_rating',
+    'pfr_passing_drops','pfr_bad_throws','pfr_blitzed_pct','pfr_sacked',
+    // computed
+    'comp_pct','ypa','td_int',
+  ],
+  RB: [
+    'avg_rush_yards_over_expected','avg_rush_yards_over_expected_pct',
+    'efficiency','percent_attempts_gte_eight_defenders',
+    'pfr_broke_tackles','pfr_yco_contact','pfr_avoided_tackles',
+    // computed
+    'ypc','rush_yards_oe_att','stacked_box_rate','ybc_att','yac_att',
+  ],
+  WR: [
     'avg_separation','avg_cushion','avg_yac_above_expectation',
     'percent_share_of_intended_air_yards',
-    // PFR (season-level)
     'pfr_drops','pfr_drop_pct','pfr_yac','pfr_broke_tackles',
     'pfr_contested_tgts','pfr_contested_catch_pct',
+    // computed
+    'adot','yac','drop_rate','avg_yac_oe','avg_intended_air_yds',
   ],
+  TE: [
+    'avg_separation','avg_cushion','avg_yac_above_expectation',
+    'percent_share_of_intended_air_yards',
+    'pfr_drops','pfr_drop_pct','pfr_yac','pfr_broke_tackles',
+    'pfr_contested_tgts','pfr_contested_catch_pct',
+    // computed
+    'adot','yac','drop_rate','avg_yac_oe','avg_intended_air_yds',
+  ],
+};
+
+// Combined for comp engine
+const TREND_STATS = {
+  QB: [...new Set([...WEEKLY_STATS.QB,...SEASON_STATS.QB])],
+  RB: [...new Set([...WEEKLY_STATS.RB,...SEASON_STATS.RB])],
+  WR: [...new Set([...WEEKLY_STATS.WR,...SEASON_STATS.WR])],
+  TE: [...new Set([...WEEKLY_STATS.TE,...SEASON_STATS.TE])],
 };
 
 function pearson(xs, ys){
@@ -315,8 +309,115 @@ async function buildAnalytics(){
     }
   }
 
-  // ── PLAYER TRAJECTORIES ──
-  console.log('\nBuilding trajectories...');
+  // ── SEASON-LEVEL CORRELATION PASS (NGS + PFR advanced stats) ──
+  // Correlate season stat value against dynasty value change over that season
+  console.log('\nRunning season-level correlations (NGS/PFR)...');
+  
+  const seasonCorrelations = {};
+  for(const pos of POSITIONS){
+    seasonCorrelations[pos] = {};
+    const stats = SEASON_STATS[pos] || [];
+    
+    // Collect (stat_value, value_change_over_season) pairs
+    const seasonPoints = {};
+    for(const stat of stats) seasonPoints[stat] = [];
+    
+    for(const p of statsPlayers){
+      if(p.pos !== pos) continue;
+      const hist = histByName[norm(p.name)];
+      if(!hist?.dates?.length) continue;
+      
+      for(const [yr, seasonData] of Object.entries(p.seasons||{})){
+        if(!seasonData.games || seasonData.games < 8) continue;
+        const t = seasonData.totals || {};
+        
+        // Value at start and end of season
+        const valStart = getValueAtDate(hist, `${yr}-09-01`);
+        const valMid = getValueAtDate(hist, `${yr}-11-15`);
+        const valEnd = getValueAtDate(hist, `${parseInt(yr)+1}-02-01`);
+        if(!valStart || !valEnd || valStart < 500) continue;
+        
+        const valChange = (valEnd - valStart) / valStart * 100;
+        const valChangeMid = valMid ? (valMid - valStart) / valStart * 100 : null;
+        
+        for(const stat of stats){
+          const statVal = parseFloat(t[stat] || 0);
+          if(isNaN(statVal) || statVal === 0) continue;
+          seasonPoints[stat].push({statVal, valChange, valChangeMid});
+        }
+      }
+    }
+    
+    // Compute correlations
+    for(const stat of stats){
+      const pts = seasonPoints[stat];
+      if(pts.length < 8){
+        seasonCorrelations[pos][stat] = {r_season:null, r_midseason:null, n:pts.length, type:'season'};
+        continue;
+      }
+      const r_season = pearson(pts.map(p=>p.statVal), pts.map(p=>p.valChange));
+      const midPts = pts.filter(p=>p.valChangeMid !== null);
+      const r_midseason = midPts.length >= 8 
+        ? pearson(midPts.map(p=>p.statVal), midPts.map(p=>p.valChangeMid))
+        : null;
+      const best = Math.max(...[r_season,r_midseason].filter(v=>v!==null).map(Math.abs));
+      seasonCorrelations[pos][stat] = {
+        r_season, r_midseason, n: pts.length, type: 'season',
+        best_r: best||null,
+        interpretation: !best?'no data':best>0.4?'strong predictor':best>0.25?'moderate predictor':best>0.15?'weak predictor':'negligible'
+      };
+    }
+    
+    // Log top season-level predictors
+    const rankedSeason = stats
+      .filter(s=>seasonCorrelations[pos][s]?.best_r)
+      .sort((a,b)=>(seasonCorrelations[pos][b].best_r||0)-(seasonCorrelations[pos][a].best_r||0));
+    
+    console.log(`\n${pos} season-level predictors:`);
+    for(const stat of rankedSeason.slice(0,5)){
+      const d = seasonCorrelations[pos][stat];
+      console.log(`  ${stat}: r=${d.best_r?.toFixed(3)} (${d.interpretation}) n=${d.n}`);
+    }
+  }
+
+  // Merge into main correlations
+  for(const pos of POSITIONS){
+    for(const [stat, data] of Object.entries(seasonCorrelations[pos])){
+      if(!correlations[pos][stat]){
+        correlations[pos][stat] = { _season_only: true, '30d': {
+          r_slope: data.r_season, r_level: data.r_season, r_momentum: data.r_midseason,
+          best_r: data.best_r, n: data.n, interpretation: data.interpretation
+        }};
+        correlations[pos][stat]._summary = {
+          best_correlation: data.best_r,
+          best_type: 'season_level',
+          n: data.n,
+          interpretation: data.interpretation
+        };
+      }
+    }
+    // Re-rank including season stats
+    const allStats = Object.keys(correlations[pos]).filter(k=>!k.startsWith('_'));
+    const reranked = allStats
+      .map(s=>({stat:s, r:Math.abs(correlations[pos][s]?._summary?.best_correlation||0)}))
+      .sort((a,b)=>b.r-a.r);
+    correlations[pos]._ranked = {
+      by_30d: reranked.map(r=>r.stat),
+      top5: reranked.slice(0,5).map(r=>({
+        stat:r.stat, r:r.r,
+        type: correlations[pos][r.stat]?._season_only?'season':'weekly',
+        ...correlations[pos][r.stat]?._summary
+      }))
+    };
+  }
+
+  console.log('\n=== COMBINED RANKINGS (weekly + season stats) ===');
+  for(const pos of POSITIONS){
+    console.log(`\n${pos}:`);
+    for(const item of (correlations[pos]._ranked?.top5||[])){
+      console.log(`  ${item.stat}: r=${item.r?.toFixed(3)} (${item.type||'?'}) ${item.interpretation||''}`);
+    }
+  }
   const trajectories={};
 
   for(const p of statsPlayers){
