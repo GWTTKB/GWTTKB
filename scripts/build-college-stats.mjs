@@ -180,85 +180,71 @@ async function build(){
     await Promise.all(batch.map(async player => {
     const nameNorm = norm(player.name);
     try{
-      // Search for player in CFBD
-      const searchRes = await fetchCFBD('/player/search', {
-        searchTerm: player.name,
-        position: player.pos === 'QB' ? 'QB' : player.pos === 'RB' ? 'RB' : player.pos === 'WR' ? 'WR' : 'TE',
-      });
-      if(!Array.isArray(searchRes)||!searchRes.length){
-        failed++;
-        
-        return;
-      }
-
-      // Find best match
-      const match = searchRes.find(p=>norm(p.name)===nameNorm||norm(p.name).includes(nameNorm.slice(0,8)))
-        || searchRes[0];
-      if(!match){ failed++; return; }
-
-      // Fetch their stats for last 3 seasons before draft
       const draftYr = player.season;
+      const college = player.college;
+      if(!college){ failed++; return; }
+
       const seasons = [];
+      // Fetch stats by school+year — more reliable than player search
       for(const yr of [draftYr-1, draftYr-2].filter(y=>y>=2017)){
         const stats = await fetchCFBD('/stats/player/season', {
           year: yr,
-          athleteId: match.id
+          school: college,
         });
-        if(Array.isArray(stats)&&stats.length){
-          const seasonStats = { year: yr, team: match.team||'', stats:{} };
-          for(const s of stats){
-            const cat = s.category?.toLowerCase()||'';
-            const type = s.statType?.toLowerCase()||'';
-            const val = num(s.stat);
-            if(val!==null) seasonStats.stats[`${cat}_${type}`] = val;
-          }
-          // Normalize to standard fields
-          const st = seasonStats.stats;
-          seasonStats.normalized = {
-            // Passing
-            pass_yards: st.passing_yds||st.passing_yards||null,
-            pass_tds: st.passing_td||st.passing_tds||null,
-            pass_attempts: st.passing_att||null,
-            completions: st.passing_completions||null,
-            interceptions: st.passing_int||null,
-            completion_pct: st.passing_att&&st.passing_completions?
-              Math.round(st.passing_completions/st.passing_att*1000)/10:null,
-            // Rushing
-            rush_yards: st.rushing_yds||st.rushing_yards||null,
-            rush_tds: st.rushing_td||st.rushing_tds||null,
-            rush_attempts: st.rushing_car||st.rushing_att||null,
-            ypc: st.rushing_car&&st.rushing_yds?Math.round(st.rushing_yds/st.rushing_car*100)/100:null,
-            // Receiving
-            rec_yards: st.receiving_yds||st.receiving_yards||null,
-            rec_tds: st.receiving_td||st.receiving_tds||null,
-            receptions: st.receiving_rec||null,
-            rec_ypr: st.receiving_rec&&st.receiving_yds?Math.round(st.receiving_yds/st.receiving_rec*100)/100:null,
-          };
-          seasons.push(seasonStats);
+        if(!Array.isArray(stats)||!stats.length){ await sleep(80); continue; }
+
+        // Group by athlete
+        const athletes = {};
+        for(const s of stats){
+          const aNorm = norm(s.athlete||s.playerName||'');
+          if(!aNorm) continue;
+          if(!athletes[aNorm]) athletes[aNorm]={name:s.athlete||s.playerName,team:s.school||college,stats:{}};
+          const cat=(s.category||'').toLowerCase();
+          const type=(s.statType||'').toLowerCase();
+          const val=num(s.stat);
+          if(val!==null) athletes[aNorm].stats[`${cat}_${type}`]=val;
         }
+
+        // Match by normalized name
+        const ma = athletes[nameNorm]
+          ||Object.values(athletes).find(a=>
+            norm(a.name).startsWith(nameNorm.slice(0,6))&&
+            nameNorm.startsWith(norm(a.name).slice(0,6)));
+        if(!ma){ await sleep(80); continue; }
+
+        const st = ma.stats;
+        seasons.push({
+          year: yr, team: ma.team, stats: st,
+          normalized: {
+            pass_yards: st.passing_yds||st.passing_yards||null,
+            pass_tds: st.passing_td||st.passing_touchdowns||null,
+            pass_attempts: st.passing_att||null,
+            completions: st.passing_completions||st.passing_comp||null,
+            interceptions: st.passing_int||st.passing_interceptions||null,
+            completion_pct:(st.passing_att&&st.passing_completions)?
+              Math.round(st.passing_completions/st.passing_att*1000)/10:null,
+            rush_yards: st.rushing_yds||st.rushing_yards||null,
+            rush_tds: st.rushing_td||st.rushing_touchdowns||null,
+            rush_attempts: st.rushing_car||st.rushing_carries||st.rushing_att||null,
+            ypc:(st.rushing_car&&st.rushing_yds)?Math.round(st.rushing_yds/st.rushing_car*100)/100:null,
+            rec_yards: st.receiving_yds||st.receiving_yards||null,
+            rec_tds: st.receiving_td||st.receiving_touchdowns||null,
+            receptions: st.receiving_rec||st.receiving_receptions||null,
+            rec_ypr:(st.receiving_rec&&st.receiving_yds)?Math.round(st.receiving_yds/st.receiving_rec*100)/100:null,
+          }
+        });
         await sleep(80);
       }
 
-      // Fetch recruiting info
-      const recruiting = await fetchCFBD('/recruiting/players', {
-        search: player.name,
-        position: player.pos,
-      });
+      // Recruiting
       let recruitingData = null;
-      if(Array.isArray(recruiting)&&recruiting.length){
-        const rec = recruiting.find(r=>norm(r.name)===nameNorm)||recruiting[0];
-        if(rec){
-          recruitingData = {
-            stars: rec.stars||null,
-            rating: num(rec.rating),
-            ranking: rec.ranking||null,
-            position_ranking: rec.positionRanking||null,
-            city: rec.city||'',
-            state_province: rec.stateProvince||'',
-            committed_to: rec.committedTo||'',
-          };
+      try{
+        const recruiting = await fetchCFBD('/recruiting/players',{search:player.name});
+        if(Array.isArray(recruiting)&&recruiting.length){
+          const rec=recruiting.find(r=>norm(r.name)===nameNorm||norm(r.name).includes(nameNorm.slice(0,8)))||recruiting[0];
+          if(rec) recruitingData={stars:rec.stars||null,rating:num(rec.rating),ranking:rec.ranking||null,position_ranking:rec.positionRanking||null};
         }
-      }
+      }catch(e){}
 
       // Compute career college stats
       const career = { seasons_tracked: seasons.length };
