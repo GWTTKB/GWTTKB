@@ -402,23 +402,46 @@ async function buildAnalytics(){
       if(weightSum > 0) efficiencyScore = Math.round(score / weightSum * 100) / 100;
     }
 
-    // Rolling 2025 stats last 6 weeks
-    const rolling={};
-    if(s25?.weeks?.length>=3){
-      const recentWeeks=s25.weeks.slice(-6);
+    // Half-season splits and YoY comparison vs 2024
+    const seasonSplits={};
+    if(s25?.weeks?.length>=4){
+      const weeks25=s25.weeks;
+      const midpoint=Math.floor(weeks25.length/2);
+      const firstHalf=weeks25.slice(0,midpoint);
+      const secondHalf=weeks25.slice(midpoint);
+      const s24=statsP?.seasons?.[2024];
+      const totals24=s24?.totals||{};
+      
       for(const stat of (WEEKLY_STATS[pos]||[])){
-        const vals=recentWeeks.map(w=>parseFloat(w[stat]||0)).filter(v=>!isNaN(v)&&v>0);
-        if(vals.length>=3){
-          rolling[stat]={avg:Math.round(vals.reduce((a,b)=>a+b)/vals.length*100)/100,
-            slope:slope(vals),trend:slope(vals)>0.1?'rising':slope(vals)<-0.1?'falling':'stable'};
-        }
+        const fh=firstHalf.map(w=>parseFloat(w[stat]||0)).filter(v=>!isNaN(v));
+        const sh=secondHalf.map(w=>parseFloat(w[stat]||0)).filter(v=>!isNaN(v));
+        if(fh.length<2||sh.length<2)continue;
+        const fhAvg=fh.reduce((a,b)=>a+b,0)/fh.length;
+        const shAvg=sh.reduce((a,b)=>a+b,0)/sh.length;
+        const fullAvg=(fhAvg*fh.length+shAvg*sh.length)/(fh.length+sh.length);
+        const trend=fhAvg>0?Math.round((shAvg-fhAvg)/fhAvg*1000)/10:0;
+        // Compare 2025 full season avg per game to 2024 totals/games
+        const games24=s24?.games||0;
+        const total24=totals24[stat]||0;
+        const ppg24=games24>0?total24/games24:0;
+        const yoy=ppg24>0?Math.round((fullAvg-ppg24)/ppg24*1000)/10:null;
+        seasonSplits[stat]={
+          first_half_avg:Math.round(fhAvg*100)/100,
+          second_half_avg:Math.round(shAvg*100)/100,
+          season_avg:Math.round(fullAvg*100)/100,
+          h2_vs_h1_pct:trend,
+          h2_trend:trend>5?'improving':trend<-5?'declining':'stable',
+          season_2024_ppg:games24>0?Math.round(ppg24*100)/100:null,
+          yoy_vs_2024_pct:yoy,
+          yoy_trend:yoy===null?'no_2024_data':yoy>10?'breakout':yoy<-10?'regression':'similar'
+        };
       }
     }
 
     // Composite signal score
     const keyStats=pos?WEEKLY_STATS[pos]?.slice(0,5):[];
-    const risingCount=keyStats.filter(s=>rolling[s]?.trend==='rising').length;
-    const fallingCount=keyStats.filter(s=>rolling[s]?.trend==='falling').length;
+    const risingCount=keyStats.filter(s=>seasonSplits[s]?.h2_trend==='improving').length;
+    const fallingCount=keyStats.filter(s=>seasonSplits[s]?.h2_trend==='declining').length;
     const compositeSignal=keyStats.length>0?
       Math.round((risingCount-fallingCount)/keyStats.length*100):null;
 
@@ -455,8 +478,9 @@ async function buildAnalytics(){
       },
       efficiency_score:efficiencyScore,
       composite_signal:compositeSignal,
-      rolling_2025:rolling,
+      season_splits_2025:seasonSplits,
       season_2025:s25?{games:s25.games,team:s25.team,...s25.totals}:null,
+      season_2024:statsP?.seasons?.[2024]?{games:statsP.seasons[2024].games,team:statsP.seasons[2024].team,...statsP.seasons[2024].totals}:null,
       stat_fingerprint:s25?.totals?buildStatFingerprint(s25.totals,pos):null,
     };
   }
