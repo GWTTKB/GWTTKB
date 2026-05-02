@@ -50,13 +50,13 @@ jobs:
       - name: Build depth charts + target share redistribution
         run: node scripts/build-depth-charts.mjs
 
-      - name: Build college stats + draft capital + combine (NFLverse + CFBD API)
-        run: node scripts/build-college-stats.mjs
-        env:
-          CFBD_API_KEY: ${{ secrets.CFBD_API_KEY }}
+      # College stats skipped — CFBD API rate limits block GitHub Actions
+      # nfl-draft-history.json (NFLverse/PFR) has draft capital + combine data
+      # College production stats will be added manually via player-profiles.json
 
-      - name: Build coaching staff history (Wikipedia)
-        run: node scripts/build-coaching-staff.mjs
+      # Coaching staff is sourced from nfl-team-context.json (user's authoritative file)
+      # Wikipedia scraper disabled — was producing wrong 2026 data
+      # coaching-staff.json is rebuilt in build-depth-charts.mjs from team context
 
       - name: Build startup + rookie ADP (live Sleeper drafts)
         run: node scripts/build-startup-adp.mjs
