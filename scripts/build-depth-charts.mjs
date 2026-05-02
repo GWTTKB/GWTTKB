@@ -375,6 +375,28 @@ async function buildDepthCharts() {
   };
 
   fs.writeFileSync('public/data/depth-charts.json', JSON.stringify(output));
+
+  // Rebuild coaching-staff.json from team context (authoritative 2026 data)
+  // This replaces the Wikipedia scraper which had wrong 2026 data
+  try {
+    const coachingOutput = {
+      season: 2026,
+      source: 'User nfl-team-context.json (authoritative)',
+      note: 'HC/OC from user file — overrides Wikipedia scraper',
+      teams: {}
+    };
+    for (const [abbr, dc] of Object.entries(depthCharts)) {
+      if (dc.hc || dc.oc) {
+        coachingOutput.teams[abbr] = {
+          hc: dc.hc || '',
+          oc: dc.oc || '',
+          scheme: dc.scheme || '',
+        };
+      }
+    }
+    fs.writeFileSync('public/data/coaching-staff.json', JSON.stringify(coachingOutput));
+    console.log(`✓ coaching-staff.json rebuilt from team context: ${Object.keys(coachingOutput.teams).length} teams`);
+  } catch(e) { console.warn('Coaching staff rebuild error:', e.message); }
   const mb = (fs.statSync('public/data/depth-charts.json').size / 1024 / 1024).toFixed(1);
   console.log(`\n✓ depth-charts.json: ${Object.keys(depthCharts).length} teams, ${output.total_players} players, ${mb}MB`);
 
