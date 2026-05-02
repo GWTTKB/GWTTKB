@@ -1751,7 +1751,7 @@ Do NOT say "Jeremiyah Love goes 1.03" meaning dynasty pick 3 — Love's NFL draf
 Always use DYNASTY ADP (from the rookie ADP data loaded above) to determine who will be available at a specific dynasty pick.
 
 2026 NFL DRAFT PICKS (for reference only — not dynasty draft order):
-${(CTX.draftHistory?.drafts?.['2026']?.dynasty_skill_picks||[]).slice(0,20).map(p=>p.round+'.'+String(p.pick).padStart(2,'0')+' '+p.team+' '+p.player+'('+p.pos+')').join(', ')}
+${(CTX.draftHistory?.drafts?.['2026']?.all_picks||[]).slice(0,30).map(p=>`R${p.round}P${p.pick} ${p.team} ${p.player}(${p.pos},${p.college})`).join(', ')}
 
 TODAY: ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}
 
@@ -1909,14 +1909,21 @@ async function fetchPlayerStats(playerName){
     const norm=s=>(s||'').toLowerCase().replace(/[^a-z]/g,'');
     const consensusPlayer=(CTX.consensusTop||[]).find(p=>norm(p.name)===norm(playerName));
     
-    // Then try nfl-stats.json for detailed metrics
+    // Then try nfl-stats.json for detailed metrics — cache after first load
     let statsData=null;
     if(CTX.statsAvailable){
       try{
-        const res=await fetch('/data/nfl-stats.json');
-        if(res.ok){
-          const data=await res.json();
-          statsData=Object.values(data.players||{}).find(p=>
+        // Cache the full stats file after first load — don't refetch 13MB every time
+        if(!CTX._nflStatsCache){
+          const res=await fetch('/data/nfl-stats.json');
+          if(res.ok){
+            const data=await res.json();
+            CTX._nflStatsCache=data.players||{};
+            console.log('NFL stats cached:',Object.keys(CTX._nflStatsCache).length,'players');
+          }
+        }
+        if(CTX._nflStatsCache){
+          statsData=Object.values(CTX._nflStatsCache).find(p=>
             norm(p.name||'')===norm(playerName)||
             norm(p.name||'').includes(norm(playerName))
           );
