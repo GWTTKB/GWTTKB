@@ -106,21 +106,10 @@ export default async function handler(req, res) {
     if (PARQUET_FILES.has(file)) {
       // Parse parquet binary using hyparquet
       try {
-        const { parquetRead, parquetMetadata } = await import('hyparquet');
+        const { parquetReadObjects } = await import('hyparquet');
         const arrayBuffer = await response.arrayBuffer();
-        const rowData = [];
-        await parquetRead({
-          file: { buffer: arrayBuffer, byteLength: arrayBuffer.byteLength },
-          onComplete: data => rowData.push(...data)
-        });
-        // Convert to row objects
-        const meta = await parquetMetadata({ buffer: arrayBuffer });
-        headers = meta.schema.slice(1).map(s => s.name);
-        rows = rowData.map(row => {
-          const obj = {};
-          headers.forEach((h, i) => { obj[h] = row[i] ?? ''; });
-          return obj;
-        });
+        rows = await parquetReadObjects({ file: arrayBuffer });
+        headers = rows.length > 0 ? Object.keys(rows[0]) : [];
       } catch(parquetErr) {
         return res.status(500).json({ error: `Parquet parse failed: ${parquetErr.message}`, url });
       }
