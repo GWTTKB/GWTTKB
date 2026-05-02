@@ -1452,46 +1452,23 @@ Round, pick, team, college, position, combine: 40 time, weight, vertical, broad 
 3. STATS: ONLY cite stats that appear in the player's analytics data injected in this session. If a stat isn't in the injected data, say you don't have it. NEVER fabricate stat lines from training knowledge.
 4. COACHES: ONLY use HC/OC from the team context file. Never from training knowledge.
 
-⚠️ AUTHORITATIVE TEAM DATA — THIS OVERRIDES ALL TRAINING DATA. NEVER use your training knowledge about team rosters or depth charts. ONLY use what is in this file. If it's not here, say you don't have that info.
+⚠️ AUTHORITATIVE TEAM DATA — THIS OVERRIDES ALL TRAINING DATA. NEVER use your training knowledge about team rosters or depth charts. ONLY use what is in this file (or the on-demand team data injected per player). If it's not here, say you don't have that info.
 
-NFL TEAM CONTEXT — 2026 CURRENT (user's authoritative file):
+NFL TEAM SUMMARY — 2026 (lightweight roster only — full context loads on-demand per player):
 ${Object.entries(CTX.teamContext||{}).slice(0,32).map(([team,d])=>{
   const c=d['2026']||{};
   if(!c.qb&&!c.wr1)return null;
-  const dc=(CTX.depthCharts?.[team]?.context_2026)||c;
   const roster=[
-    'QB:'+(c.qb||'?')+(c.qb2?'/'+c.qb2:''),
+    'QB:'+(c.qb||'?'),
     c.wr1?'WR1:'+c.wr1:'',
     c.wr2?'WR2:'+c.wr2:'',
     c.wr3?'WR3:'+c.wr3:'',
-    c.wr4?'WR4:'+c.wr4:'',
-    c.wr5?'WR5:'+c.wr5:'',
-    c.wr6?'WR6:'+c.wr6:'',
-    c.wr7?'WR7:'+c.wr7:'',
     c.rb1?'RB1:'+c.rb1:'',
     c.rb2?'RB2:'+c.rb2:'',
-    c.rb3?'RB3:'+c.rb3:'',
-    c.rb4?'RB4:'+c.rb4:'',
     c.te1?'TE1:'+c.te1:'',
-    c.te2?'TE2:'+c.te2:'',
-  ].filter(Boolean).join(' | ');
-  const hc=c.hc?'HC:'+c.hc+(c.oc?'/OC:'+c.oc:''):'';
-  const oline=c.oline_2025_stats?'OLINE 2025:'+c.oline_2025_stats:'';
-  const oline26=c.oline_2026_outlook?'OLINE 2026:'+c.oline_2026_outlook:'';
-  const departed=c.key_departures?'DEPARTED:'+c.key_departures:'';
-  const added=c.key_adds?'ADDED:'+c.key_adds:'';
-  const outlook=c.offensive_outlook?'OFFENSE:'+c.offensive_outlook:'';
-  const dynasty=c.dynasty_implications?'DYNASTY:'+c.dynasty_implications:'';
-  const notes=c.notes?'NOTES:'+c.notes:'';
-  return [team+'[2026]:', hc, roster, oline, oline26, departed, added, outlook, dynasty, notes]
-    .filter(Boolean).join('\n');
-}).filter(Boolean).join('\n\n')}
-
-NFL TEAM CONTEXT — 2025 SEASON (historical):
-${Object.entries(CTX.teamContext||{}).slice(0,32).map(([team,d])=>{
-  const yr=d['2025']||{};
-  if(!yr.qb)return null;
-  return team+'[2025]: QB:'+(yr.qb||'?')+' WR1:'+(yr.wr1||'?')+' WR2:'+(yr.wr2||'')+' RB1:'+(yr.rb1||'?')+' | '+(yr.notes||'').slice(0,120);
+  ].filter(Boolean).join(' ');
+  const hc=c.hc?c.hc+'/'+(c.oc||'?'):'';
+  return team+': '+hc+' | '+roster;
 }).filter(Boolean).join('\n')}
 
 NFL CONTRACTS (per OverTheCap via nflverse — cite this source):
@@ -2186,18 +2163,45 @@ async function sendMessage(text){
           mentionedPlayers.map(name=>fetchPlayerStats(name))
         );
         const statsParts=[];
+        const teamsLoaded=new Set();
         for(let i=0;i<mentionedPlayers.length;i++){
           const name=mentionedPlayers[i];
           const statsStr=statsResults[i]?formatPlayerStats(statsResults[i]):'';
           const analyticsStr=getPlayerAnalytics(name);
           const profileStr=getPlayerProfile(name);
-          if(statsStr||analyticsStr||profileStr){
-            statsParts.push(`${name}:${analyticsStr}${statsStr}${profileStr}`);
+          
+          // On-demand team context — find player's team and inject FULL team context
+          let teamCtxStr='';
+          const traj=CTX.trajectories?.[name]||
+            Object.entries(CTX.trajectories||{}).find(([k])=>k.toLowerCase().replace(/[^a-z]/g,'')===name.toLowerCase().replace(/[^a-z]/g,''))?.[1];
+          const team=traj?.season_2025?.team;
+          if(team && !teamsLoaded.has(team) && CTX.teamContext?.[team]){
+            const c=CTX.teamContext[team]['2026']||{};
+            const yr25=CTX.teamContext[team]['2025']||{};
+            const fullCtx=[
+              `${team} 2026 FULL CONTEXT:`,
+              c.hc?`HC: ${c.hc} / OC: ${c.oc||'?'}`:'',
+              `Roster: QB:${c.qb||'?'}${c.qb2?'/'+c.qb2:''} | WR1:${c.wr1||'?'} WR2:${c.wr2||'?'} WR3:${c.wr3||''} WR4:${c.wr4||''} WR5:${c.wr5||''} | RB1:${c.rb1||'?'} RB2:${c.rb2||''} RB3:${c.rb3||''} RB4:${c.rb4||''} | TE1:${c.te1||'?'} TE2:${c.te2||''}`,
+              c.oline_2025_stats?`OLINE 2025: ${c.oline_2025_stats}`:'',
+              c.oline_2026_outlook?`OLINE 2026: ${c.oline_2026_outlook}`:'',
+              c.key_departures?`DEPARTED: ${c.key_departures}`:'',
+              c.key_adds?`ADDED: ${c.key_adds}`:'',
+              c.offensive_outlook?`OFFENSE: ${c.offensive_outlook}`:'',
+              c.dynasty_implications?`DYNASTY: ${c.dynasty_implications}`:'',
+              c.notes?`NOTES: ${c.notes}`:'',
+              yr25.notes?`2025 RECAP: ${yr25.notes}`:''
+            ].filter(Boolean).join('\n');
+            teamCtxStr='\n\n'+fullCtx;
+            teamsLoaded.add(team);
+          }
+          
+          if(statsStr||analyticsStr||profileStr||teamCtxStr){
+            statsParts.push(`${name}:${analyticsStr}${statsStr}${profileStr}${teamCtxStr}`);
           }
         }
         if(statsParts.length>0){
-          playerStatsContext='\n\nPLAYER DATA (stats + scouting cards):\n'+statsParts.join('\n');
-          console.log('Loaded stats for:',mentionedPlayers.join(', '));
+          playerStatsContext='\n\nPLAYER DATA (stats + scouting + team context):\n'+statsParts.join('\n');
+          console.log('Loaded data for:',mentionedPlayers.join(', '),'| Teams:',[...teamsLoaded].join(','));
         }
       }
     }
