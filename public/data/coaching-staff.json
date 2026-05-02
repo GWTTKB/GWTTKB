@@ -1,1 +1,217 @@
-{"generated":"2026-05-01T23:55:29.845Z","source":"Wikipedia NFL season articles","years_covered":"2015-2026","coverage":"0/384 team-years","teams":{"ARI":{"2015":{"hc":"Unknown","oc":"Unknown","scheme":"","source":"Wikipedia"},"2016":{"hc":"Unknown","oc":"Unknown","scheme":"","source":"Wikipedia"},"2017":{"hc":"Unknown","oc":"Unknown","scheme":"","source":"Wikipedia"},"2018":{"hc":"Unknown","oc":"Unknown","scheme":"","source":"Wikipedia"},"2019":{"hc":"Unknown","oc":"Unknown","scheme":"","source":"Wikipedia"},"2020":{"hc":"Unknown","oc":"Unknown","scheme":"","source":"Wikipedia"},"2021":{"hc":"Unknown","oc":"Unknown","scheme":"","source":"Wikipedia"},"2022":{"hc":"Unknown","oc":"Unknown","scheme":"","source":"Wikipedia"},"2023":{"hc":"Unknown","oc":"Unknown","scheme":"","source":"Wikipedia"},"2024":{"hc":"Unknown","oc":"Unknown","scheme":"","source":"Wikipedia"}},"ATL":{},"BAL":{},"BUF":{},"CAR":{},"CHI":{},"CIN":{},"CLE":{},"DAL":{},"DEN":{},"DET":{},"GB":{},"HOU":{},"IND":{},"JAX":{},"KC":{},"LAC":{},"LAR":{"2020":{"hc":"Unknown","oc":"Unknown","scheme":"","source":"Wikipedia"},"2023":{"hc":"Unknown","oc":"Unknown","scheme":"","source":"Wikipedia"},"2025":{"hc":"Unknown","oc":"Unknown","scheme":"","source":"Wikipedia"}},"LV":{"2019":{"hc":"Unknown","oc":"Unknown","scheme":"","source":"Wikipedia"},"2022":{"hc":"Unknown","oc":"Unknown","scheme":"","source":"Wikipedia"},"2025":{"hc":"Unknown","oc":"Unknown","scheme":"","source":"Wikipedia"}},"MIA":{"2015":{"hc":"Unknown","oc":"Unknown","scheme":"","source":"Wikipedia"},"2018":{"hc":"Unknown","oc":"Unknown","scheme":"","source":"Wikipedia"},"2021":{"hc":"Unknown","oc":"Unknown","scheme":"","source":"Wikipedia"}},"MIN":{},"NE":{},"NO":{},"NYG":{},"NYJ":{},"PHI":{},"PIT":{},"SEA":{},"SF":{},"TB":{},"TEN":{},"WAS":{}}}
+{
+  "season": 2026,
+  "source": "User nfl-team-context.json (authoritative 2026 data)",
+  "note": "HC/OC pulled directly from user's team context file \u2014 do not overwrite with Wikipedia scraper",
+  "teams": {
+    "ARI": {
+      "hc": "Mike LaFleur",
+      "oc": "Nathaniel Hackett",
+      "scheme": "",
+      "hc_2025": "",
+      "oc_2025": ""
+    },
+    "ATL": {
+      "hc": "Kevin Stefanski",
+      "oc": "Tommy Rees",
+      "scheme": "",
+      "hc_2025": "",
+      "oc_2025": ""
+    },
+    "BAL": {
+      "hc": "Jesse Minter",
+      "oc": "Declan Doyle",
+      "scheme": "",
+      "hc_2025": "",
+      "oc_2025": ""
+    },
+    "BUF": {
+      "hc": "Joe Brady",
+      "oc": "Pete Carmichael Jr.",
+      "scheme": "",
+      "hc_2025": "",
+      "oc_2025": ""
+    },
+    "CHI": {
+      "hc": "Ben Johnson",
+      "oc": "Press Taylor",
+      "scheme": "",
+      "hc_2025": "",
+      "oc_2025": ""
+    },
+    "CIN": {
+      "hc": "Zac Taylor",
+      "oc": "Dan Pitcher",
+      "scheme": "",
+      "hc_2025": "",
+      "oc_2025": ""
+    },
+    "CLE": {
+      "hc": "Todd Monken",
+      "oc": "Travis Switzer",
+      "scheme": "",
+      "hc_2025": "",
+      "oc_2025": ""
+    },
+    "DAL": {
+      "hc": "Brian Schottenheimer",
+      "oc": "Klayton Adams",
+      "scheme": "",
+      "hc_2025": "",
+      "oc_2025": ""
+    },
+    "DEN": {
+      "hc": "Sean Payton",
+      "oc": "Davis Webb",
+      "scheme": "",
+      "hc_2025": "",
+      "oc_2025": ""
+    },
+    "DET": {
+      "hc": "Dan Campbell",
+      "oc": "Drew Petzing",
+      "scheme": "",
+      "hc_2025": "",
+      "oc_2025": ""
+    },
+    "GB": {
+      "hc": "Matt LaFleur",
+      "oc": "Adam Stenavich",
+      "scheme": "",
+      "hc_2025": "",
+      "oc_2025": ""
+    },
+    "HOU": {
+      "hc": "Demeco Ryans",
+      "oc": "Nick Caley",
+      "scheme": "",
+      "hc_2025": "",
+      "oc_2025": ""
+    },
+    "IND": {
+      "hc": "Shane Steichen",
+      "oc": "Jim Bob Cooter",
+      "scheme": "",
+      "hc_2025": "",
+      "oc_2025": ""
+    },
+    "JAX": {
+      "hc": "Liam Coen",
+      "oc": "Grant Udinski",
+      "scheme": "",
+      "hc_2025": "",
+      "oc_2025": ""
+    },
+    "KC": {
+      "hc": "Andy Reid",
+      "oc": "Eric Bieniemy",
+      "scheme": "",
+      "hc_2025": "",
+      "oc_2025": ""
+    },
+    "LAC": {
+      "hc": "Jim Harbaugh",
+      "oc": "Mike McDaniel",
+      "scheme": "",
+      "hc_2025": "",
+      "oc_2025": ""
+    },
+    "LAR": {
+      "hc": "Sean McVay",
+      "oc": "nate Scheelhaase",
+      "scheme": "",
+      "hc_2025": "",
+      "oc_2025": ""
+    },
+    "LV": {
+      "hc": "Klint Kubiak",
+      "oc": "Andrew Janocko",
+      "scheme": "",
+      "hc_2025": "",
+      "oc_2025": ""
+    },
+    "MIA": {
+      "hc": "Jeff Hafley",
+      "oc": "Bobby Slowik",
+      "scheme": "",
+      "hc_2025": "",
+      "oc_2025": ""
+    },
+    "NE": {
+      "hc": "Mike Vrabel",
+      "oc": "Josh McDaniels",
+      "scheme": "",
+      "hc_2025": "",
+      "oc_2025": ""
+    },
+    "NO": {
+      "hc": "Kellen Moore",
+      "oc": "Doug Nussmeier",
+      "scheme": "",
+      "hc_2025": "",
+      "oc_2025": ""
+    },
+    "NYG": {
+      "hc": "Jim Harbaugh",
+      "oc": "Matt Nagy",
+      "scheme": "",
+      "hc_2025": "",
+      "oc_2025": ""
+    },
+    "NYJ": {
+      "hc": "Aaron Glenn",
+      "oc": "Frank Reich",
+      "scheme": "",
+      "hc_2025": "",
+      "oc_2025": ""
+    },
+    "PHI": {
+      "hc": "Nick Sirianni",
+      "oc": "Sean Mannion",
+      "scheme": "",
+      "hc_2025": "",
+      "oc_2025": ""
+    },
+    "PIT": {
+      "hc": "Mike McCarthy",
+      "oc": "Brian Angelichio",
+      "scheme": "",
+      "hc_2025": "",
+      "oc_2025": ""
+    },
+    "SEA": {
+      "hc": "Mike Macdonald",
+      "oc": "Brian Fleury",
+      "scheme": "",
+      "hc_2025": "",
+      "oc_2025": ""
+    },
+    "SF": {
+      "hc": "Kyle Shanahan",
+      "oc": "Klay Kubiak",
+      "scheme": "",
+      "hc_2025": "",
+      "oc_2025": ""
+    },
+    "TB": {
+      "hc": "Zac Robinson",
+      "oc": "",
+      "scheme": "",
+      "hc_2025": "",
+      "oc_2025": ""
+    },
+    "TEN": {
+      "hc": "Robert Saleh",
+      "oc": "Brian Daboll",
+      "scheme": "",
+      "hc_2025": "",
+      "oc_2025": ""
+    },
+    "WAS": {
+      "hc": "Dan Quinn",
+      "oc": "David Blough",
+      "scheme": "",
+      "hc_2025": "",
+      "oc_2025": ""
+    }
+  }
+}
