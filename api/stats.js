@@ -21,11 +21,12 @@ const FILES = {
   pfr_pass:            (season) => `${BASE}/pfr_advstats/advstats_season_pass_${season}.parquet`,
   pfr_rush:            (season) => `${BASE}/pfr_advstats/advstats_season_rush_${season}.parquet`,
   pfr_rec:             (season) => `${BASE}/pfr_advstats/advstats_season_rec_${season}.parquet`,
-  // NGS stats — discover actual filenames via GitHub API
-  // Release exists at nextgen_stats but exact filenames unknown
-  ngs_pass:            (season) => `${BASE}/nextgen_stats/nextgen_stats_passing_${season}.parquet`,
-  ngs_rush:            (season) => `${BASE}/nextgen_stats/nextgen_stats_rushing_${season}.parquet`,
-  ngs_rec:             (season) => `${BASE}/nextgen_stats/nextgen_stats_receiving_${season}.parquet`,
+  // NGS stats — confirmed filenames from GitHub API
+  // Single file per stat type contains ALL years (2016-2024)
+  // No 2025 NGS data yet — most recent is 2024 season
+  ngs_pass:            () => `${BASE}/nextgen_stats/ngs_passing.parquet`,
+  ngs_rush:            () => `${BASE}/nextgen_stats/ngs_rushing.parquet`,
+  ngs_rec:             () => `${BASE}/nextgen_stats/ngs_receiving.parquet`,
   // Players
   players:             () => `${BASE}/players/players.csv`,
 };
@@ -87,32 +88,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Special: discover NGS filenames via GitHub API BEFORE trying the URL
-    if (file.startsWith('ngs_')) {
-      const statType = file === 'ngs_pass' ? 'passing' : file === 'ngs_rush' ? 'rushing' : 'receiving';
-      try {
-        const ghRes = await fetch('https://api.github.com/repos/nflverse/nflverse-data/releases/tags/nextgen_stats', {
-          headers: { 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'GWTTKB/1.0' }
-        });
-        if (ghRes.ok) {
-          const release = await ghRes.json();
-          const assets = release.assets || [];
-          return res.status(200).json({
-            file, season,
-            message: 'NGS release asset list - use these filenames',
-            release_name: release.name,
-            all_assets: assets.map(a => a.name),
-            matching_assets: assets.filter(a => a.name.includes(statType)).map(a => ({
-              name: a.name,
-              download_url: a.browser_download_url
-            }))
-          });
-        }
-      } catch(e) {
-        console.warn('GitHub API discovery error:', e.message);
-      }
-    }
-
     const url = FILES[file](season);
     const response = await fetch(url, {
       headers: { 'User-Agent': 'GWTTKB/1.0' },
