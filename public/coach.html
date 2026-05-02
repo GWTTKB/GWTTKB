@@ -730,17 +730,13 @@ async function loadAllContext(){
 
     setLoad(78,'LOADING COACHING STAFF + PHASE 2 DATA...');
     try{
-      const[coachRes,dkRes,draftRes,contractRes,teamCtxRes]=await Promise.all([
+      const[coachRes,draftRes,teamCtxRes]=await Promise.all([
         fetch('/data/coaching-staff.json'),
-        fetch('/data/dynasty-knowledge.json'),
         fetch('/data/nfl-draft-history.json'),
-        fetch('/data/contract-knowledge.json'),
         fetch('/data/nfl-team-context.json')
       ]);
       CTX.coaching=coachRes.ok?(await coachRes.json()).teams:{};
-      CTX.dynasty=dkRes.ok?await dkRes.json():{};
       CTX.draftHistory=draftRes.ok?await draftRes.json():{};
-      CTX.contractKnowledge=contractRes.ok?await contractRes.json():{};
       CTX.teamContext=teamCtxRes.ok?(await teamCtxRes.json()).teams:{};
     }catch(e){console.warn('Phase 2 data:',e);}
 
@@ -1001,7 +997,7 @@ async function loadDynastyData(){
   CTX.sfVals={};CTX.qbVals={};CTX.playerNames={};CTX.playerPos={};
 
   try{
-    const[cRes,gRes,hRes,pkRes,contractsRes,patternsRes,statsMetaRes,startupAdpRes,mktRes,dcRes]=await Promise.all([
+    const[cRes,gRes,hRes,pkRes,contractsRes,patternsRes,statsMetaRes,startupAdpRes,mktRes,dcRes,ppRes]=await Promise.all([
       fetch('/data/consensus.json'),
       fetch('/data/leland-rankings.json'),
       fetch('/data/historical-players.json').catch(()=>null),
@@ -1011,7 +1007,8 @@ async function loadDynastyData(){
       fetch('/data/nfl-stats.json').catch(()=>null),
       fetch('/data/startup-adp.json').catch(()=>null),
       fetch('/data/market-intel.json').catch(()=>null),
-      fetch('/data/depth-charts.json').catch(()=>null)
+      fetch('/data/depth-charts.json').catch(()=>null),
+      fetch('/data/player-profiles.json').catch(()=>null)
     ]);
 
     // Consensus
@@ -1069,6 +1066,15 @@ async function loadDynastyData(){
         CTX.class2024=Object.entries(CTX.playerDraftYear).filter(([,yr])=>yr===2024).map(([name])=>name);
         console.log('Draft classes detected — 2025:',CTX.class2025.length,'2024:',CTX.class2024.length);
       }catch(e){console.warn('Historical data error:',e);}
+    }
+
+    // Player profiles (your written scouting notes)
+    if(ppRes?.ok){
+      try{
+        const pp=await ppRes.json();
+        CTX.playerProfiles=pp.players||{};
+        console.log('Player profiles loaded:',Object.keys(CTX.playerProfiles).length,'players');
+      }catch(e){console.warn('Player profiles error:',e);}
     }
 
     // Depth charts + target share data
@@ -1303,24 +1309,21 @@ function buildSystemPrompt(){
     return`${t.username}:avgAge=${avgAge.toFixed(1)},rookies=${rookies}`;
   }).join(' | ');
 
-  // College breakout profiles
-  const collegeProfiles=CTX.draftHistory?.college_breakout_profiles?
-    Object.entries(CTX.draftHistory.college_breakout_profiles).map(([pos,prof])=>
-      `${pos}: Elite profile=${prof.elite_profile?.slice(0,80)} | Breakout timing=${prof.breakout_timing}`
-    ).join(' || '):''
 
-  // 2025 draft class context
-  const draft2025=(CTX.draftHistory?.drafts?.['2025']?.round1||[]).slice(0,20)
-    .map(p=>`${p.pick}.${p.player}(${p.pos},${p.team})`).join(', ');
+  // 2025 draft class — from NFLverse (accurate)
+  const draft2025=(CTX.draftHistory?.drafts?.['2025']?.all_picks||[]).slice(0,30)
+    .map(p=>`R${p.round}P${p.pick} ${p.player}(${p.pos},${p.team},${p.college})`).join(', ');
+
+  // 2026 draft class — from NFLverse (accurate)  
+  const draft2026=(CTX.draftHistory?.drafts?.['2026']?.all_picks||[]).slice(0,40)
+    .map(p=>`R${p.round}P${p.pick} ${p.player}(${p.pos},${p.team},${p.college}${p.combine?.forty?',40:'+p.combine.forty:''}${p.combine?.wt?',wt:'+p.combine.wt:''})`).join(', ');
 
   // Contract league context
-  const contractCtx=CTX.isContractLeague?
-    `THIS IS A CONTRACT LEAGUE. ${CTX.contractKnowledge?.formats?.salary_cap?.strategy||''}`:
-    'Standard dynasty (no salary cap).';
+  const contractCtx=CTX.isContractLeague?'THIS IS A CONTRACT LEAGUE — factor salary cap into all advice.':'Standard dynasty (no salary cap).';
 
-  // Coaching staff context (key fantasy-relevant matchups)
-  const coachCtx=Object.entries(CTX.coaching||{}).slice(0,10)
-    .map(([team,c])=>`${team}:${c.hc}/${c.oc}(${c.scheme})`).join(', ');
+  // Coaching staff from user team context (authoritative 2026)
+  const coachCtx=Object.entries(CTX.coaching||{}).slice(0,32)
+    .map(([team,c])=>`${team}:HC=${c.hc||'?'}/OC=${c.oc||'?'}${c.scheme?'/'+c.scheme:''}`).join(' | ');
 
   return `You are The Coach — the most analytically sophisticated dynasty fantasy football intelligence system ever built. You operate for GWTTKB (Guys Who Think They Know Ball). You exist for one reason: to help this manager win a championship.
 
@@ -1872,6 +1875,25 @@ function extractPlayerNames(text){
   return [...new Set(names)].slice(0,5);
 }
 
+// Get player profile card (your written scouting notes)
+function getPlayerProfile(playerName){
+  if(!CTX.playerProfiles)return '';
+  const norm=s=>(s||'').toLowerCase().replace(/[^a-z]/g,'');
+  // Try exact match first, then normalized
+  const profile=CTX.playerProfiles[playerName]||
+    Object.entries(CTX.playerProfiles).find(([k])=>norm(k)===norm(playerName))?.[1];
+  if(!profile)return '';
+  const parts=[];
+  if(profile.depth_chart) parts.push('DEPTH CHART: '+profile.depth_chart);
+  if(profile.opportunity) parts.push('OPPORTUNITY: '+profile.opportunity);
+  if(profile.comp) parts.push('HISTORICAL COMP: '+profile.comp);
+  if(profile.outlook) parts.push('DYNASTY OUTLOOK: '+profile.outlook);
+  if(profile.risk) parts.push('RISK: '+profile.risk);
+  if(profile.bsh) parts.push('BSH: '+profile.bsh);
+  if(profile.notes) parts.push('NOTES: '+profile.notes);
+  return parts.length?'\nSCOUTING CARD:\n'+parts.join('\n'):'';
+}
+
 // Format player stats for system prompt injection
 function formatPlayerStats(statsObj){
   if(!statsObj)return '';
@@ -1935,12 +1957,14 @@ async function sendMessage(text){
         );
         const statsParts=[];
         for(let i=0;i<mentionedPlayers.length;i++){
-          if(statsResults[i]){
-            statsParts.push(`${mentionedPlayers[i]} STATS: ${formatPlayerStats(statsResults[i])}`);
+          const statsStr=statsResults[i]?formatPlayerStats(statsResults[i]):'';
+          const profileStr=getPlayerProfile(mentionedPlayers[i]);
+          if(statsStr||profileStr){
+            statsParts.push(`${mentionedPlayers[i]}:${statsStr}${profileStr}`);
           }
         }
         if(statsParts.length>0){
-          playerStatsContext='\n\nON-DEMAND PLAYER STATS (2020-2025, all metrics):\n'+statsParts.join('\n');
+          playerStatsContext='\n\nPLAYER DATA (stats + scouting cards):\n'+statsParts.join('\n');
           console.log('Loaded stats for:',mentionedPlayers.join(', '));
         }
       }
