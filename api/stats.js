@@ -17,17 +17,20 @@ const FILES = {
   injuries:            (season) => `${BASE}/injuries/injuries_${season}.csv`,
   // Depth charts
   depth_charts:        (season) => `${BASE}/depth_charts/depth_charts_${season}.csv`,
-  // PFR advanced stats
-  pfr_pass:            (season) => `${BASE}/pfr_advstats/advstats_season_pass_${season}.csv`,
-  pfr_rush:            (season) => `${BASE}/pfr_advstats/advstats_season_rush_${season}.csv`,
-  pfr_rec:             (season) => `${BASE}/pfr_advstats/advstats_season_rec_${season}.csv`,
-  // NGS stats
-  ngs_pass:            (season) => `${BASE}/nextgen_stats/nextgen_stats_passing_${season}.csv`,
-  ngs_rush:            (season) => `${BASE}/nextgen_stats/nextgen_stats_rushing_${season}.csv`,
-  ngs_rec:             (season) => `${BASE}/nextgen_stats/nextgen_stats_receiving_${season}.csv`,
+  // PFR advanced stats — parquet only
+  pfr_pass:            (season) => `${BASE}/pfr_advstats/advstats_season_pass_${season}.parquet`,
+  pfr_rush:            (season) => `${BASE}/pfr_advstats/advstats_season_rush_${season}.parquet`,
+  pfr_rec:             (season) => `${BASE}/pfr_advstats/advstats_season_rec_${season}.parquet`,
+  // NGS stats — parquet only (no CSV available)
+  ngs_pass:            (season) => `${BASE}/nextgen_stats/nextgen_stats_passing_${season}.parquet`,
+  ngs_rush:            (season) => `${BASE}/nextgen_stats/nextgen_stats_rushing_${season}.parquet`,
+  ngs_rec:             (season) => `${BASE}/nextgen_stats/nextgen_stats_receiving_${season}.parquet`,
   // Players
   players:             () => `${BASE}/players/players.csv`,
 };
+
+// Parquet files — use hyparquet
+const PARQUET_FILES = new Set(['pfr_pass','pfr_rush','pfr_rec','ngs_pass','ngs_rush','ngs_rec']);
 
 // Handles quoted fields with embedded commas and escaped double-quotes ("")
 function parseCSV(text) {
@@ -98,7 +101,34 @@ export default async function handler(req, res) {
       });
     }
 
-    const { headers, rows } = parseCSV(await response.text());
+    let headers, rows;
+
+    if (PARQUET_FILES.has(file)) {
+      // Parse parquet binary using hyparquet
+      try {
+        const { parquetRead, parquetMetadata } = await import('hyparquet');
+        const arrayBuffer = await response.arrayBuffer();
+        const rowData = [];
+        await parquetRead({
+          file: { buffer: arrayBuffer, byteLength: arrayBuffer.byteLength },
+          onComplete: data => rowData.push(...data)
+        });
+        // Convert to row objects
+        const meta = await parquetMetadata({ buffer: arrayBuffer });
+        headers = meta.schema.slice(1).map(s => s.name);
+        rows = rowData.map(row => {
+          const obj = {};
+          headers.forEach((h, i) => { obj[h] = row[i] ?? ''; });
+          return obj;
+        });
+      } catch(parquetErr) {
+        return res.status(500).json({ error: `Parquet parse failed: ${parquetErr.message}`, url });
+      }
+    } else {
+      const parsed = parseCSV(await response.text());
+      headers = parsed.headers;
+      rows = parsed.rows;
+    }
 
     // META mode: return only schema + a sample row (super lightweight)
     if (meta) {
