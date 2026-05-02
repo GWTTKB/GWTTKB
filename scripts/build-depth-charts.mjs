@@ -165,10 +165,12 @@ async function buildDepthCharts() {
     // Override with team context 2026 where available
     // Team context IS authoritative for the starter-level players
     const starters = {
-      QB: ctx2026.qb || null,
+      QB: ctx2026.qb || null, QB2: ctx2026.qb2 || null,
       WR1: ctx2026.wr1 || null, WR2: ctx2026.wr2 || null,
       WR3: ctx2026.wr3 || null, WR4: ctx2026.wr4 || null,
-      RB1: ctx2026.rb1 || null, RB2: ctx2026.rb2 || null, RB3: ctx2026.rb3 || null,
+      WR5: ctx2026.wr5 || null, WR6: ctx2026.wr6 || null, WR7: ctx2026.wr7 || null,
+      RB1: ctx2026.rb1 || null, RB2: ctx2026.rb2 || null,
+      RB3: ctx2026.rb3 || null, RB4: ctx2026.rb4 || null,
       TE1: ctx2026.te1 || null, TE2: ctx2026.te2 || null,
     };
 
@@ -185,7 +187,9 @@ async function buildDepthCharts() {
     depthCharts[teamAbbr] = {
       team: teamAbbr,
       name: TEAM_NAMES[teamAbbr],
-      // Authoritative 2026 starters from user's team context
+      // Full 2026 context — ALL fields from user's authoritative team context file
+      context_2026: ctx2026,
+      // Quick access starters
       starters_2026: starters,
       notes_2026: ctx2026.notes || '',
       analyst_notes: ctx2026.analyst_notes || '',
