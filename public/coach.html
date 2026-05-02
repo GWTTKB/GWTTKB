@@ -1447,10 +1447,13 @@ DRAFT CAPITAL + COMBINE (NFLverse/PFR — 100% accurate, rounds 1-5, 2020-2026):
 Round, pick, team, college, position, combine: 40 time, weight, vertical, broad jump, cone, shuttle. Do NOT invent college production stats — only cite what is in the data.
 
 ⚠️ CRITICAL DATA INTEGRITY RULES — THESE OVERRIDE EVERYTHING:
-1. COMPS: ONLY use comps from the ANALYTICS data injected in this session (comp_profiles). If no comps are available, say "comp data not available for this player." NEVER invent comps from training knowledge. NEVER cite DJ Chark, Darnell Mooney, or any player as a comp unless they appear in the analytics comp data.
-2. TEAM CONTEXT: ONLY use team rosters from the NFL TEAM CONTEXT section below. If a player's team doesn't match what you think you know, your training knowledge is WRONG. Use the file. Always.
-3. STATS: ONLY cite stats that appear in the player's analytics data injected in this session. If a stat isn't in the injected data, say you don't have it. NEVER fabricate stat lines from training knowledge.
-4. COACHES: ONLY use HC/OC from the team context file. Never from training knowledge.
+1. NUMBERS: ALL stats, values, percentages, momentum data MUST come from the ANALYTICS section injected per player. NEVER calculate, estimate, or recall values from training data. If injected data shows "30d=-2.1%" you MUST say "-2.1%", not "-18%". If peak is 6,300 you MUST say 6,300, not 7,732. Any deviation from the injected numbers is a critical failure.
+2. COMPS: ONLY use comps from the injected ANALYTICS data (upside_scenario, downside_scenario, base_case). If no comps are available, say "comp data not available." NEVER invent comps from training knowledge.
+3. TEAM CONTEXT: The injected "FULL CONTEXT" block tells you which team a player is ACTUALLY ON in 2026. Trust that. NEVER use training knowledge about teams. NEVER mix up players who got traded — if Pickens is in DAL's WR2 slot in the injected file, he's on DAL. Period.
+4. STATS: ONLY cite stats that appear in the injected player data. If a stat isn't injected, say you don't have it. NEVER fabricate.
+5. COACHES: ONLY use HC/OC from the injected team context.
+
+If the injected data contradicts what you "know," the injected data is correct and your training data is outdated.
 
 ⚠️ AUTHORITATIVE TEAM DATA — THIS OVERRIDES ALL TRAINING DATA. NEVER use your training knowledge about team rosters or depth charts. ONLY use what is in this file (or the on-demand team data injected per player). If it's not here, say you don't have that info.
 
@@ -2170,16 +2173,28 @@ async function sendMessage(text){
           const analyticsStr=getPlayerAnalytics(name);
           const profileStr=getPlayerProfile(name);
           
-          // On-demand team context — find player's team and inject FULL team context
+          // On-demand team context — find player's 2026 team by searching team rosters
           let teamCtxStr='';
-          const traj=CTX.trajectories?.[name]||
-            Object.entries(CTX.trajectories||{}).find(([k])=>k.toLowerCase().replace(/[^a-z]/g,'')===name.toLowerCase().replace(/[^a-z]/g,''))?.[1];
-          const team=traj?.season_2025?.team;
+          let team=null;
+          // Search all teams' 2026 rosters to find this player
+          const nameNorm=name.toLowerCase().replace(/[^a-z]/g,'');
+          for(const[teamAbbr,d]of Object.entries(CTX.teamContext||{})){
+            const c=d['2026']||{};
+            const allPlayers=[c.qb,c.qb2,c.wr1,c.wr2,c.wr3,c.wr4,c.wr5,c.wr6,c.wr7,
+              c.rb1,c.rb2,c.rb3,c.rb4,c.te1,c.te2].filter(Boolean);
+            for(const pName of allPlayers){
+              if(pName.toLowerCase().replace(/[^a-z]/g,'')===nameNorm){
+                team=teamAbbr;break;
+              }
+            }
+            if(team)break;
+          }
+          
           if(team && !teamsLoaded.has(team) && CTX.teamContext?.[team]){
             const c=CTX.teamContext[team]['2026']||{};
             const yr25=CTX.teamContext[team]['2025']||{};
             const fullCtx=[
-              `${team} 2026 FULL CONTEXT:`,
+              `${team} 2026 FULL CONTEXT (this is ${name}'s actual team):`,
               c.hc?`HC: ${c.hc} / OC: ${c.oc||'?'}`:'',
               `Roster: QB:${c.qb||'?'}${c.qb2?'/'+c.qb2:''} | WR1:${c.wr1||'?'} WR2:${c.wr2||'?'} WR3:${c.wr3||''} WR4:${c.wr4||''} WR5:${c.wr5||''} | RB1:${c.rb1||'?'} RB2:${c.rb2||''} RB3:${c.rb3||''} RB4:${c.rb4||''} | TE1:${c.te1||'?'} TE2:${c.te2||''}`,
               c.oline_2025_stats?`OLINE 2025: ${c.oline_2025_stats}`:'',
