@@ -93,7 +93,7 @@ async function build(){
       const yr = parseInt(r.season||r.draft_year||0);
       const round = parseInt(r.round||0);
       const pos = (r.position||r.pos||'').toUpperCase();
-      return yr >= 2020 && round >= 1 && round <= 4 && SKILL.has(pos);
+      return yr >= 2020 && round >= 1 && round <= 5 && SKILL.has(pos);
     });
     console.log(`  ✓ ${allDraftRows.length} skill player picks (rounds 1-7, 2020-2026)`);
   }catch(e){
