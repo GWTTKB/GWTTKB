@@ -337,8 +337,10 @@ async function buildAnalytics(){
     const candidates=[];
     for(const[compName,hist]of Object.entries(histPlayers)){
       if(compName===name)continue;
+      // Only match same position
+      const compTraj=trajectories[compName];
+      if(pos&&compTraj?.pos&&compTraj.pos!==pos)continue;
       // Get shape from 2-4 years ago for this comp player
-      // then check what happened to them in the following year
       const compSf=hist.sf||[];
       const compDates=hist.dates||[];
       if(compSf.length<30)continue;
@@ -352,13 +354,15 @@ async function buildAnalytics(){
         if(window.filter(v=>v>0).length<8)continue;
 
         const sim=cosineSim(currentShape,window);
-        if(sim<0.7)continue; // only strong matches
+        if(sim<0.85)continue; // strong matches only
 
         // What happened to this comp player 12 months after this point?
         const valAt=compSf[idx]||0;
         const val12m=getValueAfterDays(hist,compDates[idx],365)||0;
         const valChange=valAt>0&&val12m>0?Math.round((val12m-valAt)/valAt*1000)/10:null;
 
+        // Filter by value tier — comp player must be within 50% of current value
+        if(currentVal>0&&valAt>0&&(valAt/currentVal<0.5||valAt/currentVal>2.0))continue;
         candidates.push({
           name:compName,
           season:lookbackYr,
