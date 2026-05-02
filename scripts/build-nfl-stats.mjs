@@ -218,11 +218,16 @@ async function buildStats(){
         attempts: num(row.attempts),
         completions: num(row.completions),
         passing_epa: dec(row.passing_epa),
+        completion_pct: row.attempts>0?dec(num(row.completions)/num(row.attempts)*100):0,
+        yards_per_attempt: row.attempts>0?dec(num(row.passing_yards)/num(row.attempts)):0,
+        sacks: num(row.sacks),
+        sack_yards: num(row.sack_yards),
         // Rushing
         carries: num(row.carries),
         rushing_yards: num(row.rushing_yards),
         rushing_tds: num(row.rushing_tds),
         rushing_epa: dec(row.rushing_epa),
+        rushing_yards_per_carry: row.carries>0?dec(num(row.rushing_yards)/num(row.carries)):0,
         // Receiving
         targets: num(row.targets),
         receptions: num(row.receptions),
@@ -232,7 +237,15 @@ async function buildStats(){
         target_share: pct(row.target_share),
         air_yards_share: pct(row.air_yards_share),
         wopr: dec(row.wopr),
+        racr: dec(row.racr),
+        yards_per_reception: row.receptions>0?dec(num(row.receiving_yards)/num(row.receptions)):0,
+        yards_per_target: row.targets>0?dec(num(row.receiving_yards)/num(row.targets)):0,
+        catch_rate: row.targets>0?dec(num(row.receptions)/num(row.targets)*100):0,
+        // Fantasy
         fantasy_points_ppr: dec(row.fantasy_points_ppr),
+        fantasy_points_half_ppr: dec(row.fantasy_points_half_ppr||row.fantasy_points),
+        // Special teams / misc
+        special_teams_tds: num(row.special_teams_tds),
       });
       weekCount++;
     }
@@ -250,10 +263,13 @@ async function buildStats(){
   console.log('\n[3] NGS advanced stats...');
   for(const yr of YEARS){
     for(const [statType, posGroup] of [['passing','QB'],['rushing','RB'],['receiving','WR_TE']]){
-      const rows = await tryFetch([
-        `${BASE}/nextgen_stats/nextgen_stats_${statType}_${yr}.csv`
-      ]);
-      if(!rows) continue;
+      const urls=[
+        `${BASE}/nextgen_stats/nextgen_stats_${statType}_${yr}.csv`,
+        `${BASE}/nextgen_stats/ngs_${statType}_${yr}.csv`,
+        `${BASE}/ngs/ngs_${statType}_${yr}.csv`,
+      ];
+      const rows = await tryFetch(urls);
+      if(!rows){console.warn(`  ✗ NGS ${yr} ${statType}: all URLs failed`);continue;}
       let matched = 0;
       for(const row of rows){
         const pid = row.player_gsis_id||row.player_id; if(!pid) continue;
@@ -287,10 +303,13 @@ async function buildStats(){
   console.log('\n[4] PFR advanced stats...');
   for(const yr of YEARS){
     for(const statType of ['pass','rush','rec']){
-      const rows = await tryFetch([
-        `${BASE}/pfr_advstats/advstats_season_${statType}_${yr}.csv`
-      ]);
-      if(!rows) continue;
+      const urls=[
+        `${BASE}/pfr_advstats/advstats_season_${statType}_${yr}.csv`,
+        `${BASE}/pfr_advstats/pfr_advstats_season_${statType}_${yr}.csv`,
+        `${BASE}/pfr_advstats/advstats_${statType}_${yr}.csv`,
+      ];
+      const rows = await tryFetch(urls);
+      if(!rows){console.warn(`  ✗ PFR ${yr} ${statType}: all URLs failed`);continue;}
       let matched = 0;
       for(const row of rows){
         const pid = row.pfr_player_id||row.player_id||row.gsis_id; if(!pid) continue;
