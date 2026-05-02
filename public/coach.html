@@ -1794,12 +1794,20 @@ FALLOFF CALL: Declining trajectory + falling stats → comp that fell same way �
 OPPONENT SCOUT: Their best asset → their need → exact trade structure to exploit it.
 DRAFT ADVICE: ADP → who's available at your slot → best player vs need → pick.
 
-VERDICT FORMAT — NEVER use Buy/Hold/Sell. ALWAYS give % projections:
-"Value projection: +X% to +Y% over next 12 months (Z% probability based on [specific data])"
-"Downside scenario: -X% if [specific trigger] (Z% probability)"
-"Current value: X. Fair value in 12 months: Y. Buy below Z, sell above W."
-Base projections on: momentum data, historical comp outcomes, stat trend direction, opportunity context.
-If comp data shows 3 similar profiles averaged +18% — say that. If downside comp shows -31% — say that too.
+VERDICT FORMAT — NEVER use Buy/Hold/Sell. ALWAYS give scenario-based projections:
+
+For every player analysis end with this exact structure:
+- "UPSIDE (X% probability): [comp name] path → +Y% to [ceiling value]"
+- "DOWNSIDE (X% probability): [comp name] path → -Y% to [floor value]"  
+- "WEIGHTED PROJECTION: ±X% to [target value] over next 12 months"
+- One sentence interpretation: "The data favors [direction] but [counter-signal] makes this [conviction level]"
+
+Always cite specific comp names. Always give percentages. Always show both ceiling and floor. The user wants the FULL range of outcomes, not a one-sided sell signal.
+
+Example structure:
+"Pickens upside (10% prob): Nico Collins 2023 path → +27% to 7,576. Downside (30% prob): Mike Evans 2020 / Robert Woods 2020 path → -30% to 4,136. Weighted projection: -11% to 5,317. Data favors fading but the ceiling case is real if separation improves."
+
+If comp data isn't available say "comp scenarios not available" and give projection based on momentum + stat trends only.
 
 RULES — NON-NEGOTIABLE:
 - Lead with numbers. Always. No exceptions.
@@ -1985,8 +1993,25 @@ function getPlayerAnalytics(playerName){
   if(traj){
     const mom=traj.momentum||{};
     const dir=mom.direction||'unknown';
-    parts.push(`VALUE TRAJECTORY: Current=${traj.current_value?.toLocaleString()} | Peak=${traj.peak_value?.toLocaleString()} (${traj.peak_value?Math.round(traj.current_value/traj.peak_value*100):'?'}% of peak)`);
-    parts.push(`MOMENTUM: ${dir.toUpperCase()} | vs30d=${mom.vs_30d!=null?(mom.vs_30d>0?'+':'')+mom.vs_30d+'%':'?'} | vs90d=${mom.vs_90d!=null?(mom.vs_90d>0?'+':'')+mom.vs_90d+'%':'?'} | vs180d=${mom.vs_180d!=null?(mom.vs_180d>0?'+':'')+mom.vs_180d+'%':'?'}`);
+    parts.push(`VALUE TRAJECTORY: ${traj.current_value?.toLocaleString()} | Peak ${traj.peak_value?.toLocaleString()} (${traj.pct_of_peak||'?'}% of peak) | Tier: ${traj.value_tier||'?'}`);
+    
+    if(traj.fantasy_tier_2025){
+      parts.push(`FANTASY FINISH 2025: ${traj.fantasy_tier_2025} (rank ${traj.fantasy_rank_2025})`);
+    }
+    
+    if(traj.draft_round){
+      parts.push(`DRAFT: R${traj.draft_round}P${traj.draft_pick} ${traj.draft_year} (${traj.draft_tier}, ${traj.college})`);
+    }
+    
+    parts.push(`MOMENTUM: ${dir.toUpperCase()} | 30d=${mom.vs_30d!=null?(mom.vs_30d>0?'+':'')+mom.vs_30d+'%':'?'} | 60d=${mom.vs_60d!=null?(mom.vs_60d>0?'+':'')+mom.vs_60d+'%':'?'} | 90d=${mom.vs_90d!=null?(mom.vs_90d>0?'+':'')+mom.vs_90d+'%':'?'} | 180d=${mom.vs_180d!=null?(mom.vs_180d>0?'+':'')+mom.vs_180d+'%':'?'}`);
+    
+    if(traj.efficiency_score!=null){
+      parts.push(`EFFICIENCY SCORE: ${traj.efficiency_score} (composite quality metric, position-weighted)`);
+    }
+    
+    if(traj.composite_signal!=null){
+      parts.push(`COMPOSITE SIGNAL: ${traj.composite_signal>0?'+':''}${traj.composite_signal} (% of key stats trending positive vs negative)`);
+    }
     
     // Rolling 2025 stats — only show trending stats
     const rolling=traj.rolling_2025||{};
@@ -1995,31 +2020,85 @@ function getPlayerAnalytics(playerName){
       .sort((a,b)=>Math.abs(b[1].slope)-Math.abs(a[1].slope))
       .slice(0,5);
     if(trending.length){
-      parts.push('2025 STAT TRENDS (last 6wks): '+trending.map(([stat,v])=>
-        `${stat}=${v.avg}avg(${v.trend}${v.slope>0?'+':''}`+Math.round(v.slope*10)/10+'/wk)'
+      parts.push('STAT TRENDS (last 6wks): '+trending.map(([stat,v])=>
+        `${stat}=${v.avg}avg(${v.trend}${v.slope>0?'+':''}${Math.round(v.slope*10)/10}/wk)`
       ).join(' | '));
     }
     
-    // Season 2025 totals
+    // Season 2025 totals — show key advanced metrics
     const s25=traj.season_2025;
     if(s25&&s25.games){
       const keyStats=[];
       if(s25.target_share) keyStats.push(`target_share=${s25.target_share}%`);
-      if(s25.fantasy_ppg) keyStats.push(`ppg=${s25.fantasy_ppg}`);
-      if(s25.targets) keyStats.push(`targets=${s25.targets}`);
+      if(s25.air_yards_share) keyStats.push(`ay_share=${s25.air_yards_share}%`);
       if(s25.wopr) keyStats.push(`wopr=${s25.wopr}`);
+      if(s25.targets) keyStats.push(`targets=${s25.targets}`);
+      if(s25.receptions) keyStats.push(`rec=${s25.receptions}`);
+      if(s25.receiving_yards) keyStats.push(`rec_yds=${s25.receiving_yards}`);
       if(s25.rushing_yards) keyStats.push(`rush_yds=${s25.rushing_yards}`);
+      if(s25.carries) keyStats.push(`carries=${s25.carries}`);
+      if(s25.fantasy_points_ppr) keyStats.push(`fp=${s25.fantasy_points_ppr}`);
       if(keyStats.length) parts.push(`2025 SEASON (${s25.games}g, ${s25.team}): ${keyStats.join(' | ')}`);
+      
+      // NGS metrics
+      const ngsStats=[];
+      if(s25.avg_separation) ngsStats.push(`separation=${s25.avg_separation}yd`);
+      if(s25.avg_cushion) ngsStats.push(`cushion=${s25.avg_cushion}yd`);
+      if(s25.avg_yac_above_expectation!=null) ngsStats.push(`yac_oe=${s25.avg_yac_above_expectation>0?'+':''}${s25.avg_yac_above_expectation}`);
+      if(s25.completion_pct_above_expectation!=null) ngsStats.push(`cpoe=${s25.completion_pct_above_expectation>0?'+':''}${s25.completion_pct_above_expectation}%`);
+      if(s25.avg_rush_yards_over_expected!=null) ngsStats.push(`ryoe=${s25.avg_rush_yards_over_expected>0?'+':''}${s25.avg_rush_yards_over_expected}`);
+      if(ngsStats.length) parts.push(`NGS: ${ngsStats.join(' | ')}`);
+      
+      // PFR metrics
+      const pfrStats=[];
+      if(s25.pfr_drop_pct!=null) pfrStats.push(`drop_rate=${s25.pfr_drop_pct}%`);
+      if(s25.pfr_contested_catch_pct!=null) pfrStats.push(`contested_catch=${s25.pfr_contested_catch_pct}%`);
+      if(s25.pfr_yac) pfrStats.push(`yac=${s25.pfr_yac}`);
+      if(s25.pfr_broke_tackles) pfrStats.push(`broke_tackles=${s25.pfr_broke_tackles}`);
+      if(s25.pfr_bad_throw_pct!=null) pfrStats.push(`bad_throw=${s25.pfr_bad_throw_pct}%`);
+      if(s25.pfr_pressure_pct!=null) pfrStats.push(`pressure=${s25.pfr_pressure_pct}%`);
+      if(pfrStats.length) parts.push(`PFR: ${pfrStats.join(' | ')}`);
     }
   }
   
-  if(comp&&comp.comps?.length){
-    const validComps=comp.comps.filter(c=>c.val_change_next_yr!=null);
-    parts.push(`HISTORICAL COMPS: `+comp.comps.map(c=>
-      `${c.name}(${c.season}${c.val_change_next_yr!=null?','+(c.val_change_next_yr>0?'+':'')+c.val_change_next_yr+'%next_yr':''})`
-    ).join(', '));
-    if(comp.projected_val_change!=null){
-      parts.push(`COMP-BASED PROJECTION: ${comp.projected_val_change>0?'+':''}${comp.projected_val_change}% value change based on historical comps`);
+  // SCENARIO-BASED COMP ANALYSIS
+  if(comp){
+    parts.push('');
+    parts.push(`COMP ANALYSIS (${comp.comp_type||'?'} matching, ${comp.total_comps_analyzed||0} comps analyzed):`);
+    
+    // UPSIDE
+    if(comp.upside_scenario?.comps?.length){
+      const u=comp.upside_scenario;
+      const compNames=u.comps.map(c=>{
+        const ctx=c.fantasy_tier?`,${c.fantasy_tier}`:c.draft?`,${c.draft}`:'';
+        return `${c.name}(${c.season}${ctx},+${c.val_change_12m}%)`;
+      }).join(' | ');
+      parts.push(`UPSIDE (${u.probability_pct}% prob, +${u.avg_gain}% avg → ceiling ${u.projected_ceiling?.toLocaleString()}): ${compNames}`);
+    }
+    
+    // BASE CASE
+    if(comp.base_case?.comps?.length){
+      const b=comp.base_case;
+      const compNames=b.comps.map(c=>{
+        const ctx=c.fantasy_tier?`,${c.fantasy_tier}`:c.draft?`,${c.draft}`:'';
+        return `${c.name}(${c.season}${ctx},${c.val_change_12m>0?'+':''}${c.val_change_12m}%)`;
+      }).join(' | ');
+      parts.push(`BASE CASE (${b.avg_change>0?'+':''}${b.avg_change}% avg): ${compNames}`);
+    }
+    
+    // DOWNSIDE
+    if(comp.downside_scenario?.comps?.length){
+      const d=comp.downside_scenario;
+      const compNames=d.comps.map(c=>{
+        const ctx=c.fantasy_tier?`,${c.fantasy_tier}`:c.draft?`,${c.draft}`:'';
+        return `${c.name}(${c.season}${ctx},${c.val_change_12m}%)`;
+      }).join(' | ');
+      parts.push(`DOWNSIDE (${d.probability_pct}% prob, ${d.avg_loss}% avg → floor ${d.projected_floor?.toLocaleString()}): ${compNames}`);
+    }
+    
+    // WEIGHTED PROJECTION
+    if(comp.weighted_projection_pct!=null && comp.projected_value_12m){
+      parts.push(`WEIGHTED 12-MONTH PROJECTION: ${comp.weighted_projection_pct>0?'+':''}${comp.weighted_projection_pct}% → ${comp.projected_value_12m.toLocaleString()}`);
     }
   }
   
