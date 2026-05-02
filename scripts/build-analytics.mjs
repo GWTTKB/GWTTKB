@@ -1,431 +1,233 @@
-// ── GWTTKB Analytics Engine ──
-// Computes rolling trends from weekly stats
-// Cross-references with daily dynasty values
-// Finds what TREND CHANGES actually predict dynasty value movement
+// ── GWTTKB Analytics Engine v2 ──
+// Fixes:
+// 1. Trajectories built for ALL 533 historical players, not just those with 2025 stats
+// 2. Comp pool uses historical-players.json value trajectories as primary signal
+// 3. Season-level NGS/PFR correlations added
+// 4. Composite multi-stat signal score added
 // Writes: public/data/analytics.json
 
 import fs from 'fs';
 
 const POSITIONS = ['QB','RB','WR','TE'];
 
-// Every stat from the stats page dropdown — weekly where available, season-level for NGS/PFR
 const WEEKLY_STATS = {
-  QB: [
-    'fantasy_points_ppr','passing_yards','passing_tds','completions','attempts',
-    'interceptions','rushing_yards','rushing_tds','carries','rushing_epa','passing_epa',
-  ],
-  RB: [
-    'fantasy_points_ppr','rushing_yards','rushing_tds','carries','target_share',
-    'receptions','receiving_yards','receiving_tds','catch_rate','wopr',
-    'rushing_epa','receiving_epa','rushing_first_downs','receiving_first_downs',
-  ],
-  WR: [
-    'fantasy_points_ppr','receiving_yards','receiving_tds','targets','receptions',
-    'catch_rate','target_share','air_yards_share','wopr','racr',
-    'receiving_epa','receiving_first_downs',
-  ],
-  TE: [
-    'fantasy_points_ppr','receiving_yards','receiving_tds','targets','receptions',
-    'catch_rate','target_share','air_yards_share','wopr','racr',
-    'receiving_epa','receiving_first_downs',
-  ],
+  QB: ['fantasy_points_ppr','passing_yards','passing_tds','completions','attempts',
+       'interceptions','rushing_yards','rushing_tds','passing_epa'],
+  RB: ['fantasy_points_ppr','rushing_yards','rushing_tds','carries','target_share',
+       'receptions','receiving_yards','receiving_tds','wopr','rushing_epa','receiving_epa'],
+  WR: ['fantasy_points_ppr','receiving_yards','receiving_tds','targets','receptions',
+       'target_share','air_yards_share','wopr','racr','receiving_epa'],
+  TE: ['fantasy_points_ppr','receiving_yards','receiving_tds','targets','receptions',
+       'target_share','air_yards_share','wopr','receiving_epa'],
 };
 
-// Season-level advanced stats (NGS + PFR) — correlate season value against end-of-season value
 const SEASON_STATS = {
-  QB: [
-    'avg_time_to_throw','avg_intended_air_yards','avg_completed_air_yards',
-    'completion_pct_above_expectation','passer_rating',
-    'pfr_passing_drops','pfr_bad_throws','pfr_blitzed_pct','pfr_sacked',
-    // computed
-    'comp_pct','ypa','td_int',
-  ],
-  RB: [
-    'avg_rush_yards_over_expected','avg_rush_yards_over_expected_pct',
-    'efficiency','percent_attempts_gte_eight_defenders',
-    'pfr_broke_tackles','pfr_yco_contact','pfr_avoided_tackles',
-    // computed
-    'ypc','rush_yards_oe_att','stacked_box_rate','ybc_att','yac_att',
-  ],
-  WR: [
-    'avg_separation','avg_cushion','avg_yac_above_expectation',
-    'percent_share_of_intended_air_yards',
-    'pfr_drops','pfr_drop_pct','pfr_yac','pfr_broke_tackles',
-    'pfr_contested_tgts','pfr_contested_catch_pct',
-    // computed
-    'adot','yac','drop_rate','avg_yac_oe','avg_intended_air_yds',
-  ],
-  TE: [
-    'avg_separation','avg_cushion','avg_yac_above_expectation',
-    'percent_share_of_intended_air_yards',
-    'pfr_drops','pfr_drop_pct','pfr_yac','pfr_broke_tackles',
-    'pfr_contested_tgts','pfr_contested_catch_pct',
-    // computed
-    'adot','yac','drop_rate','avg_yac_oe','avg_intended_air_yds',
-  ],
-};
-
-// Combined for comp engine
-const TREND_STATS = {
-  QB: [...new Set([...WEEKLY_STATS.QB,...SEASON_STATS.QB])],
-  RB: [...new Set([...WEEKLY_STATS.RB,...SEASON_STATS.RB])],
-  WR: [...new Set([...WEEKLY_STATS.WR,...SEASON_STATS.WR])],
-  TE: [...new Set([...WEEKLY_STATS.TE,...SEASON_STATS.TE])],
+  QB: ['avg_time_to_throw','avg_intended_air_yards','completion_pct_above_expectation',
+       'passer_rating','pfr_sacked','pfr_bad_throws'],
+  RB: ['avg_rush_yards_over_expected','efficiency','pfr_broke_tackles','pfr_yco_contact'],
+  WR: ['avg_separation','avg_cushion','avg_yac_above_expectation',
+       'percent_share_of_intended_air_yards','pfr_drop_pct','pfr_yac','pfr_contested_catch_pct'],
+  TE: ['avg_separation','avg_cushion','avg_yac_above_expectation',
+       'pfr_drop_pct','pfr_yac','pfr_contested_catch_pct'],
 };
 
 function pearson(xs, ys){
-  const n = xs.length;
-  if(n < 8) return null;
-  const mx = xs.reduce((a,b)=>a+b)/n;
-  const my = ys.reduce((a,b)=>a+b)/n;
-  let num=0, dx2=0, dy2=0;
-  for(let i=0;i<n;i++){
-    const dx=xs[i]-mx, dy=ys[i]-my;
-    num+=dx*dy; dx2+=dx*dx; dy2+=dy*dy;
-  }
-  const denom=Math.sqrt(dx2*dy2);
-  return denom===0?null:Math.round(num/denom*1000)/1000;
+  const n=xs.length; if(n<8)return null;
+  const mx=xs.reduce((a,b)=>a+b)/n, my=ys.reduce((a,b)=>a+b)/n;
+  let num=0,dx2=0,dy2=0;
+  for(let i=0;i<n;i++){const dx=xs[i]-mx,dy=ys[i]-my;num+=dx*dy;dx2+=dx*dx;dy2+=dy*dy;}
+  const d=Math.sqrt(dx2*dy2); return d===0?null:Math.round(num/d*1000)/1000;
 }
 
-function norm(s){ return (s||'').toLowerCase().replace(/[^a-z]/g,''); }
+function norm(s){return(s||'').toLowerCase().replace(/[^a-z]/g,'');}
 
-function weekToDate(season, week){
-  const starts = {
-    2020:'2020-09-10',2021:'2021-09-09',2022:'2022-09-08',
-    2023:'2023-09-07',2024:'2024-09-05',2025:'2025-09-04'
-  };
-  const d = new Date(starts[season]||`${season}-09-05`);
+function weekToDate(season,week){
+  const starts={2020:'2020-09-10',2021:'2021-09-09',2022:'2022-09-08',
+    2023:'2023-09-07',2024:'2024-09-05',2025:'2025-09-04'};
+  const d=new Date(starts[season]||`${season}-09-05`);
   d.setDate(d.getDate()+(week-1)*7);
   return d.toISOString().split('T')[0];
 }
 
-function findDateIdx(dates, targetDate){
-  const ts = new Date(targetDate).getTime();
+function findDateIdx(dates,targetDate){
+  const ts=new Date(targetDate).getTime();
   let lo=0,hi=dates.length-1;
-  while(lo<=hi){
-    const mid=(lo+hi)>>1;
-    const d=new Date(dates[mid]).getTime();
-    if(d===ts)return mid;
-    if(d<ts)lo=mid+1; else hi=mid-1;
-  }
+  while(lo<=hi){const mid=(lo+hi)>>1;const d=new Date(dates[mid]).getTime();
+    if(d===ts)return mid;if(d<ts)lo=mid+1;else hi=mid-1;}
   return lo<dates.length?lo:dates.length-1;
 }
 
-function getValueAtDate(hist, date){
+function getValueAtDate(hist,date){
   if(!hist?.dates?.length)return null;
   const idx=findDateIdx(hist.dates,date);
   return hist.sf?.[idx]||null;
 }
 
-function getValueAfterDays(hist, startDate, days){
-  const d=new Date(startDate);
-  d.setDate(d.getDate()+days);
-  return getValueAtDate(hist, d.toISOString().split('T')[0]);
+function getValueAfterDays(hist,startDate,days){
+  const d=new Date(startDate);d.setDate(d.getDate()+days);
+  return getValueAtDate(hist,d.toISOString().split('T')[0]);
 }
 
-// Linear regression slope — tells us if metric is trending up or down
 function slope(ys){
-  const n=ys.length; if(n<3)return 0;
+  const n=ys.length;if(n<3)return 0;
   const xs=Array.from({length:n},(_,i)=>i);
-  const mx=xs.reduce((a,b)=>a+b)/n;
-  const my=ys.reduce((a,b)=>a+b)/n;
+  const mx=xs.reduce((a,b)=>a+b)/n,my=ys.reduce((a,b)=>a+b)/n;
   let num=0,den=0;
   for(let i=0;i<n;i++){num+=(xs[i]-mx)*(ys[i]-my);den+=(xs[i]-mx)**2;}
   return den===0?0:Math.round(num/den*1000)/1000;
 }
 
-// Rolling average over last N values
-function rollingAvg(arr, n){
-  if(arr.length<n)return arr.reduce((a,b)=>a+b,0)/arr.length;
-  return arr.slice(-n).reduce((a,b)=>a+b,0)/n;
-}
-
 async function buildAnalytics(){
-  console.log('=== Building Analytics Engine (Rolling Trends) ===');
+  console.log('=== Building Analytics Engine v2 ===');
   fs.mkdirSync('public/data',{recursive:true});
 
-  // Load stats
-  console.log('\nLoading nfl-stats.json...');
-  const statsRaw = JSON.parse(fs.readFileSync('public/data/nfl-stats.json','utf8'));
-  const statsPlayers = Object.values(statsRaw.players||{});
-  console.log(`  ${statsPlayers.length} players`);
+  // Load data
+  console.log('\nLoading data...');
+  const statsRaw=JSON.parse(fs.readFileSync('public/data/nfl-stats.json','utf8'));
+  const statsPlayers=Object.values(statsRaw.players||{});
+  console.log(`  nfl-stats: ${statsPlayers.length} players`);
 
-  // Load historical values
-  console.log('Loading historical-players.json...');
-  const histRaw = JSON.parse(fs.readFileSync('public/data/historical-players.json','utf8'));
-  const histPlayers = histRaw.players||{};
-  const histByName = {};
-  for(const[name,data]of Object.entries(histPlayers)){
-    histByName[norm(name)]=data;
-  }
-  console.log(`  ${Object.keys(histByName).length} historical players`);
+  const histRaw=JSON.parse(fs.readFileSync('public/data/historical-players.json','utf8'));
+  const histPlayers=histRaw.players||{};
+  const histByName={};
+  for(const[name,data]of Object.entries(histPlayers))histByName[norm(name)]=data;
+  console.log(`  historical: ${Object.keys(histByName).length} players`);
 
-  // ── BUILD ROLLING TREND DATASET ──
-  // For each player, each week (after week 4):
-  // Compute rolling metrics and trend slopes
-  // Then look up dynasty value 14, 30, 60 days later
-  // Correlate: does rising trend predict rising value?
+  // Build stats lookup by normalized name
+  const statsByName={};
+  for(const p of statsPlayers)statsByName[norm(p.name)]=p;
 
-  const LAG_DAYS = [14, 30, 60];
-  
-  // dataPoints[pos][stat] = [{trendSlope, rollingAvg, pctChangeFrom4WkAgo, valueChange30d}]
-  const dataPoints = {};
+  // ── CORRELATIONS (weekly rolling trends) ──
+  console.log('\n[1] Weekly correlations...');
+  const LAG_DAYS=[14,30,60];
+  const correlations={};
+
   for(const pos of POSITIONS){
-    dataPoints[pos]={};
-    for(const stat of TREND_STATS[pos]||[]){
-      dataPoints[pos][stat]=[];
-    }
-  }
+    correlations[pos]={};
+    const stats=WEEKLY_STATS[pos]||[];
+    const dataPoints={};
+    for(const stat of stats)dataPoints[stat]=[];
 
-  let totalPoints=0;
-  for(const p of statsPlayers){
-    if(!POSITIONS.includes(p.pos))continue;
-    const hist=histByName[norm(p.name)];
-    if(!hist?.dates?.length)continue;
+    let playerCount=0;
+    for(const p of statsPlayers){
+      if(p.pos!==pos)continue;
+      const hist=histByName[norm(p.name)];
+      if(!hist?.dates?.length)continue;
+      playerCount++;
 
-    for(const[yr,seasonData]of Object.entries(p.seasons||{})){
-      const weeks=seasonData.weeks||[];
-      if(weeks.length<5)continue;
+      for(const[yr,seasonData]of Object.entries(p.seasons||{})){
+        const weeks=seasonData.weeks||[];
+        if(weeks.length<4)continue;
+        for(let wi=3;wi<weeks.length;wi++){
+          const window=weeks.slice(Math.max(0,wi-3),wi+1);
+          const weekDate=weekToDate(parseInt(yr),weeks[wi].week);
+          const valNow=getValueAtDate(hist,weekDate);
+          if(!valNow||valNow<500)continue;
 
-      for(let wi=4; wi<weeks.length; wi++){
-        // Get last 4 weeks of each stat
-        const window=weeks.slice(Math.max(0,wi-3),wi+1);
-        const weekDate=weekToDate(parseInt(yr),weeks[wi].week);
-
-        // Get current value and future values
-        const valNow=getValueAtDate(hist,weekDate);
-        if(!valNow||valNow<500)continue;
-
-        // Compute rolling trends for each stat
-        for(const stat of TREND_STATS[p.pos]||[]){
-          const vals=window.map(w=>parseFloat(w[stat]||0)).filter(v=>!isNaN(v));
-          if(vals.length<3)continue;
-          if(vals.every(v=>v===0))continue;
-
-          const trendSlope=slope(vals);
-          const rolling4=rollingAvg(vals,4);
-          const firstVal=vals[0];
-          const pctChange=firstVal>0?(vals[vals.length-1]-firstVal)/firstVal*100:0;
-
-          // Value changes at each lag
-          for(const lag of LAG_DAYS){
-            const valFuture=getValueAfterDays(hist,weekDate,lag);
-            if(!valFuture)continue;
-            const valChange=(valFuture-valNow)/valNow*100;
-
-            dataPoints[p.pos][stat].push({
-              trendSlope,   // is the stat going up or down over last 4 weeks
-              rolling4,     // recent level
-              pctChange,    // % change from 4 weeks ago to now
-              valChange,    // dynasty value change in next N days
-              lag,
-              player: p.name,
-              yr: parseInt(yr),
-              week: weeks[wi].week
-            });
-            totalPoints++;
+          for(const stat of stats){
+            const vals=window.map(w=>parseFloat(w[stat]||0)).filter(v=>!isNaN(v));
+            if(vals.length<3||vals.every(v=>v===0))continue;
+            const trendSlope=slope(vals);
+            const rolling4=vals.reduce((a,b)=>a+b)/vals.length;
+            const pctChange=vals[0]>0?(vals[vals.length-1]-vals[0])/vals[0]*100:0;
+            for(const lag of LAG_DAYS){
+              const valFuture=getValueAfterDays(hist,weekDate,lag);
+              if(!valFuture)continue;
+              const valChange=(valFuture-valNow)/valNow*100;
+              dataPoints[stat].push({trendSlope,rolling4,pctChange,valChange,lag});
+            }
           }
         }
       }
     }
-  }
 
-  console.log(`\nTotal data points: ${totalPoints.toLocaleString()}`);
-
-  // ── COMPUTE CORRELATIONS ──
-  // Three correlation types per stat:
-  // 1. Trend slope vs value change (is rising stat predictive?)
-  // 2. Rolling average level vs value change (does high level predict rise?)
-  // 3. Pct change from 4wks ago vs value change (momentum signal)
-
-  const correlations={};
-  for(const pos of POSITIONS){
-    correlations[pos]={};
-    for(const stat of TREND_STATS[pos]||[]){
+    for(const stat of stats){
       correlations[pos][stat]={};
-      const pts=dataPoints[pos][stat];
-
+      const pts=dataPoints[stat];
       for(const lag of LAG_DAYS){
         const lagPts=pts.filter(p=>p.lag===lag);
-        if(lagPts.length<10){
-          correlations[pos][stat][`${lag}d`]={n:lagPts.length,r_slope:null,r_level:null,r_momentum:null};
-          continue;
-        }
-
-        const r_slope=pearson(lagPts.map(p=>p.trendSlope), lagPts.map(p=>p.valChange));
-        const r_level=pearson(lagPts.map(p=>p.rolling4), lagPts.map(p=>p.valChange));
-        const r_momentum=pearson(lagPts.map(p=>p.pctChange), lagPts.map(p=>p.valChange));
-
-        correlations[pos][stat][`${lag}d`]={
-          n: lagPts.length,
-          r_slope,    // trend direction predictor
-          r_level,    // absolute level predictor
-          r_momentum, // momentum predictor
-          best_r: [r_slope,r_level,r_momentum].filter(Boolean)
-            .reduce((best,r)=>Math.abs(r)>Math.abs(best)?r:best, 0),
-          interpretation: (() => {
-            const vals=[r_slope,r_level,r_momentum].filter(v=>v!==null&&!isNaN(v));
-            if(!vals.length)return 'no data';
-            const best=Math.max(...vals.map(Math.abs));
-            if(best>0.4)return 'strong predictor';
-            if(best>0.25)return 'moderate predictor';
-            if(best>0.15)return 'weak predictor';
-            return 'negligible';
-          })()
-        };
+        if(lagPts.length<10){correlations[pos][stat][`${lag}d`]={r_slope:null,r_level:null,r_momentum:null,n:lagPts.length};continue;}
+        const r_slope=pearson(lagPts.map(p=>p.trendSlope),lagPts.map(p=>p.valChange));
+        const r_level=pearson(lagPts.map(p=>p.rolling4),lagPts.map(p=>p.valChange));
+        const r_momentum=pearson(lagPts.map(p=>p.pctChange),lagPts.map(p=>p.valChange));
+        const best=Math.max(...[r_slope,r_level,r_momentum].filter(v=>v!==null).map(Math.abs));
+        correlations[pos][stat][`${lag}d`]={r_slope,r_level,r_momentum,
+          best_r:best||null,n:lagPts.length,
+          interpretation:!best?'no data':best>0.4?'strong':best>0.25?'moderate':best>0.15?'weak':'negligible'};
       }
-
-      // Rank: best lag and best correlation type for this stat
-      const best30=correlations[pos][stat]['30d'];
+      const b30=correlations[pos][stat]['30d'];
       correlations[pos][stat]._summary={
-        best_correlation: best30?.best_r||null,
-        best_type: best30 ? (['r_slope','r_level','r_momentum']
-          .reduce((best,k)=>Math.abs(best30[k]||0)>Math.abs(best30[best]||0)?k:best,'r_slope')) : null,
-        n: best30?.n||0,
-        interpretation: best30?.interpretation||'no data'
+        best_correlation:b30?.best_r||null,
+        best_type:b30?['r_slope','r_level','r_momentum'].reduce((best,k)=>Math.abs(b30[k]||0)>Math.abs(b30[best]||0)?k:best,'r_slope'):null,
+        n:b30?.n||0,interpretation:b30?.interpretation||'no data'
       };
     }
 
-    // Rank stats by 30d correlation strength
-    const ranked=Object.entries(correlations[pos])
-      .filter(([k])=>!k.startsWith('_'))
-      .map(([stat,data])=>({stat, r:Math.abs(data._summary?.best_correlation||0)}))
+    const ranked=stats.filter(s=>!s.startsWith('_'))
+      .map(s=>({stat:s,r:Math.abs(correlations[pos][s]?._summary?.best_correlation||0)}))
       .sort((a,b)=>b.r-a.r);
-    
-    correlations[pos]._ranked={
-      by_30d: ranked.map(r=>r.stat),
-      top5: ranked.slice(0,5).map(r=>({stat:r.stat, r:r.r, ...correlations[pos][r.stat]._summary}))
-    };
-
-    console.log(`\n${pos} top predictors (30d):`);
-    for(const item of ranked.slice(0,8)){
-      const d=correlations[pos][item.stat]?.['30d']||{};
-      const bestType=item.stat.startsWith('_')?null:
-        ['r_slope','r_level','r_momentum'].filter(k=>d[k]!==null)
-        .reduce((best,k)=>Math.abs(d[k]||0)>Math.abs(d[best]||0)?k:best,'r_slope');
-      const bestVal=bestType?d[bestType]:0;
-      const typeLabel=bestType==='r_slope'?'trend':bestType==='r_level'?'level':'momentum';
-      console.log(`  ${item.stat}: r=${item.r.toFixed(3)} via ${typeLabel} signal (${d.interpretation||'?'}) n=${d.n||0}`);
-    }
+    correlations[pos]._ranked={by_30d:ranked.map(r=>r.stat),top5:ranked.slice(0,5)};
+    console.log(`  ${pos}: top=${ranked[0]?.stat}(r=${ranked[0]?.r?.toFixed(3)})`);
   }
 
-  // ── SEASON-LEVEL CORRELATION PASS (NGS + PFR advanced stats) ──
-  // Correlate season stat value against dynasty value change over that season
-  console.log('\nRunning season-level correlations (NGS/PFR)...');
-  
-  const seasonCorrelations = {};
+  // ── SEASON-LEVEL CORRELATIONS (NGS/PFR) ──
+  console.log('\n[2] Season-level correlations (NGS/PFR)...');
+  const seasonCorr={};
   for(const pos of POSITIONS){
-    seasonCorrelations[pos] = {};
-    const stats = SEASON_STATS[pos] || [];
-    
-    // Collect (stat_value, value_change_over_season) pairs
-    const seasonPoints = {};
-    for(const stat of stats) seasonPoints[stat] = [];
-    
+    seasonCorr[pos]={};
+    const stats=SEASON_STATS[pos]||[];
+    const pts={};
+    for(const stat of stats)pts[stat]=[];
+
     for(const p of statsPlayers){
-      if(p.pos !== pos) continue;
-      const hist = histByName[norm(p.name)];
-      if(!hist?.dates?.length) continue;
-      
-      for(const [yr, seasonData] of Object.entries(p.seasons||{})){
-        if(!seasonData.games || seasonData.games < 8) continue;
-        const t = seasonData.totals || {};
-        
-        // Value at start and end of season
-        const valStart = getValueAtDate(hist, `${yr}-09-01`);
-        const valMid = getValueAtDate(hist, `${yr}-11-15`);
-        const valEnd = getValueAtDate(hist, `${parseInt(yr)+1}-02-01`);
-        if(!valStart || !valEnd || valStart < 500) continue;
-        
-        const valChange = (valEnd - valStart) / valStart * 100;
-        const valChangeMid = valMid ? (valMid - valStart) / valStart * 100 : null;
-        
+      if(p.pos!==pos)continue;
+      const hist=histByName[norm(p.name)];
+      if(!hist?.dates?.length)continue;
+      for(const[yr,sd]of Object.entries(p.seasons||{})){
+        if(!sd.games||sd.games<8)continue;
+        const t=sd.totals||{};
+        const valStart=getValueAtDate(hist,`${yr}-09-01`);
+        const valEnd=getValueAtDate(hist,`${parseInt(yr)+1}-02-01`);
+        if(!valStart||!valEnd||valStart<500)continue;
+        const valChange=(valEnd-valStart)/valStart*100;
         for(const stat of stats){
-          const statVal = parseFloat(t[stat] || 0);
-          if(isNaN(statVal) || statVal === 0) continue;
-          seasonPoints[stat].push({statVal, valChange, valChangeMid});
+          const v=parseFloat(t[stat]||0);
+          if(!isNaN(v)&&v!==0)pts[stat].push({v,valChange});
         }
       }
     }
-    
-    // Compute correlations
-    for(const stat of stats){
-      const pts = seasonPoints[stat];
-      if(pts.length < 8){
-        seasonCorrelations[pos][stat] = {r_season:null, r_midseason:null, n:pts.length, type:'season'};
-        continue;
-      }
-      const r_season = pearson(pts.map(p=>p.statVal), pts.map(p=>p.valChange));
-      const midPts = pts.filter(p=>p.valChangeMid !== null);
-      const r_midseason = midPts.length >= 8 
-        ? pearson(midPts.map(p=>p.statVal), midPts.map(p=>p.valChangeMid))
-        : null;
-      const best = Math.max(...[r_season,r_midseason].filter(v=>v!==null).map(Math.abs));
-      seasonCorrelations[pos][stat] = {
-        r_season, r_midseason, n: pts.length, type: 'season',
-        best_r: best||null,
-        interpretation: !best?'no data':best>0.4?'strong predictor':best>0.25?'moderate predictor':best>0.15?'weak predictor':'negligible'
-      };
-    }
-    
-    // Log top season-level predictors
-    const rankedSeason = stats
-      .filter(s=>seasonCorrelations[pos][s]?.best_r)
-      .sort((a,b)=>(seasonCorrelations[pos][b].best_r||0)-(seasonCorrelations[pos][a].best_r||0));
-    
-    console.log(`\n${pos} season-level predictors:`);
-    for(const stat of rankedSeason.slice(0,5)){
-      const d = seasonCorrelations[pos][stat];
-      console.log(`  ${stat}: r=${d.best_r?.toFixed(3)} (${d.interpretation}) n=${d.n}`);
-    }
-  }
 
-  // Merge into main correlations
-  for(const pos of POSITIONS){
-    for(const [stat, data] of Object.entries(seasonCorrelations[pos])){
-      if(!correlations[pos][stat]){
-        correlations[pos][stat] = { _season_only: true, '30d': {
-          r_slope: data.r_season, r_level: data.r_season, r_momentum: data.r_midseason,
-          best_r: data.best_r, n: data.n, interpretation: data.interpretation
-        }};
-        correlations[pos][stat]._summary = {
-          best_correlation: data.best_r,
-          best_type: 'season_level',
-          n: data.n,
-          interpretation: data.interpretation
-        };
+    let matched=0;
+    for(const stat of stats){
+      const p=pts[stat];
+      if(p.length<8){seasonCorr[pos][stat]={r:null,n:p.length};continue;}
+      const r=pearson(p.map(x=>x.v),p.map(x=>x.valChange));
+      const best=Math.abs(r||0);
+      seasonCorr[pos][stat]={r,n:p.length,
+        interpretation:!r?'no data':best>0.4?'strong':best>0.25?'moderate':best>0.15?'weak':'negligible'};
+      if(r)matched++;
+    }
+    // Merge into correlations
+    for(const[stat,data]of Object.entries(seasonCorr[pos])){
+      if(data.r){
+        correlations[pos][stat]={_season_only:true,'30d':{r_slope:data.r,best_r:Math.abs(data.r),n:data.n,interpretation:data.interpretation},
+          _summary:{best_correlation:Math.abs(data.r),best_type:'season_level',n:data.n,interpretation:data.interpretation}};
       }
     }
     // Re-rank including season stats
-    const allStats = Object.keys(correlations[pos]).filter(k=>!k.startsWith('_'));
-    const reranked = allStats
-      .map(s=>({stat:s, r:Math.abs(correlations[pos][s]?._summary?.best_correlation||0)}))
+    const allStats=Object.keys(correlations[pos]).filter(k=>!k.startsWith('_'));
+    const reranked=allStats.map(s=>({stat:s,r:Math.abs(correlations[pos][s]?._summary?.best_correlation||0)}))
       .sort((a,b)=>b.r-a.r);
-    correlations[pos]._ranked = {
-      by_30d: reranked.map(r=>r.stat),
-      top5: reranked.slice(0,5).map(r=>({
-        stat:r.stat, r:r.r,
-        type: correlations[pos][r.stat]?._season_only?'season':'weekly',
-        ...correlations[pos][r.stat]?._summary
-      }))
-    };
+    correlations[pos]._ranked={by_30d:reranked.map(r=>r.stat),top5:reranked.slice(0,5)};
+    console.log(`  ${pos}: ${matched} NGS/PFR stats with data`);
   }
 
-  console.log('\n=== COMBINED RANKINGS (weekly + season stats) ===');
-  for(const pos of POSITIONS){
-    console.log(`\n${pos}:`);
-    for(const item of (correlations[pos]._ranked?.top5||[])){
-      console.log(`  ${item.stat}: r=${item.r?.toFixed(3)} (${item.type||'?'}) ${item.interpretation||''}`);
-    }
-  }
+  // ── TRAJECTORIES (ALL historical players) ──
+  console.log('\n[3] Building trajectories for ALL historical players...');
   const trajectories={};
 
-  for(const p of statsPlayers){
-    if(!POSITIONS.includes(p.pos))continue;
-    const hist=histByName[norm(p.name)];
+  for(const[name,hist]of Object.entries(histPlayers)){
     if(!hist?.sf?.length)continue;
-
-    // Current value
     const recentIdx=hist.sf.reduceRight((f,v,i)=>f===-1&&v>0?i:f,-1);
     if(recentIdx===-1)continue;
     const currentValue=hist.sf[recentIdx];
@@ -436,26 +238,41 @@ async function buildAnalytics(){
     const v90=getValueAfterDays(hist,currentDate,-90)||0;
     const v180=getValueAfterDays(hist,currentDate,-180)||0;
 
-    // 2025 season rolling stats (last 6 weeks)
-    const s25=p.seasons?.[2025];
-    const recentWeeks=(s25?.weeks||[]).slice(-6);
-    
+    // Get stats if available
+    const statsP=statsByName[norm(name)];
+    const s25=statsP?.seasons?.[2025];
+
+    // Rolling 2025 stats last 6 weeks
     const rolling={};
-    for(const stat of TREND_STATS[p.pos]||[]){
-      const vals=recentWeeks.map(w=>parseFloat(w[stat]||0)).filter(v=>!isNaN(v)&&v>0);
-      if(vals.length>=3){
-        rolling[stat]={
-          avg:Math.round(vals.reduce((a,b)=>a+b)/vals.length*100)/100,
-          slope:slope(vals),
-          trend:slope(vals)>0.1?'rising':slope(vals)<-0.1?'falling':'stable'
-        };
+    if(s25?.weeks?.length>=3){
+      const recentWeeks=s25.weeks.slice(-6);
+      const pos=statsP.pos||'WR';
+      for(const stat of (WEEKLY_STATS[pos]||[])){
+        const vals=recentWeeks.map(w=>parseFloat(w[stat]||0)).filter(v=>!isNaN(v)&&v>0);
+        if(vals.length>=3){
+          rolling[stat]={avg:Math.round(vals.reduce((a,b)=>a+b)/vals.length*100)/100,
+            slope:slope(vals),trend:slope(vals)>0.1?'rising':slope(vals)<-0.1?'falling':'stable'};
+        }
       }
     }
 
-    trajectories[p.name]={
-      pid:p.player_id, pos:p.pos,
-      current_value:currentValue, current_date:currentDate,
-      peak_value:Math.max(...hist.sf.filter(v=>v>0)),
+    // Composite signal score — how many key stats are rising?
+    const pos=statsP?.pos;
+    const keyStats=pos?WEEKLY_STATS[pos]?.slice(0,5):[];
+    const risingCount=keyStats.filter(s=>rolling[s]?.trend==='rising').length;
+    const fallingCount=keyStats.filter(s=>rolling[s]?.trend==='falling').length;
+    const compositeSignal=keyStats.length>0?
+      Math.round((risingCount-fallingCount)/keyStats.length*100):null;
+
+    const peakValue=Math.max(...hist.sf.filter(v=>v>0));
+
+    trajectories[name]={
+      pid:statsP?.player_id||null,
+      pos:pos||null,
+      current_value:currentValue,
+      current_date:currentDate,
+      peak_value:peakValue,
+      pct_of_peak:peakValue>0?Math.round(currentValue/peakValue*1000)/10:null,
       momentum:{
         vs_30d:v30>0?Math.round((currentValue-v30)/v30*1000)/10:null,
         vs_60d:v60>0?Math.round((currentValue-v60)/v60*1000)/10:null,
@@ -463,77 +280,123 @@ async function buildAnalytics(){
         vs_180d:v180>0?Math.round((currentValue-v180)/v180*1000)/10:null,
         direction:v30>0?(currentValue-v30)/v30>0.05?'rising':(currentValue-v30)/v30<-0.05?'falling':'stable':'unknown'
       },
+      composite_signal:compositeSignal,
       rolling_2025:rolling,
       season_2025:s25?{games:s25.games,team:s25.team,...s25.totals}:null
     };
   }
+  console.log(`  Trajectories: ${Object.keys(trajectories).length}`);
 
-  // ── COMP ENGINE ──
-  console.log('Building comp profiles...');
+  // ── COMP ENGINE (trajectory shape matching) ──
+  console.log('\n[4] Building comp profiles...');
   const compProfiles={};
 
-  // Build stat vectors using top predictors per position
-  const getVector=(p,yr)=>{
-    const t=p.seasons?.[yr]?.totals||{};
-    const stats=TREND_STATS[p.pos]||[];
-    // Normalize by games played
-    const games=p.seasons?.[yr]?.games||1;
-    return stats.map(s=>(parseFloat(t[s]||0)/games));
+  // For each current player, find historical players with similar:
+  // 1. Value trajectory shape (rise/fall pattern over last 2 years)
+  // 2. Stat profile (if available)
+  // 3. Age/position/tier
+
+  const getValueShape=(name)=>{
+    const hist=histPlayers[name];
+    if(!hist?.sf?.length)return null;
+    // Get monthly values over last 24 months
+    const recentIdx=hist.sf.reduceRight((f,v,i)=>f===-1&&v>0?i:f,-1);
+    if(recentIdx<12)return null;
+    // Sample 12 evenly spaced points over last 24 months
+    const window=hist.sf.slice(Math.max(0,recentIdx-24),recentIdx+1);
+    if(window.length<12)return null;
+    const step=Math.floor(window.length/12);
+    return Array.from({length:12},(_,i)=>window[i*step]||0);
   };
 
-  const eligible=statsPlayers.filter(p=>POSITIONS.includes(p.pos)&&p.seasons?.[2025]?.games>=8);
-  
-  for(const p of eligible){
-    const vec25=getVector(p,2025);
-    if(vec25.every(v=>v===0))continue;
+  const cosineSim=(a,b)=>{
+    if(!a||!b||a.length!==b.length)return 0;
+    const dot=a.reduce((s,v,i)=>s+v*b[i],0);
+    const ma=Math.sqrt(a.reduce((s,v)=>s+v*v,0));
+    const mb=Math.sqrt(b.reduce((s,v)=>s+v*v,0));
+    return ma&&mb?dot/(ma*mb):0;
+  };
 
-    const comps=[];
-    for(const other of statsPlayers){
-      if(other.player_id===p.player_id||other.pos!==p.pos)continue;
-      for(const yr of [2020,2021,2022,2023,2024]){
-        if(!other.seasons?.[yr]?.games||other.seasons[yr].games<8)continue;
-        const vec=getVector(other,yr);
-        if(vec.every(v=>v===0))continue;
-        
-        // Euclidean distance (normalized)
-        let dist=0;
-        for(let i=0;i<vec25.length;i++) dist+=(vec25[i]-vec[i])**2;
-        dist=Math.sqrt(dist);
-        
-        // What happened to this player's value the following year?
-        const hist=histByName[norm(other.name)];
-        const valStart=getValueAfterDays(hist,`${yr}-12-01`,30);
-        const valEnd=getValueAfterDays(hist,`${yr+1}-10-01`,0);
-        const valChange=valStart&&valEnd?Math.round((valEnd-valStart)/valStart*1000)/10:null;
-        
-        comps.push({name:other.name,season:yr,dist:Math.round(dist*100)/100,val_change_next_yr:valChange});
+  // Build shapes for all historical players
+  const shapes={};
+  for(const name of Object.keys(histPlayers)){
+    const shape=getValueShape(name);
+    if(shape)shapes[name]=shape;
+  }
+  console.log(`  Shape profiles: ${Object.keys(shapes).length}`);
+
+  // For each player with current trajectory, find top 3 comps from EARLIER periods
+  for(const[name,traj]of Object.entries(trajectories)){
+    const currentShape=shapes[name];
+    if(!currentShape)continue;
+    const pos=traj.pos;
+    const currentVal=traj.current_value;
+
+    // Find players whose HISTORICAL trajectory shape matches
+    // Use players from 2020-2023 data range (so we can see what happened AFTER)
+    const candidates=[];
+    for(const[compName,hist]of Object.entries(histPlayers)){
+      if(compName===name)continue;
+      // Get shape from 2-4 years ago for this comp player
+      // then check what happened to them in the following year
+      const compSf=hist.sf||[];
+      const compDates=hist.dates||[];
+      if(compSf.length<30)continue;
+
+      // Try to find a 12-point window from 1-3 years ago
+      for(const lookbackYr of [2023,2022,2021,2020]){
+        const targetDate=`${lookbackYr}-09-01`;
+        const idx=findDateIdx(compDates,targetDate);
+        if(idx<12||idx>compSf.length-30)continue;
+        const window=compSf.slice(idx-12,idx);
+        if(window.filter(v=>v>0).length<8)continue;
+
+        const sim=cosineSim(currentShape,window);
+        if(sim<0.7)continue; // only strong matches
+
+        // What happened to this comp player 12 months after this point?
+        const valAt=compSf[idx]||0;
+        const val12m=getValueAfterDays(hist,compDates[idx],365)||0;
+        const valChange=valAt>0&&val12m>0?Math.round((val12m-valAt)/valAt*1000)/10:null;
+
+        candidates.push({
+          name:compName,
+          season:lookbackYr,
+          similarity:Math.round(sim*1000)/10,
+          val_at_comp:valAt,
+          val_12m_later:val12m,
+          val_change_12m:valChange
+        });
+        break; // one window per comp player
       }
     }
 
-    // Top 3 closest comps
-    const top3=comps.sort((a,b)=>a.dist-b.dist).slice(0,3);
-    const validChanges=top3.filter(c=>c.val_change_next_yr!==null);
-    
-    compProfiles[p.name]={
-      pos:p.pos,
+    if(!candidates.length)continue;
+    const top3=candidates.sort((a,b)=>b.similarity-a.similarity).slice(0,3);
+    const validChanges=top3.filter(c=>c.val_change_12m!==null);
+
+    compProfiles[name]={
+      pos,
+      current_value:currentVal,
       comps:top3,
-      projected_val_change:validChanges.length>0
-        ?Math.round(validChanges.reduce((s,c)=>s+c.val_change_next_yr,0)/validChanges.length*10)/10
-        :null
+      avg_comp_outcome:validChanges.length>0?
+        Math.round(validChanges.reduce((s,c)=>s+c.val_change_12m,0)/validChanges.length*10)/10:null,
+      projected_value_12m:validChanges.length>0&&currentVal?
+        Math.round(currentVal*(1+(validChanges.reduce((s,c)=>s+c.val_change_12m,0)/validChanges.length)/100)):null
     };
   }
+  console.log(`  Comp profiles: ${Object.keys(compProfiles).length}`);
 
   // ── OUTPUT ──
   const output={
     generated:new Date().toISOString(),
-    methodology:'Rolling 4-week trends correlated against dynasty value changes at 14/30/60 day lags',
+    methodology:'v2: trajectory shape matching + weekly rolling correlations + season NGS/PFR + composite signal',
     correlations,
     trajectories,
     comp_profiles:compProfiles,
     summary:{
-      total_data_points:totalPoints,
-      players_with_trajectories:Object.keys(trajectories).length,
-      players_with_comps:Object.keys(compProfiles).length,
+      total_trajectories:Object.keys(trajectories).length,
+      total_comps:Object.keys(compProfiles).length,
       top_predictors:Object.fromEntries(
         POSITIONS.map(pos=>[pos,correlations[pos]?._ranked?.top5||[]])
       )
@@ -545,7 +408,21 @@ async function buildAnalytics(){
   console.log(`\n✓ analytics.json: ${mb}MB`);
   console.log(`Trajectories: ${Object.keys(trajectories).length}`);
   console.log(`Comp profiles: ${Object.keys(compProfiles).length}`);
-  console.log(`Total data points: ${totalPoints.toLocaleString()}`);
+
+  // Show Pickens specifically
+  if(trajectories['George Pickens']){
+    const t=trajectories['George Pickens'];
+    console.log(`\nGeorge Pickens trajectory:`);
+    console.log(`  Value: ${t.current_value} (${t.pct_of_peak}% of peak ${t.peak_value})`);
+    console.log(`  Momentum: vs30d=${t.momentum.vs_30d}% vs90d=${t.momentum.vs_90d}%`);
+    console.log(`  Composite signal: ${t.composite_signal}`);
+  }
+  if(compProfiles['George Pickens']){
+    const c=compProfiles['George Pickens'];
+    console.log(`\nGeorge Pickens comps:`);
+    c.comps.forEach(x=>console.log(`  ${x.name}(${x.season}): sim=${x.similarity} → ${x.val_change_12m}% 12m later`));
+    console.log(`  Avg outcome: ${c.avg_comp_outcome}% | Projected: ${c.projected_value_12m}`);
+  }
 }
 
 buildAnalytics().catch(e=>{console.error('FATAL:',e);process.exit(1);});
