@@ -17,10 +17,10 @@ const FILES = {
   injuries:            (season) => `${BASE}/injuries/injuries_${season}.csv`,
   // Depth charts
   depth_charts:        (season) => `${BASE}/depth_charts/depth_charts_${season}.csv`,
-  // PFR advanced stats — parquet, filter by season after loading
-  pfr_pass:            (season) => `${BASE}/pfr_advstats/advstats_season_pass_${season}.parquet`,
-  pfr_rush:            (season) => `${BASE}/pfr_advstats/advstats_season_rush_${season}.parquet`,
-  pfr_rec:             (season) => `${BASE}/pfr_advstats/advstats_season_rec_${season}.parquet`,
+  // PFR advanced stats — confirmed all-years parquet files
+  pfr_pass:            () => `${BASE}/pfr_advstats/advstats_season_pass.parquet`,
+  pfr_rush:            () => `${BASE}/pfr_advstats/advstats_season_rush.parquet`,
+  pfr_rec:             () => `${BASE}/pfr_advstats/advstats_season_rec.parquet`,
   // NGS stats — confirmed filenames from GitHub API
   // Single file per stat type contains ALL years (2016-2024)
   // No 2025 NGS data yet — most recent is 2024 season
@@ -88,26 +88,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Temporary: discover PFR filenames via GitHub API
-    if (file.startsWith('pfr_') && req.query.discover === '1') {
-      try {
-        const ghRes = await fetch('https://api.github.com/repos/nflverse/nflverse-data/releases/tags/pfr_advstats', {
-          headers: { 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'GWTTKB/1.0' }
-        });
-        if (ghRes.ok) {
-          const release = await ghRes.json();
-          const assets = release.assets || [];
-          return res.status(200).json({
-            file, season,
-            release_name: release.name,
-            all_assets: assets.map(a => a.name)
-          });
-        }
-      } catch(e) {
-        console.warn('PFR discovery error:', e.message);
-      }
-    }
-
     const url = FILES[file](season);
     const response = await fetch(url, {
       headers: { 'User-Agent': 'GWTTKB/1.0' },
@@ -132,8 +112,8 @@ export default async function handler(req, res) {
         const arrayBuffer = await response.arrayBuffer();
         rows = await parquetReadObjects({ file: arrayBuffer });
         headers = rows.length > 0 ? Object.keys(rows[0]) : [];
-        // NGS files contain all years — filter by season
-        if (file.startsWith('ngs_') && season) {
+        // NGS and PFR all-years files contain every season — filter by season
+        if ((file.startsWith('ngs_') || file.startsWith('pfr_')) && season) {
           rows = rows.filter(r => String(r.season) === String(season));
         }
       } catch(parquetErr) {
