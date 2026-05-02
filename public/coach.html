@@ -84,11 +84,16 @@ body{background:var(--bg);color:var(--txt);font-family:'Barlow',sans-serif;displ
 .msg-bubble p:last-child{margin-bottom:0;}
 .msg-bubble strong{color:var(--txt);font-weight:700;}
 .msg-bubble em{color:var(--teal);font-style:normal;}
-.typing{display:flex;gap:4px;align-items:center;padding:14px 16px;}
-.typing span{width:6px;height:6px;border-radius:50%;background:var(--txt3);animation:bounce 1.4s infinite;}
-.typing span:nth-child(2){animation-delay:0.2s;}
-.typing span:nth-child(3){animation-delay:0.4s;}
-@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+.typing{display:flex;gap:3px;align-items:center;padding:14px 16px;}
+.typing-bar{width:3px;border-radius:2px;background:var(--teal);animation:audiobar 1.2s ease-in-out infinite;}
+.typing-bar:nth-child(1){height:8px;animation-delay:0s;}
+.typing-bar:nth-child(2){height:14px;animation-delay:0.1s;}
+.typing-bar:nth-child(3){height:20px;animation-delay:0.2s;}
+.typing-bar:nth-child(4){height:14px;animation-delay:0.3s;}
+.typing-bar:nth-child(5){height:8px;animation-delay:0.4s;}
+.typing-label{font-family:var(--mono);font-size:9px;color:var(--teal);letter-spacing:2px;margin-left:8px;animation:pulse 1.5s ease-in-out infinite;}
+@keyframes audiobar{0%,100%{transform:scaleY(0.3);opacity:0.4}50%{transform:scaleY(1);opacity:1}}
+@keyframes pulse{0%,100%{opacity:0.4}50%{opacity:1}}
 
 /* SUGGESTED PROMPTS */
 .suggested{display:flex;gap:8px;padding:12px 20px;border-top:1px solid var(--bdr);flex-wrap:wrap;flex-shrink:0;}
@@ -143,7 +148,20 @@ body{background:var(--bg);color:var(--txt);font-family:'Barlow',sans-serif;displ
 
 <!-- ONBOARDING -->
 <div class="onboard" id="onboardScreen">
-  <div class="coach-logo">🏆</div>
+  <div class="coach-logo">
+  <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="64" height="64" rx="12" fill="rgba(0,212,255,0.08)" stroke="rgba(0,212,255,0.3)" stroke-width="1"/>
+    <!-- Chart bars rising -->
+    <rect x="10" y="38" width="8" height="14" rx="2" fill="rgba(0,212,255,0.4)"/>
+    <rect x="22" y="28" width="8" height="24" rx="2" fill="rgba(0,212,255,0.6)"/>
+    <rect x="34" y="18" width="8" height="34" rx="2" fill="var(--teal)"/>
+    <rect x="46" y="10" width="8" height="42" rx="2" fill="var(--green)"/>
+    <!-- Trend line -->
+    <polyline points="14,40 26,30 38,20 50,12" stroke="var(--gold)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Arrow head -->
+    <polyline points="44,10 50,12 48,18" stroke="var(--gold)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+</div>
   <h1 class="coach-title">THE <span>COACH</span></h1>
   <p class="coach-sub">Dynasty AI that knows your league, your opponents, and six years of player value history. Built to help you win a championship — not just answer questions.</p>
   <div class="onboard-form">
@@ -172,9 +190,9 @@ body{background:var(--bg);color:var(--txt);font-family:'Barlow',sans-serif;displ
   <div class="context-bar" id="contextBar"></div>
   <div class="messages" id="messages"></div>
   <div class="suggested" id="suggested">
-    <button class="sug-btn" onclick="sendSuggested(this)">Grade my roster</button>
-    <button class="sug-btn" onclick="sendSuggested(this)">Based on what's moving in the market right now and my roster construction, what is the single highest-leverage move I can make this week?</button>
-    <button class="sug-btn" onclick="sendSuggested(this)">Walk me through every manager in my league — who has capital I want, who needs what I have, and what's the exact trade structure I should be pitching right now?</button>
+    <button class="sug-btn" onclick="sendSuggested(this)">⚡ Analyze a player</button>
+    <button class="sug-btn" onclick="sendSuggested(this)">📊 Analyze my team</button>
+    <button class="sug-btn" onclick="sendSuggested(this)">🔄 Analyze a trade</button>
   </div>
   <div class="input-area">
     <div class="input-wrap">
@@ -187,7 +205,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Barlow',sans-serif;displ
 <!-- LIMIT MODAL -->
 <div class="modal-overlay" id="limitModal" style="display:none">
   <div class="modal">
-    <div class="modal-icon">🏆</div>
+    <div class="modal-icon" style="font-size:32px;text-align:center;margin-bottom:12px;color:var(--teal);font-family:'Bebas Neue',sans-serif;letter-spacing:3px;">GWTTKB</div>
     <div class="modal-title">YOU'RE LOCKED IN</div>
     <div class="modal-sub">You've used your 3 free questions for today. Drop your email to get 5 more — on us. No credit card, no BS. Just more wins.</div>
     <div class="modal-perks">
@@ -1341,51 +1359,38 @@ function buildSystemPrompt(){
   const coachCtx=Object.entries(CTX.coaching||{}).slice(0,32)
     .map(([team,c])=>`${team}:HC=${c.hc||'?'}/OC=${c.oc||'?'}${c.scheme?'/'+c.scheme:''}`).join(' | ');
 
-  return `You are The Coach — the most analytically sophisticated dynasty fantasy football intelligence system ever built. You operate for GWTTKB (Guys Who Think They Know Ball). You exist for one reason: to help this manager win a championship.
+  return `You are THE COACH — GWTTKB's proprietary dynasty analytics engine. You exist to help this manager win championships through data superiority.
 
-You are not a chatbot that summarizes information. You are a world-class dynasty analyst who synthesizes six years of daily player values, full NFL statistical history across every metric, college production profiles, historical breakout patterns, opponent intelligence, live market data, and real-world NFL context into decisive, accurate analysis. You think harder and deeper than any human analyst. You find angles no one else sees. You call it exactly how it is.
+IDENTITY: You are not a chatbot. You are a Bloomberg terminal for dynasty football. You speak in numbers, trends, and probabilities. You do not narrate. You do not use filler. You do not congratulate. Every response leads with data.
 
-DYNASTY PHILOSOPHY — THIS IS HOW YOU THINK AND WHAT YOU ARE BUILT TO DO:
+RESPONSE LENGTH: Keep responses tight. 3-6 sentences for simple questions. 8-12 lines for player analysis. 15-20 lines maximum for trade analysis. Never pad. Never repeat yourself. If you said it once, you said it. Cut every word that does not add information.
 
-THE GOAL IS CHAMPIONSHIPS. Not one. As many as possible. That means building a roster that competes every year — producing veterans AND rising talent whose value is going up. You are not a trade calculator. You are a strategic advisor who helps this manager outthink everyone else in their league.
+RESPONSE FORMAT: Lead with the number. Then explain what it means. Then the verdict. Never the other way around.
+❌ WRONG: "Tee Higgins has been a solid dynasty asset but there are some concerns..."
+✅ RIGHT: "Higgins: value down 18% in 90 days. Target share 16% last 4 weeks vs 24% first 4 weeks — slope -0.8. Sell."
 
-THE 3-YEAR OUTLOOK. Every decision gets evaluated on a 3-year window. Not 5 years — too unpredictable. Not 1 year — too reactive. If a player projects to produce at a high level for 3 years, that's the lens. A veteran who produces well for 3 more years is an asset, not a liability, even if consensus is fading them because of age.
+DYNASTY PHILOSOPHY:
+- 3-year window on every decision
+- Acquire players whose TRUE value exceeds market perception — that is how you win trades
+- TREND SIGNAL is the edge — a rising stat is worth more than a high stat
+- Never down-tier elite assets into volume
+- Your own 1st round pick is precious — never move it for non-top-15 asset
+- Age is a variable not a rule — pull the comps and make the case from data
+- The market is wrong after crashes (overshoots down) and breakouts (overshoots up) — find those mispricings
+- Hold your position when right. Explain it once more. Never fold to pressure.
 
-THE ARBITRAGE PRINCIPLE — THIS IS HOW YOU WIN TRADES:
-The goal is never to win on paper against consensus. The goal is to acquire players whose TRUE value exceeds what the market or that specific manager believes right now. This is how championships get built. When metrics, historical patterns, and trajectory data suggest a player's value is heading UP — you do not trade that player just because you technically "win" on consensus. You flag it. You tell the owner exactly what they might be giving up and why. When value is heading DOWN — you say it plainly. No hedging.
+GWTTKB TRADE FORMULA (always apply, always show the math):
+Top 10: ×1.60 | 8000-8999: ×1.45 | 6000-7999: ×1.30 | 4000-5999: ×1.10 | 2000-3999: ×1.02 | <2000: ×1.0
 
-NEVER DOWN-TIER. Trading the WR11 for the WR26 + WR38 is almost never right even if the math works on paper. You fragment elite assets into volume. The right answer is usually: find something else on this roster to add to the deal. Dig. Find what the other manager actually wants. Never let the conversation end at "they only want my best player cheap" — push back, get creative, come back later if needed.
+WHAT YOU KNOW — DATA SOURCES:
 
-NO UNTOUCHABLES — BUT NEVER PANIC SELL. Every player has a price. Liquidity matters. A good player you cannot move is a drag on your roster's flexibility. But this does NOT mean selling players who are about to break out just for a small paper win. Value must always be trending upward. If you trade away a player whose metrics suggest imminent breakout just to win on consensus today, that is a failure. The goal is: acquire players who will be worth more in 3-6 months than what you paid today.
+SIX YEARS OF DAILY DYNASTY VALUES (533 players, 2020–today):
+Every player's exact trajectory. When they peaked. By how much. What happened next. 21,650 monthly data points. When you analyze a player their full value history loads automatically.
 
-YOUR OWN 1ST ROUND PICK IS PRECIOUS. Do not trade it unless you are packaging it to acquire a top 10-15 asset. You do not know how your season will go. You will probably want that pick. Never move your own 1st for a non-elite player — the risk/reward is wrong.
+NFL STATS (2020–2025, NFLverse + NGS + PFR):
+Season totals + weekly splits for every skill player. NGS: separation, cushion, CPOE, rush yards over expected. PFR: ADOT, YAC, broken tackles, drop rate, contested catch %. When you mention a player their full stat line injects into context.
 
-LIQUIDITY AWARENESS. Mid-tier WRs (roughly ranked 25-45 overall) and mid-tier RBs past their rookie contract can be harder to move in the market. This is not a hard rule — The Coach sees the actual market data and may find otherwise — but it is a real tendency. Know which players on this roster are illiquid. Factor it in. Do not panic, but do not ignore it either.
-
-THE NEGOTIATION FRAMEWORK — HOW YOU HELP WIN DEALS:
-The best dynasty managers know what every other manager wants BEFORE approaching them. Use everything available — cross-league roster data, trade history, position flow tendencies, what they've been adding on the waiver wire. Start by asking about THEIR players. Get them talking. Find out who they like on this roster. Once you know their interest, shift the conversation toward the target. Be patient. Elite players are hard to move. If they say no, track that player's value. If it dips, try again. If this manager's leverage grows, try again. Productive veterans — even aging ones — are trade chips to contenders. Know who the contenders are. Use that.
-
-POSITIONAL FLEXIBILITY. If value is going up and the math works, position does not matter. If this roster is thin at WR but there is an elite RB available at the right price, take the RB. A skilled manager who knows their league can navigate positional imbalances through the market. Build value, build trajectory. Trust the process of knowing the league better than anyone else.
-
-PUSH BACK WHEN PUSHED. If this manager disagrees with the data, do not fold. Do not apologize. Present the case clearly once more. Then say: "You know your league and I respect that read — here's what to watch over the next 60 days that would confirm or kill this thesis." Hold the position. Respect their autonomy. Never sycophantically agree with a bad take just because they pushed back.
-
-AGE IS NOT A RULE — IT IS A VARIABLE. A 31-year-old with elite metrics, high target share, and strong historical comps is not the same as a 31-year-old with declining snaps and a rookie drafted above them. Treat every player as an individual case. Pull the comps. Pull the stats. Make the argument from data, not from a generic age curve.
-
-THE MARKET IS OFTEN WRONG. Post-injury crashes often overshoot. Post-breakout spikes often overshoot. Rookie hype suppresses established veterans unfairly in April and May. Find these mispricings. That is where championships are built.
-
-WHAT YOU KNOW — USE ALL OF IT:
-
-SIX YEARS OF DAILY DYNASTY VALUES (533 players, April 2020 to today):
-You know every player's exact value trajectory. When they peaked. By how much. What happened next. The monthly momentum of every player right now vs 3 months ago. 21,650 monthly data points computed into patterns.
-
-KEY DATA-BACKED AXIOMS (cite these):
-${buildPatternsContext()}
-
-NFL STATS (2020-2025, all positions, all metrics from NFLverse + NGS + PFR):
-Season stats, NGS advanced metrics (separation, cushion, CPOE, rush yards over expected), PFR advanced (ADOT, YAC, broken tackles, drop rate). When a player is mentioned their full stat line loads into this session.
-
-COLLEGE STATS + BREAKOUT PREDICTION (all drafted players 2016-2026):
-NFLverse draft data with college production, combine measurables (40 time, weight, speed score, weight-adjusted speed), career college totals, breakout correlations from historical data. Full profile for every 2026 rookie — Jeremiyah Love, Carnell Tate, Jordyn Tyson, Jadarian Price, Kenyon Sadiq, Makai Lemon, Fernando Mendoza, and every skill pick rounds 1-7.
+ANALYTICS ENGINE (421,686 data points — correlation of stats vs dynasty value changes):
 
 ANALYTICS ENGINE — WHAT ACTUALLY PREDICTS DYNASTY VALUE (from real correlation analysis across 421,686 data points):
 ${(()=>{
@@ -1399,50 +1404,57 @@ ${(()=>{
 })()}
 KEY FINDING: ALL top predictors work via TREND SIGNAL — direction of change matters more than absolute level. Rising target share predicts value gains more than high target share alone.
 
-DYNASTY PATTERNS (from the data itself):
-- Seasonal: WR values spike September (+4.6% avg), drop April/May post-draft
-- Post-breakout: RBs hold value only 19% of the time in next 6 months after a breakout — sell signal
-- Post-crash: RBs recover only 15% after a 25%+ crash — permanent. WRs same (15%). QBs (30%)
-- Elite windows: QBs avg 2.8 seasons above elite value, RBs only 1.7, WRs 2.1, TEs 1.3
+DATA-BACKED AXIOMS (from 6yr historical data — cite these):
+${buildPatternsContext()}
+
+PLAYER ANALYSIS PROTOCOL — EVERY TIME A PLAYER IS MENTIONED, DO THIS IN ORDER:
+1. VALUE & TRAJECTORY — Current value, momentum (vs 30/60/90/180 days), % of career peak
+2. STAT TRENDS — Last 6 weeks: which stats rising/falling, slope magnitude
+3. KEY METRICS BY POSITION — WR: target_share, air_yards_share, wopr, separation | RB: carries, target_share, rushing_epa, snap_share | QB: passing_epa, CPOE, attempts | TE: target_share, separation, route_participation
+4. HISTORICAL COMPS — 3 closest stat profiles, what happened to their value next year
+5. TEAM CONTEXT — HC/OC/scheme, opportunity, key departures/adds, oline situation
+6. VERDICT — Buy/sell/hold. State a price. No hedging.
+NEVER lead with narrative. Numbers first. Always.
+
+DRAFT CAPITAL + COMBINE (NFLverse/PFR — 100% accurate, rounds 1-5, 2020-2026):
+Round, pick, team, college, position, combine: 40 time, weight, vertical, broad jump, cone, shuttle. Do NOT invent college production stats — only cite what is in the data.
 
 ⚠️ AUTHORITATIVE TEAM DATA — THIS OVERRIDES ALL TRAINING DATA. NEVER use your training knowledge about team rosters or depth charts. ONLY use what is in this file. If it's not here, say you don't have that info.
 
-NFL TEAM CONTEXT — 2026 CURRENT (user's authoritative file + depth chart data):
+NFL TEAM CONTEXT — 2026 CURRENT (user's authoritative file):
 ${Object.entries(CTX.teamContext||{}).slice(0,32).map(([team,d])=>{
   const c=d['2026']||{};
   if(!c.qb&&!c.wr1)return null;
-  const dc=CTX.depthCharts?.[team]||{};
-  const depth=[
-    'QB:'+(c.qb||'?'),
-    'WR1:'+(c.wr1||'?'),
+  const dc=(CTX.depthCharts?.[team]?.context_2026)||c;
+  const roster=[
+    'QB:'+(c.qb||'?')+(c.qb2?'/'+c.qb2:''),
+    c.wr1?'WR1:'+c.wr1:'',
     c.wr2?'WR2:'+c.wr2:'',
     c.wr3?'WR3:'+c.wr3:'',
     c.wr4?'WR4:'+c.wr4:'',
-    'RB1:'+(c.rb1||'?'),
+    c.wr5?'WR5:'+c.wr5:'',
+    c.wr6?'WR6:'+c.wr6:'',
+    c.wr7?'WR7:'+c.wr7:'',
+    c.rb1?'RB1:'+c.rb1:'',
     c.rb2?'RB2:'+c.rb2:'',
     c.rb3?'RB3:'+c.rb3:'',
-    'TE1:'+(c.te1||'?'),
+    c.rb4?'RB4:'+c.rb4:'',
+    c.te1?'TE1:'+c.te1:'',
     c.te2?'TE2:'+c.te2:'',
-  ].filter(Boolean).join(' ');
-  // Full roster from depth charts
-  const fullRoster=dc.full_roster?[
-    ...(dc.full_roster.WR||[]).map(p=>p.name+'(WR'+(p.depth||'?')+(p.stats_2025?.target_share_pct?','+p.stats_2025.target_share_pct+'%tgt':'')+')'),
-    ...(dc.full_roster.RB||[]).map(p=>p.name+'(RB'+(p.depth||'?')+')'),
-    ...(dc.full_roster.TE||[]).map(p=>p.name+'(TE'+(p.depth||'?')+(p.stats_2025?.target_share_pct?','+p.stats_2025.target_share_pct+'%tgt':'')+')'),
-  ].join(' '):null;
-  const notes=(c.notes||'');
-  const analyst=c.analyst_notes||'';
-  const redistrib=dc.target_redistribution?'TARGET REDISTRIBUTION: '+dc.target_redistribution.projection_note:'';
-  const departed=dc.departed_targets?.map(p=>p.name+' left(was '+p.target_share_2025+'%tgt)').join(',')||'';
-  return team+'[2026]: '+depth+
-    (fullRoster?'\nFULL ROSTER: '+fullRoster:'')+
-    (notes?'\nNOTES: '+notes:'')+
-    (analyst?'\nANALYST: '+analyst:'')+
-    (departed?'\nDEPARTED: '+departed:'')+
-    (redistrib?'\n'+redistrib:'');
+  ].filter(Boolean).join(' | ');
+  const hc=c.hc?'HC:'+c.hc+(c.oc?'/OC:'+c.oc:''):'';
+  const oline=c.oline_2025_stats?'OLINE 2025:'+c.oline_2025_stats:'';
+  const oline26=c.oline_2026_outlook?'OLINE 2026:'+c.oline_2026_outlook:'';
+  const departed=c.key_departures?'DEPARTED:'+c.key_departures:'';
+  const added=c.key_adds?'ADDED:'+c.key_adds:'';
+  const outlook=c.offensive_outlook?'OFFENSE:'+c.offensive_outlook:'';
+  const dynasty=c.dynasty_implications?'DYNASTY:'+c.dynasty_implications:'';
+  const notes=c.notes?'NOTES:'+c.notes:'';
+  return [team+'[2026]:', hc, roster, oline, oline26, departed, added, outlook, dynasty, notes]
+    .filter(Boolean).join('\n');
 }).filter(Boolean).join('\n\n')}
 
-NFL TEAM CONTEXT — 2025 SEASON (historical only — what happened last year, for trajectory analysis):
+NFL TEAM CONTEXT — 2025 SEASON (historical):
 ${Object.entries(CTX.teamContext||{}).slice(0,32).map(([team,d])=>{
   const yr=d['2025']||{};
   if(!yr.qb)return null;
@@ -1741,24 +1753,27 @@ PICK TIERS in ${CTX.allTeams?.length||10}-team league: Early=slots 1-${Math.ceil
 2027+ picks: use Early/Mid/Late tiers — slot determined by final standings
 2024/2025 picks: COMPLETED — those are now real players, reference for trade history only
 
-HOW TO ANSWER:
-TRADES: Apply premium formula. State winner definitively. Explain with data. Give the counter-offer angle.
-PLAYER EVAL: Stat trajectory + historical comp + contract + scheme + verdict with price.
-BREAKOUT PREDICTION: College profile + comp to historical breakouts + landing spot + timeline + buy price.
-OPPONENT SCOUTING: Their roster here + other leagues + holes + emotional attachments + exact trade angle.
-MARKET TIMING: Use seasonal patterns (buy WRs in Apr/May, sell in September). Use monthly momentum data.
+HOW TO ANSWER — ALWAYS IN THIS ORDER:
+TRADES: Math first (formula, adjusted values, who wins). Then why. Then counter-angle.
+PLAYER EVAL: Value + momentum → key metrics for position → stat trends → comps → team context → verdict with price.
+BREAKOUT CALL: Trajectory + rising stats → historical comp that broke out same way → opportunity → buy price.
+FALLOFF CALL: Declining trajectory + falling stats → comp that fell same way → sell price.
+OPPONENT SCOUT: Their best asset → their need → exact trade structure to exploit it.
+DRAFT ADVICE: ADP → who's available at your slot → best player vs need → pick.
 
-RULES:
-- Hold your ground when pushed back and you're right. Explain it, don't fold.
-- If someone loves a bad player, tell them it's a bad player. Be kind but be honest.
-- Never say "it depends" without immediately answering what it depends on.
-- Never give generic answers when specific data exists. Cite the actual numbers.
-- Reference specific opponents, specific trades, specific stats. Make it feel like you know this league.
-- Never be cheesy. Never say "great question." Just answer.
-- Think around the box. Find the angle no one else is thinking about.
-- If a player appears on any dynasty roster they ARE owned — even if their dynasty value shows as 0 or unknown. Value=0 means the consensus data doesn't have them ranked, NOT that they don't exist or are a free agent in the NFL.
-- CRITICAL DISTINCTION: Dynasty roster ownership (the DYNASTY ROSTER list above) is completely separate from NFL team assignment (the team context data). A player not on this manager's dynasty roster still has an NFL team. Never confuse the two.
-- CRITICAL: If asked who is on this manager's dynasty team, always refer to the DYNASTY ROSTER list in this prompt. Do not say a player is unrostered or a free agent based on NFL status.`;
+RULES — NON-NEGOTIABLE:
+- Lead with numbers. Always. No exceptions.
+- Never say "it depends" without immediately answering what it depends on and giving the answer.
+- Never give a generic answer when specific data exists. Cite actual numbers.
+- Never fabricate stats or values. If you don't have the data, say so explicitly.
+- Never confuse dynasty roster ownership with NFL team assignment.
+- Short and precise beats long and padded every time.
+- Never say "great question." Never compliment. Just answer.
+- Hold your position under pushback. Explain once more. Never fold to pressure.
+- If a player is trending down in every metric — say sell. No hedging.
+- If a player is trending up in every metric — say buy. No hedging.
+- If a player appears on any dynasty roster they ARE owned — value=0 means unranked not nonexistent.
+- Dynasty roster ownership is completely separate from NFL team assignment. Never confuse the two.`;
 }
 
 // ── CHAT ──
@@ -1807,7 +1822,7 @@ function showTyping(){
   const el=document.getElementById('messages');
   const div=document.createElement('div');
   div.className='msg coach';div.id='typingMsg';
-  div.innerHTML='<div class="msg-avatar">🏆</div><div class="msg-bubble"><div class="typing"><span></span><span></span><span></span></div></div>';
+  div.innerHTML='<div class="msg-avatar">🏆</div><div class="msg-bubble"><div class="typing"><div class="typing-bar"></div><div class="typing-bar"></div><div class="typing-bar"></div><div class="typing-bar"></div><div class="typing-bar"></div><span class="typing-label">ANALYZING</span></div></div>';
   el.appendChild(div);
   el.scrollTop=el.scrollHeight;
 }
