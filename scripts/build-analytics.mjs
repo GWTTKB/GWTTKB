@@ -485,10 +485,11 @@ async function buildAnalytics(){
         if(compName===name) continue;
         if(compTraj.pos !== pos) continue;
         if(!compTraj.draft_round) continue;
-        // Must be drafted in similar range (within 1 round or 15 picks)
+        // Must be drafted in similar range — within 1 round AND within 25 picks
         const roundDiff = Math.abs(compTraj.draft_round - targetRound);
-        const pickDiff = compTraj.draft_pick && targetPick ? Math.abs(compTraj.draft_pick - targetPick) : 99;
-        if(roundDiff > 1 && pickDiff > 15) continue;
+        const pickDiff = compTraj.draft_pick && targetPick ? Math.abs(compTraj.draft_pick - targetPick) : 999;
+        if(roundDiff > 1) continue;
+        if(pickDiff > 25) continue;
         // Must be at least 1 year removed (so we have post-draft trajectory data)
         if(!compTraj.draft_year || compTraj.draft_year >= (new Date().getFullYear() - 1)) continue;
         // Get value 12 months after their rookie season ended
@@ -590,8 +591,27 @@ async function buildAnalytics(){
     }
 
     if(!candidates.length) continue;
-    const top3 = candidates.sort((a,b) => b.match_score - a.match_score).slice(0,3);
-    const validChanges = top3.filter(c => c.val_change_12m !== null);
+    
+    // Pull more candidates so we can split into upside/downside/base scenarios
+    const sorted = candidates.sort((a,b) => b.match_score - a.match_score);
+    const top10 = sorted.slice(0, 10); // top 10 most similar comps
+    const validChanges = top10.filter(c => c.val_change_12m !== null);
+    
+    // Split into scenarios
+    const upsideComps = validChanges.filter(c => c.val_change_12m > 5).sort((a,b) => b.val_change_12m - a.val_change_12m).slice(0, 3);
+    const downsideComps = validChanges.filter(c => c.val_change_12m < -5).sort((a,b) => a.val_change_12m - b.val_change_12m).slice(0, 3);
+    const baseComps = validChanges.filter(c => Math.abs(c.val_change_12m) <= 15).slice(0, 3);
+    
+    // Weighted average — best matches get more weight
+    const totalWeight = validChanges.reduce((s,c) => s + (c.match_score || 1), 0);
+    const weightedAvg = totalWeight > 0 ? 
+      validChanges.reduce((s,c) => s + (c.val_change_12m * (c.match_score || 1)), 0) / totalWeight : null;
+    
+    // Probabilities
+    const upsideProb = validChanges.length > 0 ? 
+      Math.round(upsideComps.length / validChanges.length * 100) : null;
+    const downsideProb = validChanges.length > 0 ?
+      Math.round(downsideComps.length / validChanges.length * 100) : null;
 
     compProfiles[name] = {
       pos,
@@ -599,11 +619,40 @@ async function buildAnalytics(){
       current_value: traj.current_value,
       fantasy_tier: traj.fantasy_tier_2025,
       value_tier: traj.value_tier,
-      comps: top3,
+      
+      // Top 3 best matches (regardless of outcome) - keep for backward compat
+      comps: sorted.slice(0, 3),
+      
+      // SCENARIO BREAKDOWN
+      upside_scenario: {
+        comps: upsideComps,
+        probability_pct: upsideProb,
+        avg_gain: upsideComps.length > 0 ?
+          Math.round(upsideComps.reduce((s,c) => s + c.val_change_12m, 0) / upsideComps.length * 10) / 10 : null,
+        projected_ceiling: upsideComps.length > 0 && traj.current_value ?
+          Math.round(traj.current_value * (1 + (upsideComps.reduce((s,c) => s + c.val_change_12m, 0) / upsideComps.length) / 100)) : null,
+      },
+      base_case: {
+        comps: baseComps,
+        avg_change: baseComps.length > 0 ?
+          Math.round(baseComps.reduce((s,c) => s + c.val_change_12m, 0) / baseComps.length * 10) / 10 : null,
+      },
+      downside_scenario: {
+        comps: downsideComps,
+        probability_pct: downsideProb,
+        avg_loss: downsideComps.length > 0 ?
+          Math.round(downsideComps.reduce((s,c) => s + c.val_change_12m, 0) / downsideComps.length * 10) / 10 : null,
+        projected_floor: downsideComps.length > 0 && traj.current_value ?
+          Math.round(traj.current_value * (1 + (downsideComps.reduce((s,c) => s + c.val_change_12m, 0) / downsideComps.length) / 100)) : null,
+      },
+      
+      // Weighted projection (most likely outcome)
       avg_comp_outcome: validChanges.length > 0 ?
         Math.round(validChanges.reduce((s,c) => s + c.val_change_12m, 0) / validChanges.length * 10) / 10 : null,
-      projected_value_12m: validChanges.length > 0 && traj.current_value ?
-        Math.round(traj.current_value * (1 + (validChanges.reduce((s,c) => s + c.val_change_12m, 0) / validChanges.length) / 100)) : null,
+      weighted_projection_pct: weightedAvg != null ? Math.round(weightedAvg * 10) / 10 : null,
+      projected_value_12m: weightedAvg != null && traj.current_value ?
+        Math.round(traj.current_value * (1 + weightedAvg / 100)) : null,
+      total_comps_analyzed: validChanges.length,
     };
   }
   console.log(`  Comp profiles: ${Object.keys(compProfiles).length}`);
@@ -642,9 +691,16 @@ async function buildAnalytics(){
   }
   if(compProfiles['George Pickens']){
     const c=compProfiles['George Pickens'];
-    console.log(`\nGeorge Pickens comps (${c.comp_type}):`);
-    c.comps.forEach(x => console.log(`  ${x.name} (${x.season}, ${x.fantasy_tier||'?'}): match=${x.match_score} val=${x.val_at_comp} → ${x.val_change_12m}% 12m later`));
-    console.log(`  Avg outcome: ${c.avg_comp_outcome}% | Projected: ${c.projected_value_12m}`);
+    console.log(`\nGeorge Pickens scenarios (${c.comp_type}, ${c.total_comps_analyzed} comps analyzed):`);
+    console.log(`  UPSIDE (${c.upside_scenario.probability_pct}% prob, avg +${c.upside_scenario.avg_gain}%):`);
+    c.upside_scenario.comps.forEach(x => console.log(`    ${x.name} (${x.season}, ${x.fantasy_tier||'?'}): +${x.val_change_12m}%`));
+    console.log(`    → Ceiling: ${c.upside_scenario.projected_ceiling}`);
+    console.log(`  BASE CASE (${c.base_case.avg_change}% avg):`);
+    c.base_case.comps.forEach(x => console.log(`    ${x.name} (${x.season}, ${x.fantasy_tier||'?'}): ${x.val_change_12m}%`));
+    console.log(`  DOWNSIDE (${c.downside_scenario.probability_pct}% prob, avg ${c.downside_scenario.avg_loss}%):`);
+    c.downside_scenario.comps.forEach(x => console.log(`    ${x.name} (${x.season}, ${x.fantasy_tier||'?'}): ${x.val_change_12m}%`));
+    console.log(`    → Floor: ${c.downside_scenario.projected_floor}`);
+    console.log(`  WEIGHTED PROJECTION: ${c.weighted_projection_pct}% → ${c.projected_value_12m}`);
   }
 
   // Show a rookie example
@@ -652,7 +708,10 @@ async function buildAnalytics(){
   if(rookieExample){
     const [n,c] = rookieExample;
     console.log(`\nRookie sample — ${n}:`);
-    c.comps.forEach(x => console.log(`  ${x.name} (${x.draft}, ${x.college}): match=${x.match_score} → ${x.val_change_12m}% 12m later`));
+    console.log(`  UPSIDE (${c.upside_scenario.probability_pct}% prob):`);
+    c.upside_scenario.comps.forEach(x => console.log(`    ${x.name} (${x.draft}, ${x.college}): +${x.val_change_12m}%`));
+    console.log(`  DOWNSIDE (${c.downside_scenario.probability_pct}% prob):`);
+    c.downside_scenario.comps.forEach(x => console.log(`    ${x.name} (${x.draft}, ${x.college}): ${x.val_change_12m}%`));
     console.log(`  Projected: ${c.projected_value_12m}`);
   }
 }
