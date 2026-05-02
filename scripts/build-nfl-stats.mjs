@@ -41,7 +41,10 @@ async function fetchCSV(url){
 async function tryFetch(urls){
   for(const url of urls){
     try{ return await fetchCSV(url); }
-    catch(e){ continue; }
+    catch(e){ 
+      if(url===urls[urls.length-1]) console.warn(`  tryFetch error: ${e.message?.slice(0,80)}`);
+      continue; 
+    }
   }
   return null;
 }
@@ -260,16 +263,29 @@ async function buildStats(){
   }
 
   // ── NGS STATS (season level) ──
-  console.log('\n[3] NGS advanced stats...');
+  // Fetched via our own Vercel API which handles NFLverse URL routing
+  const VERCEL_API = process.env.VERCEL_URL 
+    ? `https://${process.env.VERCEL_URL}/api/stats`
+    : 'https://gwttkb.vercel.app/api/stats';
+  console.log('\n[3] NGS advanced stats (via Vercel API)...');
   for(const yr of YEARS){
     for(const [statType, posGroup] of [['passing','QB'],['rushing','RB'],['receiving','WR_TE']]){
-      const urls=[
-        `${BASE}/nextgen_stats/nextgen_stats_${statType}_${yr}.csv`,
-        `${BASE}/nextgen_stats/ngs_${statType}_${yr}.csv`,
-        `${BASE}/ngs/ngs_${statType}_${yr}.csv`,
-      ];
-      const rows = await tryFetch(urls);
-      if(!rows){console.warn(`  ✗ NGS ${yr} ${statType}: all URLs failed`);continue;}
+      const apiUrl = `${VERCEL_API}?file=ngs_${statType.replace('receiving','rec').replace('passing','pass').replace('rushing','rush')}&season=${yr}`;
+      let rows = null;
+      try{
+        const r = await fetch(apiUrl, {headers:{'User-Agent':'GWTTKB/1.0'}});
+        if(r.ok){
+          const text = await r.text();
+          rows = parseCSV(text);
+        } else {
+          console.warn(`  ✗ NGS ${yr} ${statType}: API returned ${r.status}`);
+          continue;
+        }
+      }catch(e){
+        console.warn(`  ✗ NGS ${yr} ${statType}: ${e.message?.slice(0,60)}`);
+        continue;
+      }
+      if(!rows?.length){continue;}
       let matched = 0;
       for(const row of rows){
         const pid = row.player_gsis_id||row.player_id; if(!pid) continue;
@@ -300,16 +316,25 @@ async function buildStats(){
   }
 
   // ── PFR ADVANCED STATS (season level) ──
-  console.log('\n[4] PFR advanced stats...');
+  console.log('\n[4] PFR advanced stats (via Vercel API)...');
   for(const yr of YEARS){
     for(const statType of ['pass','rush','rec']){
-      const urls=[
-        `${BASE}/pfr_advstats/advstats_season_${statType}_${yr}.csv`,
-        `${BASE}/pfr_advstats/pfr_advstats_season_${statType}_${yr}.csv`,
-        `${BASE}/pfr_advstats/advstats_${statType}_${yr}.csv`,
-      ];
-      const rows = await tryFetch(urls);
-      if(!rows){console.warn(`  ✗ PFR ${yr} ${statType}: all URLs failed`);continue;}
+      const apiUrl = `${VERCEL_API}?file=pfr_${statType}&season=${yr}`;
+      let rows = null;
+      try{
+        const r = await fetch(apiUrl, {headers:{'User-Agent':'GWTTKB/1.0'}});
+        if(r.ok){
+          const text = await r.text();
+          rows = parseCSV(text);
+        } else {
+          console.warn(`  ✗ PFR ${yr} ${statType}: API returned ${r.status}`);
+          continue;
+        }
+      }catch(e){
+        console.warn(`  ✗ PFR ${yr} ${statType}: ${e.message?.slice(0,60)}`);
+        continue;
+      }
+      if(!rows?.length){continue;}
       let matched = 0;
       for(const row of rows){
         const pid = row.pfr_player_id||row.player_id||row.gsis_id; if(!pid) continue;
