@@ -997,7 +997,7 @@ async function loadDynastyData(){
   CTX.sfVals={};CTX.qbVals={};CTX.playerNames={};CTX.playerPos={};
 
   try{
-    const[cRes,gRes,hRes,pkRes,contractsRes,patternsRes,statsMetaRes,startupAdpRes,mktRes,dcRes,ppRes]=await Promise.all([
+    const[cRes,gRes,hRes,pkRes,contractsRes,patternsRes,statsMetaRes,startupAdpRes,mktRes,dcRes,ppRes,analyticsRes]=await Promise.all([
       fetch('/data/consensus.json'),
       fetch('/data/leland-rankings.json'),
       fetch('/data/historical-players.json').catch(()=>null),
@@ -1008,7 +1008,8 @@ async function loadDynastyData(){
       fetch('/data/startup-adp.json').catch(()=>null),
       fetch('/data/market-intel.json').catch(()=>null),
       fetch('/data/depth-charts.json').catch(()=>null),
-      fetch('/data/player-profiles.json').catch(()=>null)
+      fetch('/data/player-profiles.json').catch(()=>null),
+      fetch('/data/analytics.json').catch(()=>null)
     ]);
 
     // Consensus
@@ -1066,6 +1067,21 @@ async function loadDynastyData(){
         CTX.class2024=Object.entries(CTX.playerDraftYear).filter(([,yr])=>yr===2024).map(([name])=>name);
         console.log('Draft classes detected — 2025:',CTX.class2025.length,'2024:',CTX.class2024.length);
       }catch(e){console.warn('Historical data error:',e);}
+    }
+
+    // Analytics engine (trajectories, comps, correlations)
+    if(analyticsRes?.ok){
+      try{
+        const analytics = await analyticsRes.json();
+        CTX.analytics = analytics;
+        CTX.trajectories = analytics.trajectories || {};
+        CTX.compProfiles = analytics.comp_profiles || {};
+        CTX.correlations = analytics.correlations || {};
+        CTX.analyticsTopPredictors = analytics.summary?.top_predictors || {};
+        console.log('Analytics loaded:',
+          Object.keys(CTX.trajectories).length,'trajectories |',
+          Object.keys(CTX.compProfiles).length,'comp profiles');
+      }catch(e){console.warn('Analytics error:',e);}
     }
 
     // Player profiles (your written scouting notes)
@@ -1370,6 +1386,18 @@ Season stats, NGS advanced metrics (separation, cushion, CPOE, rush yards over e
 
 COLLEGE STATS + BREAKOUT PREDICTION (all drafted players 2016-2026):
 NFLverse draft data with college production, combine measurables (40 time, weight, speed score, weight-adjusted speed), career college totals, breakout correlations from historical data. Full profile for every 2026 rookie — Jeremiyah Love, Carnell Tate, Jordyn Tyson, Jadarian Price, Kenyon Sadiq, Makai Lemon, Fernando Mendoza, and every skill pick rounds 1-7.
+
+ANALYTICS ENGINE — WHAT ACTUALLY PREDICTS DYNASTY VALUE (from real correlation analysis across 421,686 data points):
+${(()=>{
+  const tp=CTX.analyticsTopPredictors||{};
+  const lines=Object.entries(tp).map(([pos,preds])=>{
+    if(!preds?.length) return null;
+    const top=(preds||[]).slice(0,5).map(p=>`${p.stat}(r=${p.r?.toFixed(3)})`).join(', ');
+    return `${pos} top predictors: ${top}`;
+  }).filter(Boolean);
+  return lines.length?lines.join('\n'):'Analytics loading...';
+})()}
+KEY FINDING: ALL top predictors work via TREND SIGNAL — direction of change matters more than absolute level. Rising target share predicts value gains more than high target share alone.
 
 DYNASTY PATTERNS (from the data itself):
 - Seasonal: WR values spike September (+4.6% avg), drop April/May post-draft
@@ -1875,6 +1903,67 @@ function extractPlayerNames(text){
   return [...new Set(names)].slice(0,5);
 }
 
+// Get player analytics (trajectory, comps, correlations)
+function getPlayerAnalytics(playerName){
+  const norm=s=>(s||'').toLowerCase().replace(/[^a-z]/g,'');
+  const nn=norm(playerName);
+  
+  // Find trajectory
+  const traj=CTX.trajectories?.[playerName]||
+    Object.entries(CTX.trajectories||{}).find(([k])=>norm(k)===nn)?.[1];
+  
+  // Find comp profile
+  const comp=CTX.compProfiles?.[playerName]||
+    Object.entries(CTX.compProfiles||{}).find(([k])=>norm(k)===nn)?.[1];
+  
+  if(!traj&&!comp) return '';
+  
+  const parts=[];
+  
+  if(traj){
+    const mom=traj.momentum||{};
+    const dir=mom.direction||'unknown';
+    parts.push(`VALUE TRAJECTORY: Current=${traj.current_value?.toLocaleString()} | Peak=${traj.peak_value?.toLocaleString()} (${traj.peak_value?Math.round(traj.current_value/traj.peak_value*100):'?'}% of peak)`);
+    parts.push(`MOMENTUM: ${dir.toUpperCase()} | vs30d=${mom.vs_30d!=null?(mom.vs_30d>0?'+':'')+mom.vs_30d+'%':'?'} | vs90d=${mom.vs_90d!=null?(mom.vs_90d>0?'+':'')+mom.vs_90d+'%':'?'} | vs180d=${mom.vs_180d!=null?(mom.vs_180d>0?'+':'')+mom.vs_180d+'%':'?'}`);
+    
+    // Rolling 2025 stats — only show trending stats
+    const rolling=traj.rolling_2025||{};
+    const trending=Object.entries(rolling)
+      .filter(([,v])=>v&&v.avg>0&&v.slope!==0)
+      .sort((a,b)=>Math.abs(b[1].slope)-Math.abs(a[1].slope))
+      .slice(0,5);
+    if(trending.length){
+      parts.push('2025 STAT TRENDS (last 6wks): '+trending.map(([stat,v])=>
+        `${stat}=${v.avg}avg(${v.trend}${v.slope>0?'+':''}`+Math.round(v.slope*10)/10+'/wk)'
+      ).join(' | '));
+    }
+    
+    // Season 2025 totals
+    const s25=traj.season_2025;
+    if(s25&&s25.games){
+      const keyStats=[];
+      if(s25.target_share) keyStats.push(`target_share=${s25.target_share}%`);
+      if(s25.fantasy_ppg) keyStats.push(`ppg=${s25.fantasy_ppg}`);
+      if(s25.targets) keyStats.push(`targets=${s25.targets}`);
+      if(s25.wopr) keyStats.push(`wopr=${s25.wopr}`);
+      if(s25.rushing_yards) keyStats.push(`rush_yds=${s25.rushing_yards}`);
+      if(keyStats.length) parts.push(`2025 SEASON (${s25.games}g, ${s25.team}): ${keyStats.join(' | ')}`);
+    }
+  }
+  
+  if(comp&&comp.comps?.length){
+    const validComps=comp.comps.filter(c=>c.val_change_next_yr!=null);
+    parts.push(`HISTORICAL COMPS: `+comp.comps.map(c=>
+      `${c.name}(${c.season}${c.val_change_next_yr!=null?','+(c.val_change_next_yr>0?'+':'')+c.val_change_next_yr+'%next_yr':''})`
+    ).join(', '));
+    if(comp.projected_val_change!=null){
+      parts.push(`COMP-BASED PROJECTION: ${comp.projected_val_change>0?'+':''}${comp.projected_val_change}% value change based on historical comps`);
+    }
+  }
+  
+  return parts.length?'\nANALYTICS:\n'+parts.join('\n'):'';
+}
+
 // Get player profile card (your written scouting notes)
 function getPlayerProfile(playerName){
   if(!CTX.playerProfiles)return '';
@@ -1957,10 +2046,12 @@ async function sendMessage(text){
         );
         const statsParts=[];
         for(let i=0;i<mentionedPlayers.length;i++){
+          const name=mentionedPlayers[i];
           const statsStr=statsResults[i]?formatPlayerStats(statsResults[i]):'';
-          const profileStr=getPlayerProfile(mentionedPlayers[i]);
-          if(statsStr||profileStr){
-            statsParts.push(`${mentionedPlayers[i]}:${statsStr}${profileStr}`);
+          const analyticsStr=getPlayerAnalytics(name);
+          const profileStr=getPlayerProfile(name);
+          if(statsStr||analyticsStr||profileStr){
+            statsParts.push(`${name}:${analyticsStr}${statsStr}${profileStr}`);
           }
         }
         if(statsParts.length>0){
