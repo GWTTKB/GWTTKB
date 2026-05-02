@@ -275,8 +275,8 @@ async function buildStats(){
       try{
         const r = await fetch(apiUrl, {headers:{'User-Agent':'GWTTKB/1.0'}});
         if(r.ok){
-          const text = await r.text();
-          rows = parseCSV(text);
+          const data = await r.json();
+          rows = data.rows || [];
         } else {
           console.warn(`  ✗ NGS ${yr} ${statType}: API returned ${r.status}`);
           continue;
@@ -285,7 +285,7 @@ async function buildStats(){
         console.warn(`  ✗ NGS ${yr} ${statType}: ${e.message?.slice(0,60)}`);
         continue;
       }
-      if(!rows?.length){continue;}
+      if(!rows?.length){console.log(`  - NGS ${yr} ${statType}: 0 rows`);continue;}
       let matched = 0;
       for(const row of rows){
         const pid = row.player_gsis_id||row.player_id; if(!pid) continue;
@@ -324,8 +324,8 @@ async function buildStats(){
       try{
         const r = await fetch(apiUrl, {headers:{'User-Agent':'GWTTKB/1.0'}});
         if(r.ok){
-          const text = await r.text();
-          rows = parseCSV(text);
+          const data = await r.json();
+          rows = data.rows || [];
         } else {
           console.warn(`  ✗ PFR ${yr} ${statType}: API returned ${r.status}`);
           continue;
@@ -334,16 +334,13 @@ async function buildStats(){
         console.warn(`  ✗ PFR ${yr} ${statType}: ${e.message?.slice(0,60)}`);
         continue;
       }
-      if(!rows?.length){continue;}
+      if(!rows?.length){console.log(`  - PFR ${yr} ${statType}: 0 rows`);continue;}
       let matched = 0;
       for(const row of rows){
-        const pid = row.pfr_player_id||row.player_id||row.gsis_id; if(!pid) continue;
-        // Try matching by name if ID doesn't match
-        let p = players[pid];
-        if(!p){
-          const name = (row.player_display_name||row.player_name||'').toLowerCase().replace(/[^a-z]/g,'');
-          p = Object.values(players).find(pl=>pl.name.toLowerCase().replace(/[^a-z]/g,'')=== name);
-        }
+        // PFR uses pfr_id, not gsis_id — match by player name
+        const name = (row.player||row.player_display_name||row.player_name||'').toLowerCase().replace(/[^a-z]/g,'');
+        if(!name) continue;
+        const p = Object.values(players).find(pl=>pl.name?.toLowerCase().replace(/[^a-z]/g,'') === name);
         if(!p?.seasons[yr]) continue;
         const t = p.seasons[yr].totals;
         if(statType==='pass'){
