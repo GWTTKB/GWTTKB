@@ -21,10 +21,11 @@ const FILES = {
   pfr_pass:            (season) => `${BASE}/pfr_advstats/advstats_season_pass_${season}.parquet`,
   pfr_rush:            (season) => `${BASE}/pfr_advstats/advstats_season_rush_${season}.parquet`,
   pfr_rec:             (season) => `${BASE}/pfr_advstats/advstats_season_rec_${season}.parquet`,
-  // NGS stats — single file per stat type, all years combined (no year suffix)
-  ngs_pass:            () => `${BASE}/nextgen_stats/nextgen_stats_passing.parquet`,
-  ngs_rush:            () => `${BASE}/nextgen_stats/nextgen_stats_rushing.parquet`,
-  ngs_rec:             () => `${BASE}/nextgen_stats/nextgen_stats_receiving.parquet`,
+  // NGS stats — discover actual filenames via GitHub API
+  // Release exists at nextgen_stats but exact filenames unknown
+  ngs_pass:            (season) => `${BASE}/nextgen_stats/nextgen_stats_passing_${season}.parquet`,
+  ngs_rush:            (season) => `${BASE}/nextgen_stats/nextgen_stats_rushing_${season}.parquet`,
+  ngs_rec:             (season) => `${BASE}/nextgen_stats/nextgen_stats_receiving_${season}.parquet`,
   // Players
   players:             () => `${BASE}/players/players.csv`,
 };
@@ -103,7 +104,44 @@ export default async function handler(req, res) {
 
     let headers, rows;
 
-    if (PARQUET_FILES.has(file)) {
+    // Special: discover NGS files via GitHub API
+  if (file.startsWith('ngs_') && url.includes('404') || (file.startsWith('ngs_'))) {
+    // Try to discover actual filenames from GitHub releases API
+    const statType = file === 'ngs_pass' ? 'passing' : file === 'ngs_rush' ? 'rushing' : 'receiving';
+    const ghApiUrl = `https://api.github.com/repos/nflverse/nflverse-data/releases/tags/nextgen_stats`;
+    try {
+      const ghRes = await fetch(ghApiUrl, {
+        headers: { 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'GWTTKB/1.0' }
+      });
+      if (ghRes.ok) {
+        const release = await ghRes.json();
+        const assets = release.assets || [];
+        const matching = assets.filter(a => a.name.includes(statType) && 
+          (a.name.endsWith('.parquet') || a.name.endsWith('.csv')));
+        console.log(`NGS ${statType} assets found:`, matching.map(a => a.name));
+        if (matching.length > 0) {
+          // Try the first matching asset
+          const assetUrl = matching[0].browser_download_url;
+          const assetRes = await fetch(assetUrl, { headers: { 'User-Agent': 'GWTTKB/1.0' }, redirect: 'follow' });
+          if (assetRes.ok) {
+            return res.status(200).json({ 
+              file, season, 
+              discovered_url: assetUrl,
+              all_assets: assets.map(a => a.name).filter(n => n.includes(statType))
+            });
+          }
+        }
+        // Return all asset names for debugging
+        return res.status(200).json({ 
+          file, season,
+          message: 'NGS release found but no matching assets',
+          all_assets: assets.map(a => a.name)
+        });
+      }
+    } catch(e) {
+      console.warn('GitHub API error:', e.message);
+    }
+  }
       // Parse parquet binary using hyparquet
       try {
         const { parquetReadObjects } = await import('hyparquet');
