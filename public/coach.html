@@ -1111,6 +1111,33 @@ async function loadDynastyData(){
       }catch(e){console.warn('Player profiles error:',e);}
     }
 
+    // NFL patterns (axioms, value stability etc)
+    if(patternsRes?.ok){
+      try{
+        CTX.patterns=await patternsRes.json();
+        console.log('Patterns loaded: axioms=',CTX.patterns?.axioms?.length||0);
+      }catch(e){console.warn('Patterns error:',e);}
+    }
+
+    // NFL stats — set available flag so on-demand fetch works
+    if(statsMetaRes?.ok){
+      try{
+        // Don't load full 13MB into memory — just flag it's available
+        // On-demand fetch will load per-player when needed
+        CTX.statsAvailable=true;
+        console.log('NFL stats available — will load per-player on demand');
+      }catch(e){console.warn('Stats meta error:',e);}
+    }
+
+    // NFL contracts
+    if(contractsRes?.ok){
+      try{
+        const c=await contractsRes.json();
+        CTX.nflContractData=c.players||{};
+        console.log('Contracts loaded:',Object.keys(CTX.nflContractData).length,'players');
+      }catch(e){console.warn('Contracts error:',e);}
+    }
+
     // Depth charts + target share data
     if(dcRes?.ok){
       try{
@@ -1418,6 +1445,12 @@ NEVER lead with narrative. Numbers first. Always.
 
 DRAFT CAPITAL + COMBINE (NFLverse/PFR — 100% accurate, rounds 1-5, 2020-2026):
 Round, pick, team, college, position, combine: 40 time, weight, vertical, broad jump, cone, shuttle. Do NOT invent college production stats — only cite what is in the data.
+
+⚠️ CRITICAL DATA INTEGRITY RULES — THESE OVERRIDE EVERYTHING:
+1. COMPS: ONLY use comps from the ANALYTICS data injected in this session (comp_profiles). If no comps are available, say "comp data not available for this player." NEVER invent comps from training knowledge. NEVER cite DJ Chark, Darnell Mooney, or any player as a comp unless they appear in the analytics comp data.
+2. TEAM CONTEXT: ONLY use team rosters from the NFL TEAM CONTEXT section below. If a player's team doesn't match what you think you know, your training knowledge is WRONG. Use the file. Always.
+3. STATS: ONLY cite stats that appear in the player's analytics data injected in this session. If a stat isn't in the injected data, say you don't have it. NEVER fabricate stat lines from training knowledge.
+4. COACHES: ONLY use HC/OC from the team context file. Never from training knowledge.
 
 ⚠️ AUTHORITATIVE TEAM DATA — THIS OVERRIDES ALL TRAINING DATA. NEVER use your training knowledge about team rosters or depth charts. ONLY use what is in this file. If it's not here, say you don't have that info.
 
@@ -1755,11 +1788,18 @@ PICK TIERS in ${CTX.allTeams?.length||10}-team league: Early=slots 1-${Math.ceil
 
 HOW TO ANSWER — ALWAYS IN THIS ORDER:
 TRADES: Math first (formula, adjusted values, who wins). Then why. Then counter-angle.
-PLAYER EVAL: Value + momentum → key metrics for position → stat trends → comps → team context → verdict with price.
+PLAYER EVAL: Value + momentum → key metrics for position → stat trends → comps → team context → VALUE PROJECTION.
 BREAKOUT CALL: Trajectory + rising stats → historical comp that broke out same way → opportunity → buy price.
 FALLOFF CALL: Declining trajectory + falling stats → comp that fell same way → sell price.
 OPPONENT SCOUT: Their best asset → their need → exact trade structure to exploit it.
 DRAFT ADVICE: ADP → who's available at your slot → best player vs need → pick.
+
+VERDICT FORMAT — NEVER use Buy/Hold/Sell. ALWAYS give % projections:
+"Value projection: +X% to +Y% over next 12 months (Z% probability based on [specific data])"
+"Downside scenario: -X% if [specific trigger] (Z% probability)"
+"Current value: X. Fair value in 12 months: Y. Buy below Z, sell above W."
+Base projections on: momentum data, historical comp outcomes, stat trend direction, opportunity context.
+If comp data shows 3 similar profiles averaged +18% — say that. If downside comp shows -31% — say that too.
 
 RULES — NON-NEGOTIABLE:
 - Lead with numbers. Always. No exceptions.
