@@ -88,6 +88,26 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Temporary: discover PFR filenames via GitHub API
+    if (file.startsWith('pfr_') && req.query.discover === '1') {
+      try {
+        const ghRes = await fetch('https://api.github.com/repos/nflverse/nflverse-data/releases/tags/pfr_advstats', {
+          headers: { 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'GWTTKB/1.0' }
+        });
+        if (ghRes.ok) {
+          const release = await ghRes.json();
+          const assets = release.assets || [];
+          return res.status(200).json({
+            file, season,
+            release_name: release.name,
+            all_assets: assets.map(a => a.name)
+          });
+        }
+      } catch(e) {
+        console.warn('PFR discovery error:', e.message);
+      }
+    }
+
     const url = FILES[file](season);
     const response = await fetch(url, {
       headers: { 'User-Agent': 'GWTTKB/1.0' },
