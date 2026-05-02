@@ -1,0 +1,8 @@
+{
+  "name": "gwttkb",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "hyparquet": "^1.6.0"
+  }
+}
