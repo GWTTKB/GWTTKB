@@ -17,14 +17,14 @@ const FILES = {
   injuries:            (season) => `${BASE}/injuries/injuries_${season}.csv`,
   // Depth charts
   depth_charts:        (season) => `${BASE}/depth_charts/depth_charts_${season}.csv`,
-  // PFR advanced stats — parquet only
+  // PFR advanced stats — parquet, filter by season after loading
   pfr_pass:            (season) => `${BASE}/pfr_advstats/advstats_season_pass_${season}.parquet`,
   pfr_rush:            (season) => `${BASE}/pfr_advstats/advstats_season_rush_${season}.parquet`,
   pfr_rec:             (season) => `${BASE}/pfr_advstats/advstats_season_rec_${season}.parquet`,
-  // NGS stats — parquet only (no CSV available)
-  ngs_pass:            (season) => `${BASE}/nextgen_stats/nextgen_stats_passing_${season}.parquet`,
-  ngs_rush:            (season) => `${BASE}/nextgen_stats/nextgen_stats_rushing_${season}.parquet`,
-  ngs_rec:             (season) => `${BASE}/nextgen_stats/nextgen_stats_receiving_${season}.parquet`,
+  // NGS stats — single file per stat type, all years combined (no year suffix)
+  ngs_pass:            () => `${BASE}/nextgen_stats/nextgen_stats_passing.parquet`,
+  ngs_rush:            () => `${BASE}/nextgen_stats/nextgen_stats_rushing.parquet`,
+  ngs_rec:             () => `${BASE}/nextgen_stats/nextgen_stats_receiving.parquet`,
   // Players
   players:             () => `${BASE}/players/players.csv`,
 };
@@ -110,6 +110,10 @@ export default async function handler(req, res) {
         const arrayBuffer = await response.arrayBuffer();
         rows = await parquetReadObjects({ file: arrayBuffer });
         headers = rows.length > 0 ? Object.keys(rows[0]) : [];
+        // NGS files contain all years — filter by season
+        if (file.startsWith('ngs_') && season) {
+          rows = rows.filter(r => String(r.season) === String(season));
+        }
       } catch(parquetErr) {
         return res.status(500).json({ error: `Parquet parse failed: ${parquetErr.message}`, url });
       }
