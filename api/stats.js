@@ -87,6 +87,32 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Special: discover NGS filenames via GitHub API BEFORE trying the URL
+    if (file.startsWith('ngs_')) {
+      const statType = file === 'ngs_pass' ? 'passing' : file === 'ngs_rush' ? 'rushing' : 'receiving';
+      try {
+        const ghRes = await fetch('https://api.github.com/repos/nflverse/nflverse-data/releases/tags/nextgen_stats', {
+          headers: { 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'GWTTKB/1.0' }
+        });
+        if (ghRes.ok) {
+          const release = await ghRes.json();
+          const assets = release.assets || [];
+          return res.status(200).json({
+            file, season,
+            message: 'NGS release asset list - use these filenames',
+            release_name: release.name,
+            all_assets: assets.map(a => a.name),
+            matching_assets: assets.filter(a => a.name.includes(statType)).map(a => ({
+              name: a.name,
+              download_url: a.browser_download_url
+            }))
+          });
+        }
+      } catch(e) {
+        console.warn('GitHub API discovery error:', e.message);
+      }
+    }
+
     const url = FILES[file](season);
     const response = await fetch(url, {
       headers: { 'User-Agent': 'GWTTKB/1.0' },
@@ -104,44 +130,7 @@ export default async function handler(req, res) {
 
     let headers, rows;
 
-    // Special: discover NGS files via GitHub API
-  if (file.startsWith('ngs_') && url.includes('404') || (file.startsWith('ngs_'))) {
-    // Try to discover actual filenames from GitHub releases API
-    const statType = file === 'ngs_pass' ? 'passing' : file === 'ngs_rush' ? 'rushing' : 'receiving';
-    const ghApiUrl = `https://api.github.com/repos/nflverse/nflverse-data/releases/tags/nextgen_stats`;
-    try {
-      const ghRes = await fetch(ghApiUrl, {
-        headers: { 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'GWTTKB/1.0' }
-      });
-      if (ghRes.ok) {
-        const release = await ghRes.json();
-        const assets = release.assets || [];
-        const matching = assets.filter(a => a.name.includes(statType) && 
-          (a.name.endsWith('.parquet') || a.name.endsWith('.csv')));
-        console.log(`NGS ${statType} assets found:`, matching.map(a => a.name));
-        if (matching.length > 0) {
-          // Try the first matching asset
-          const assetUrl = matching[0].browser_download_url;
-          const assetRes = await fetch(assetUrl, { headers: { 'User-Agent': 'GWTTKB/1.0' }, redirect: 'follow' });
-          if (assetRes.ok) {
-            return res.status(200).json({ 
-              file, season, 
-              discovered_url: assetUrl,
-              all_assets: assets.map(a => a.name).filter(n => n.includes(statType))
-            });
-          }
-        }
-        // Return all asset names for debugging
-        return res.status(200).json({ 
-          file, season,
-          message: 'NGS release found but no matching assets',
-          all_assets: assets.map(a => a.name)
-        });
-      }
-    } catch(e) {
-      console.warn('GitHub API error:', e.message);
-    }
-  }
+    if (PARQUET_FILES.has(file)) {
       // Parse parquet binary using hyparquet
       try {
         const { parquetReadObjects } = await import('hyparquet');
