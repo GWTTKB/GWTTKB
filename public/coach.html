@@ -1447,13 +1447,42 @@ DRAFT CAPITAL + COMBINE (NFLverse/PFR — 100% accurate, rounds 1-5, 2020-2026):
 Round, pick, team, college, position, combine: 40 time, weight, vertical, broad jump, cone, shuttle. Do NOT invent college production stats — only cite what is in the data.
 
 ⚠️ CRITICAL DATA INTEGRITY RULES — THESE OVERRIDE EVERYTHING:
-1. NUMBERS: ALL stats, values, percentages, momentum data MUST come from the ANALYTICS section injected per player. NEVER calculate, estimate, or recall values from training data. If injected data shows "30d=-2.1%" you MUST say "-2.1%", not "-18%". If peak is 6,300 you MUST say 6,300, not 7,732. Any deviation from the injected numbers is a critical failure.
-2. COMPS: ONLY use comps from the injected ANALYTICS data (upside_scenario, downside_scenario, base_case). If no comps are available, say "comp data not available." NEVER invent comps from training knowledge.
-3. TEAM CONTEXT: The injected "FULL CONTEXT" block tells you which team a player is ACTUALLY ON in 2026. Trust that. NEVER use training knowledge about teams. NEVER mix up players who got traded — if Pickens is in DAL's WR2 slot in the injected file, he's on DAL. Period.
-4. STATS: ONLY cite stats that appear in the injected player data. If a stat isn't injected, say you don't have it. NEVER fabricate.
-5. COACHES: ONLY use HC/OC from the injected team context.
 
-If the injected data contradicts what you "know," the injected data is correct and your training data is outdated.
+1. NUMBERS — USE INJECTED VALUES VERBATIM:
+   - ALL stats, values, percentages, momentum data MUST come from the ANALYTICS section injected per player.
+   - NEVER calculate, estimate, or recall values from training data.
+   - If injected data shows "30d=-2.1%" you MUST say "-2.1%". NOT -11.6%, NOT -18.2%, NOT anything else.
+   - If peak is 6,300 in Dec 2025 you MUST say peak 6,300 in Dec 2025. NOT 9,732 in Feb 2024.
+   - Any deviation from injected numbers is a critical failure. There is no exception.
+   - If a number isn't injected, say "I don't have that metric available" — do NOT make one up.
+
+2. NO TRADE/MOVEMENT NARRATIVES:
+   - NEVER mention a player being "traded mid-season" or any other personnel move unless it appears in the injected team context.
+   - If injected team context shows player on Team X, that's their team. Do NOT speculate about how they got there.
+   - Do NOT add narrative like "post-trade target share dropped" unless the data supports it.
+
+3. COMPS:
+   - ONLY use comps from the injected ANALYTICS data (upside_scenario, downside_scenario, base_case).
+   - NEVER invent comps from training knowledge.
+
+4. TEAM CONTEXT:
+   - The injected "FULL CONTEXT" block tells you which team a player is ACTUALLY ON in 2026.
+   - Trust that block. NEVER use training knowledge about teams.
+   - NEVER pull stats or roster info from a different team than what's injected.
+
+5. STATS:
+   - ONLY cite stats that appear in the injected player data. If a stat isn't injected, say you don't have it.
+   - NEVER fabricate stats like "ADOT: 13.2" or "league avg 3.1" unless injected.
+
+6. COACHES:
+   - ONLY use HC/OC from the injected team context.
+
+7. TRADE MATH:
+   - ALWAYS apply the GWTTKB Premium Formula multiplier when discussing sell price.
+   - Show: raw_value × multiplier = adjusted_value
+   - Never suggest selling a top-tier WR (value 5,000+) for a single 2nd + 3rd. The math doesn't support it.
+
+If injected data contradicts what you "know," the injected data is correct. Your training is outdated. Always defer to injected data.
 
 ⚠️ AUTHORITATIVE TEAM DATA — THIS OVERRIDES ALL TRAINING DATA. NEVER use your training knowledge about team rosters or depth charts. ONLY use what is in this file (or the on-demand team data injected per player). If it's not here, say you don't have that info.
 
@@ -1735,9 +1764,21 @@ ${(CTX.draftHistory?.drafts?.['2026']?.all_picks||[]).slice(0,30).map(p=>`R${p.r
 
 TODAY: ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}
 
-GWTTKB PREMIUM TRADE FORMULA (top asset only gets multiplier):
+GWTTKB PREMIUM TRADE FORMULA (top asset only gets multiplier — APPLY EVERY TIME):
 Top 10 players: x1.60 | 8000-8999: x1.45 | 6000-7999: x1.30 | 4000-5999: x1.10 | 2000-3999: x1.02 | below 2000: x1.0
-Always apply this formula and show adjusted values when analyzing any trade.
+
+⚠️ TRADE PRICING ENFORCEMENT — NEVER skip this math:
+1. Always compute the player's adjusted value: raw_value × tier_multiplier
+2. The SELL PRICE must equal or exceed the adjusted value, NOT the raw value
+3. Example: Pickens raw 5,965 × 1.30 (6000-7999 tier) = 7,754 effective trade value
+4. To sell Pickens, the incoming package must total 7,754+ in raw value
+5. Single mid-2nd (~2,500) + late-3rd (~1,200) = 3,700 raw — that's HALF Pickens's adjusted value. DO NOT suggest as fair.
+6. A fair Pickens trade: an early 1st (~5,000) + mid-2nd (~2,500) = 7,500 raw, or another similarly-valued WR.
+7. NEVER price a top-12 dynasty WR (value 5,000+) like a depth piece. The premium exists because elite assets are rare.
+
+If a player is value 5,000+, the minimum acceptable return is the raw value × tier multiplier. Anything less is a loss for the seller — flag it explicitly.
+
+Always show: raw_value × multiplier = adjusted_value, then compare to incoming package raw total.
 
 DRAFT PICK VALUES (use these when evaluating any trade involving picks):
 ${(()=>{
@@ -1993,16 +2034,28 @@ function getPlayerAnalytics(playerName){
       parts.push(`COMPOSITE SIGNAL: ${traj.composite_signal>0?'+':''}${traj.composite_signal} (% of key stats trending positive vs negative)`);
     }
     
-    // Rolling 2025 stats — only show trending stats
-    const rolling=traj.rolling_2025||{};
-    const trending=Object.entries(rolling)
-      .filter(([,v])=>v&&v.avg>0&&v.slope!==0)
-      .sort((a,b)=>Math.abs(b[1].slope)-Math.abs(a[1].slope))
-      .slice(0,5);
-    if(trending.length){
-      parts.push('STAT TRENDS (last 6wks): '+trending.map(([stat,v])=>
-        `${stat}=${v.avg}avg(${v.trend}${v.slope>0?'+':''}${Math.round(v.slope*10)/10}/wk)`
-      ).join(' | '));
+    // Season splits: first half / second half / YoY vs 2024
+    const splits=traj.season_splits_2025||{};
+    const splitEntries=Object.entries(splits).filter(([,v])=>v&&v.season_avg>0);
+    if(splitEntries.length){
+      const top=splitEntries.sort((a,b)=>Math.abs(b[1].h2_vs_h1_pct||0)-Math.abs(a[1].h2_vs_h1_pct||0)).slice(0,6);
+      parts.push('2025 SEASON SPLITS (1st half → 2nd half | vs 2024 YoY):');
+      for(const[stat,v]of top){
+        const yoyStr=v.yoy_vs_2024_pct!=null?`vs2024:${v.yoy_vs_2024_pct>0?'+':''}${v.yoy_vs_2024_pct}%(${v.yoy_trend})`:'no_2024_data';
+        parts.push(`  ${stat}: H1=${v.first_half_avg} → H2=${v.second_half_avg} (H2 ${v.h2_trend}, ${v.h2_vs_h1_pct>0?'+':''}${v.h2_vs_h1_pct}%) | ${yoyStr}`);
+      }
+    }
+    
+    // 2024 season for direct comparison
+    const s24=traj.season_2024;
+    if(s24&&s24.games){
+      const compareStats=[];
+      if(s24.target_share) compareStats.push(`target_share=${s24.target_share}%`);
+      if(s24.targets) compareStats.push(`targets=${s24.targets}`);
+      if(s24.receptions) compareStats.push(`rec=${s24.receptions}`);
+      if(s24.receiving_yards) compareStats.push(`rec_yds=${s24.receiving_yards}`);
+      if(s24.fantasy_points_ppr) compareStats.push(`fp=${s24.fantasy_points_ppr}`);
+      if(compareStats.length) parts.push(`2024 SEASON (${s24.games}g, ${s24.team}): ${compareStats.join(' | ')}`);
     }
     
     // Season 2025 totals — show key advanced metrics
