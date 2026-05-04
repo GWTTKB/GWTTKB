@@ -2266,7 +2266,10 @@ async function sendMessage(text){
           }
           
           if(statsStr||analyticsStr||profileStr||teamCtxStr){
-            statsParts.push(`${name}:${analyticsStr}${statsStr}${profileStr}${teamCtxStr}`);
+            statsParts.push(`====== INJECTED DATA FOR ${name} ======${analyticsStr}${statsStr}${profileStr}${teamCtxStr}\n====== END INJECTED DATA FOR ${name} ======`);
+          } else {
+            console.warn(`No data found for ${name} — analytics:${!!analyticsStr} stats:${!!statsStr} profile:${!!profileStr} team:${!!teamCtxStr}`);
+            statsParts.push(`====== ${name} ======\n[NO DATA AVAILABLE — player not in analytics, stats, or team rosters. Tell user data is missing.]\n====== END ${name} ======`);
           }
         }
         if(statsParts.length>0){
