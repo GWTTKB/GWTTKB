@@ -1032,7 +1032,16 @@ async function loadDynastyData(){
     // Consensus
     if(cRes?.ok){
       try{
-        const c=await cRes.json();
+        // First check what we actually got — Vercel sometimes serves wrong file
+        const text=await cRes.text();
+        if(text.startsWith('name:')||text.startsWith('<')){
+          console.error('❌ CONSENSUS RETURNED WRONG FILE TYPE');
+          console.error('Response starts with:',text.slice(0,80));
+          console.error('Vercel is serving a non-JSON file at /data/consensus.json');
+          console.error('Try: 1) Clear Vercel cache, 2) Redeploy, 3) Check vercel.json routes');
+          throw new Error('Vercel served '+text.slice(0,30)+'... instead of JSON');
+        }
+        const c=JSON.parse(text);
       const sfp=c.formats?.sf_ppr?.players||c.players||[];
       const qp=c.formats?.qb1_ppr?.players||[];
       for(const p of sfp){
@@ -1048,7 +1057,30 @@ async function loadDynastyData(){
       }
       for(const p of qp)CTX.qbVals[n(p.name)]=p.value;
       CTX.consensusTop=CTX.consensusTop.slice(0,600); // all players
-      }catch(e){console.warn('Consensus parse error:',e);}
+      }catch(e){
+        console.warn('Consensus parse error:',e);
+        console.warn('Attempting fallback fetch from GitHub raw...');
+        try{
+          const fb=await fetch('https://raw.githubusercontent.com/GWTTKB/GWTTKB/main/public/data/consensus.json');
+          if(fb.ok){
+            const c=await fb.json();
+            const sfp=c.formats?.sf_ppr?.players||c.players||[];
+            const qp=c.formats?.qb1_ppr?.players||[];
+            for(const p of sfp){
+              CTX.sfVals[n(p.name)]=p.value;
+              if(p.id){
+                CTX.sfVals[p.id]=p.value;
+                CTX.playerNames[p.id]=p.name;
+                CTX.playerPos[p.id]=p.pos||p.position;
+              }
+              CTX.consensusTop.push({name:p.name,sf:p.value,pos:p.pos||p.position,id:p.id});
+            }
+            for(const p of qp)CTX.qbVals[n(p.name)]=p.value;
+            CTX.consensusTop=CTX.consensusTop.slice(0,600);
+            console.log('✅ Fallback consensus loaded:',CTX.consensusTop.length,'players');
+          }
+        }catch(fe){console.error('Fallback also failed:',fe);}
+      }
     }
 
     // Historical picks
@@ -1903,16 +1935,26 @@ function buildPatternsContext(){
     lines.push('AXIOMS FROM 6YRS DATA: '+p.axioms.join(' | '));
   }
   if(p.value_stability){
-    const vs=Object.entries(p.value_stability).map(([pos,v])=>
-      pos+': '+v.avg_elite_seasons+'yr elite avg, '+v.avg_starter_seasons+'yr starter avg'
-    ).join(' | ');
-    lines.push('VALUE STABILITY: '+vs);
+    const vs=Object.entries(p.value_stability).map(([pos,v])=>{
+      const elite=v?.avg_elite_seasons;
+      const starter=v?.avg_starter_seasons;
+      const parts=[];
+      if(elite!==undefined)parts.push(elite+'yr elite avg');
+      if(starter!==undefined)parts.push(starter+'yr starter avg');
+      return parts.length?pos+': '+parts.join(', '):null;
+    }).filter(Boolean).join(' | ');
+    if(vs)lines.push('VALUE STABILITY: '+vs);
   }
   if(p.signal_patterns){
-    const sp=Object.entries(p.signal_patterns).map(([pos,s])=>
-      pos+' after spike crash rate='+s.after_30pct_spike.crash_rate+'%, after crash recovery='+s.after_25pct_crash.recovery_rate+'%'
-    ).join(' | ');
-    lines.push('SELL/BUY SIGNALS: '+sp);
+    const sp=Object.entries(p.signal_patterns).map(([pos,s])=>{
+      const spike=s.after_30pct_spike?.crash_rate;
+      const crash=s.after_25pct_crash?.recovery_rate;
+      const parts=[];
+      if(spike!==undefined)parts.push('after spike crash rate='+spike+'%');
+      if(crash!==undefined)parts.push('after crash recovery='+crash+'%');
+      return parts.length?pos+' '+parts.join(', '):null;
+    }).filter(Boolean).join(' | ');
+    if(sp)lines.push('SELL/BUY SIGNALS: '+sp);
   }
   if(p.peak_patterns){
     const cliffs=Object.entries(p.peak_patterns).flatMap(([pos,pp])=>
