@@ -170,7 +170,10 @@ body{background:var(--bg);color:var(--txt);font-family:'Barlow',sans-serif;displ
       <div class="ob-label">Your Sleeper Username</div>
       <input class="ob-input" id="obUsername" type="text" placeholder="Enter username..." autocomplete="off">
       <button class="ob-btn" id="obBtn1" onclick="lookupUser()">CONNECT SLEEPER →</button>
-      <div class="ob-hint">No account needed · Free during beta</div>
+      <div class="ob-hint">Connects to your Sleeper league for personalized trade analysis</div>
+      <div style="margin-top:14px;text-align:center;">
+        <a href="#" onclick="skipSetup();return false;" style="color:var(--teal);font-size:13px;text-decoration:underline;letter-spacing:1px;">or just ask general questions →</a>
+      </div>
     </div>
     <!-- Step 2: League picker -->
     <div class="ob-step" id="step2" style="display:none">
@@ -228,6 +231,7 @@ async function gFetch(url){const r=await fetch(url);if(!r.ok)throw new Error(r.s
 // ── STATE ──
 let CTX={
   username:'', userId:'', league:null, isSF:false,
+  isAdmin:false,
   myRoster:null, myTeam:null, allTeams:[],
   gradedTrades:[], tRec:{}, waiverAct:{},
   consensusTop:[], gwttkbTop:[], picks:{},
@@ -256,6 +260,13 @@ function getQuestions(){
   return parseInt(localStorage.getItem('coach_q')||'0');
 }
 function addQuestion(){
+  if(CTX.isAdmin){
+    // Track for visibility but don't enforce
+    const q=getQuestions()+1;
+    localStorage.setItem('coach_q',String(q));
+    updateQCounter();
+    return q;
+  }
   const q=getQuestions()+1;
   localStorage.setItem('coach_q',String(q));
   updateQCounter();
@@ -265,13 +276,28 @@ function updateQCounter(){
   const q=getQuestions();
   const bonus=parseInt(localStorage.getItem('coach_bonus')||'0');
   const limit=3+bonus;
+  const el=document.getElementById('qCounter');
+  if(!el)return;
   document.getElementById('qUsed').textContent=q;
-  document.getElementById('qCounter').innerHTML='Questions: <span id="qUsed">'+q+'</span>/'+limit+' today';
+  if(CTX.isAdmin){
+    el.innerHTML='<span style="color:var(--gold)">⚡ ADMIN</span> · <span id="qUsed">'+q+'</span> asked today';
+  }else{
+    el.innerHTML='Questions: <span id="qUsed">'+q+'</span>/'+limit+' today';
+  }
 }
 function canAsk(){
+  if(CTX.isAdmin)return true;  // admins bypass limits
   const q=getQuestions();
   const bonus=parseInt(localStorage.getItem('coach_bonus')||'0');
   return q<(3+bonus);
+}
+
+// ── ADMIN USER LIST ──
+// Usernames in this list bypass question limits and get debug logging
+const ADMIN_USERS = ['lelandh'];
+function isAdminUsername(uname){
+  if(!uname)return false;
+  return ADMIN_USERS.map(u=>u.toLowerCase()).includes(uname.toLowerCase());
 }
 
 // ── ONBOARDING ──
@@ -285,6 +311,11 @@ async function lookupUser(){
     if(!user?.user_id)throw new Error('User not found');
     CTX.username=user.display_name||user.username;
     CTX.userId=user.user_id;
+    // Admin detection — works on any case
+    CTX.isAdmin=isAdminUsername(CTX.username)||isAdminUsername(username);
+    if(CTX.isAdmin){
+      console.log('🔓 ADMIN MODE active for',CTX.username);
+    }
     // Get leagues
     const currentYear=new Date().getFullYear();
     const leagues=await gFetch(`${API_URL}/user/${user.user_id}/leagues/nfl/${currentYear}`)
@@ -315,6 +346,34 @@ function showLeaguePicker(leagues){
       <span class="li-badge ${sf?'li-sf':'li-qb'}">${sf?'SF':'1QB'}</span>
     </div>`;
   }).join('');
+}
+
+// ── GENERIC MODE — skip Sleeper setup, just chat about players ──
+async function skipSetup(){
+  // No Sleeper user, no league — just universal data
+  CTX.username='';
+  CTX.userId='';
+  CTX.league=null;
+  CTX.isSF=true;  // default to SF for value display since most dynasty leagues are SF
+  CTX.genericMode=true;
+  document.getElementById('step1').style.display='none';
+  document.getElementById('step3').style.display='flex';
+  await loadUniversalDataOnly();
+}
+
+async function loadUniversalDataOnly(){
+  try{
+    setLoad(20,'LOADING DYNASTY VALUES...');
+    await loadDynastyData();
+    setLoad(70,'LOADING ANALYTICS ENGINE...');
+    // Universal data only — no Sleeper league setup
+    setLoad(100,'READY');
+    await S(400);
+    startChat();
+  }catch(e){
+    console.error('Generic mode load error:',e);
+    document.getElementById('obLoadStep').textContent='ERROR: '+e.message;
+  }
 }
 
 async function selectLeague(league){
@@ -1340,18 +1399,18 @@ function buildSystemPrompt(){
   const myRosterStr=myRoster.slice(0,20).map(p=>`${p.name}(${p.pos},${p.value})`).join(', ');
 
   // All teams (compact)
-  const teamsStr=CTX.allTeams.map(t=>`${t.username}${t.isMe?' [YOU]':''}:${t.wins}W-${t.losses}L val=${t.total} top=${t.players.slice(0,4).map(p=>p.name+' '+p.value).join('/')}`).join(' | ');
+  const teamsStr=(CTX.allTeams||[]).map(t=>`${t.username}${t.isMe?' [YOU]':''}:${t.wins}W-${t.losses}L val=${t.total} top=${(t.players||[]).slice(0,4).map(p=>p.name+' '+p.value).join('/')}`).join(' | ');
 
   // Manager tendencies
-  const tendStr=Object.entries(CTX.tRec).map(([un,r])=>{
+  const tendStr=Object.entries(CTX.tRec||{}).map(([un,r])=>{
     const flows=Object.entries(r.posFlow||{}).filter(([,v])=>Math.abs(v)>=2).map(([pos,v])=>v>0?`+${pos}`:pos+v).join(',');
     return`${un}:${r.trades}trades${flows?' flow:'+flows:''}`;
   }).join(' | ');
 
   // Recent trades (last 12)
-  const recentTrades=CTX.allTrades.slice(-12).map(t=>{
+  const recentTrades=(CTX.allTrades||[]).slice(-12).map(t=>{
     const sides=(t.roster_ids||[]).map(rid=>{
-      const team=CTX.allTeams.find(tm=>tm.roster_id===rid);
+      const team=(CTX.allTeams||[]).find(tm=>tm.roster_id===rid);
       const adds=Object.entries(t.adds||{}).filter(([,r])=>r===rid).map(([id])=>CTX.playerNames[id]||id);
       const picks=(t.draft_picks||[]).filter(pk=>pk.owner_id===rid).map(pk=>`${pk.season||'?'} ${pk.round||'?'}rd`);
       return`${team?.username||'?'} got [${[...adds,...picks].join(',')}]`;
@@ -1384,7 +1443,7 @@ function buildSystemPrompt(){
     .join(', ');
 
   // League-wide contract/age context
-  const leagueAgeContext=CTX.allTeams.map(t=>{
+  const leagueAgeContext=(CTX.allTeams||[]).map(t=>{
     const avgAge=(t.players||[]).filter(p=>p.age>0).reduce((s,p,_,a)=>s+p.age/a.length,0)||0;
     const rookies=(t.players||[]).filter(p=>{
       const c=Object.values(CTX.nflContracts||{}).find(x=>x.name===p.name);
@@ -1539,12 +1598,12 @@ EXPIRING CONTRACTS LEAGUE-WIDE (dynasty sell signals):
 ${Object.values(CTX.nflContractData||{}).filter((c,i,a)=>i===a.findIndex(x=>x.name===c.name)&&c.status==='expiring'&&['QB','RB','WR','TE'].includes(c.pos)).sort((a,b)=>b.apy-a.apy).slice(0,12).map(c=>c.name+'('+c.pos+','+c.team+',$'+c.apy+'M)').join(', ')||''}
 
 FORMAT: ${CTX.isSF?'SUPERFLEX PPR — QBs 30-40% premium. Elite QBs are top 5 assets. Never roster zero at QB.':'1QB PPR — RB scarcity drives top values. Elite WRs dominant.'}
-LEAGUE: ${CTX.league?.name||'Dynasty League'} | ${CTX.allTeams?.length||0} teams | Season ${CTX.league?.season||2026}
+LEAGUE: ${CTX.genericMode||!CTX.username?'GENERIC MODE — no Sleeper league connected. The user is asking general questions. Do not reference any specific roster, manager, or league.':`${CTX.league?.name||'Dynasty League'} | ${CTX.allTeams?.length||0} teams | Season ${CTX.league?.season||2026}`}
 
 ⚠️ ROSTER + LEAGUE CONTEXT IS LOADED ON DEMAND:
 The user's roster, other managers' rosters, recent trades, and league-wide standings are ONLY injected when you need them. If the user mentions trades, asks about their team, or names another manager, that data WILL be injected below. If the user asks a generic player or strategy question, that data won't be loaded — and you should not pretend you have it. Just answer based on the player data and analytics that ARE injected.
 
-If you need roster/league data and it's not present, ask the user "Want me to pull your roster / [manager]'s roster / recent league trades?" — but do not invent the data.
+${CTX.genericMode||!CTX.username?'⚠️ GENERIC MODE: This user has NOT connected their Sleeper account. You can answer player questions, dynasty strategy, draft advice, and trade frameworks. You cannot reference their roster, their league, or other specific managers because that data does not exist. If they ask about "their team" or "their league," tell them to click "Connect Sleeper" at the top to plug in their league for personalized analysis.':'If you need roster/league data and it\'s not present, ask the user "Want me to pull your roster / [manager]\'s roster / recent league trades?" — but do not invent the data.'}
 
 
 
@@ -1561,7 +1620,7 @@ ${(CTX.marketIntel?.sell_signals||[]).slice(0,10).map(p=>p.name+'('+p.pos+',-'+p
 TRADE CONTEXT (what players are being traded for across Sleeper):
 ${(CTX.marketIntel?.trade_context||[]).slice(0,15).map(p=>p.name+' traded for: '+Object.entries(p.tradedFor).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k,v])=>k+'(x'+v+')').join(',')).join(' | ')||'Loading'}
 
-LEAGUE TRANSACTIONS (recent waiver adds/drops in BYX Dynasty):
+LEAGUE TRANSACTIONS (recent waiver adds/drops in ${CTX.league?.name||'this league'}):
 ${(CTX.recentWaiverAdds||[]).slice(0,10).map(tx=>{
   const adds=tx.adds.map(p=>p.name+'('+p.pos+') added by '+p.owner).join(', ');
   const drops=tx.drops.map(p=>p.name+'('+p.pos+') dropped').join(', ');
@@ -1900,18 +1959,38 @@ function startChat(){
   // Context bar
   const me=CTX.myTeam;
   const sf=CTX.isSF;
-  document.getElementById('contextBar').innerHTML=`
-    <div class="cb-name">@${CTX.username}</div>
-    <span class="cb-badge cb-t">${CTX.league?.name||'League'}</span>
-    <span class="cb-badge ${sf?'cb-t':'cb-p'}">${sf?'SF PPR':'1QB PPR'}</span>
-    <span class="cb-badge cb-g">${CTX.allTeams.length} TEAMS</span>
-    ${me?`<span class="cb-badge cb-g">${me.wins}W-${me.losses}L · ${me.total.toLocaleString()} VAL</span>`:''}
-    <div class="cb-right">
-      <span class="cb-reset" onclick="resetChat()">↻ New League</span>
-    </div>`;
+  const isGeneric=CTX.genericMode||!CTX.username;
+  
+  if(isGeneric){
+    // Generic mode — no Sleeper, just universal Coach
+    document.getElementById('contextBar').innerHTML=`
+      <div class="cb-name">GENERIC MODE</div>
+      <span class="cb-badge cb-t">No League Connected</span>
+      <span class="cb-badge cb-g">600+ Players</span>
+      <div class="cb-right">
+        <span class="cb-reset" onclick="resetChat()">↻ Connect Sleeper</span>
+      </div>`;
+  }else{
+    document.getElementById('contextBar').innerHTML=`
+      <div class="cb-name">@${CTX.username}${CTX.isAdmin?' <span style="color:var(--gold);font-size:11px">⚡ADMIN</span>':''}</div>
+      <span class="cb-badge cb-t">${CTX.league?.name||'League'}</span>
+      <span class="cb-badge ${sf?'cb-t':'cb-p'}">${sf?'SF PPR':'1QB PPR'}</span>
+      <span class="cb-badge cb-g">${CTX.allTeams.length} TEAMS</span>
+      ${me?`<span class="cb-badge cb-g">${me.wins}W-${me.losses}L · ${me.total.toLocaleString()} VAL</span>`:''}
+      <div class="cb-right">
+        <span class="cb-reset" onclick="resetChat()">↻ Switch League</span>
+      </div>`;
+  }
 
   // Opening message
-  const opener=CTX.username?`Alright @${CTX.username} — what do you want to work on?`:'Hey — what do you want to dig into?';
+  let opener;
+  if(isGeneric){
+    opener='Hey — I can analyze any player, dive into NFL stats, walk through dynasty strategy, or break down a trade scenario. What do you want to dig into?\n\nIf you want personalized analysis on YOUR team, click "↻ Connect Sleeper" up top to plug in your league.';
+  }else if(CTX.isAdmin){
+    opener=`Alright @${CTX.username} — admin mode, unlimited questions. What do you want to work on?`;
+  }else{
+    opener=`Alright @${CTX.username} — what do you want to work on?`;
+  }
   addMessage('coach',opener);
 }
 
@@ -2080,7 +2159,7 @@ function getPlayerTier2Extras(playerName){
     parts.push(`ROOKIE ADP: pick ${rookieAdp.adp||rookieAdp.avg_pick||'?'} (n=${rookieAdp.drafts||'?'} rookie drafts)`);
   }
   
-  // Recent trades involving this player (BYX Dynasty)
+  // Recent trades involving this player (current league)
   const playerTrades=[];
   for(const t of (CTX.allTrades||[])){
     const adds=Object.entries(t.adds||{});
@@ -2097,7 +2176,7 @@ function getPlayerTier2Extras(playerName){
     }
   }
   if(playerTrades.length){
-    parts.push(`BYX LEAGUE TRADES involving ${playerName}: ${playerTrades.slice(-3).join(' | ')}`);
+    parts.push(`${CTX.league?.name||'LEAGUE'} TRADES involving ${playerName}: ${playerTrades.slice(-3).join(' | ')}`);
   }
   
   // Cross-league trades for this player
@@ -2158,7 +2237,7 @@ function buildTradeContext(mentionedManagers){
     if(un===CTX.username)continue;
     const team=(CTX.allTeams||[]).find(t=>t.username===un);
     if(team){
-      parts.push(`\n========== @${un}'s ROSTER (BYX Dynasty) ==========`);
+      parts.push(`\n========== @${un}'s ROSTER (${CTX.league?.name||'this league'}) ==========`);
       parts.push(`Total Value: ${team.total?.toLocaleString()} | ${team.wins||0}W-${team.losses||0}L`);
       parts.push('PLAYERS: '+(team.players||[]).map(p=>`${p.name}(${p.pos},${p.value?.toLocaleString()})`).join(', '));
     }
@@ -2188,7 +2267,7 @@ function buildTradeContext(mentionedManagers){
     }
   }
   
-  // Recent BYX trades (last 8)
+  // Recent league trades (last 8)
   const recent=(CTX.allTrades||[]).slice(-8).map(t=>{
     const date=t.date||(t.week?'WK'+t.week:'?');
     const sides=(t.roster_ids||[]).map(rid=>{
@@ -2199,7 +2278,7 @@ function buildTradeContext(mentionedManagers){
     });
     return`${date}: ${sides.join(' / ')}`;
   }).join(' | ');
-  if(recent)parts.push(`\nRECENT BYX TRADES (last 8): ${recent}`);
+  if(recent)parts.push(`\nRECENT ${CTX.league?.name||'LEAGUE'} TRADES (last 8): ${recent}`);
   
   // Pick values
   const picks=CTX.picks||{};
@@ -2683,7 +2762,9 @@ function autoResize(el){
 }
 
 function resetChat(){
-  CTX={username:'',userId:'',league:null,isSF:false,myRoster:null,myTeam:null,
+  CTX={username:'',userId:'',league:null,isSF:false,
+    isAdmin:false, genericMode:false,
+    myRoster:null,myTeam:null,
     allTeams:[],gradedTrades:[],tRec:{},waiverAct:{},consensusTop:[],gwttkbTop:[],
     picks:{},coaching:{},dynasty:{},trending:[],trendingAdds:[],trendingDrops:[],
     draftHistory:{},contractKnowledge:{},isContractLeague:false,contractData:{},
