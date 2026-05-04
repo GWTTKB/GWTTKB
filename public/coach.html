@@ -1541,80 +1541,12 @@ ${Object.values(CTX.nflContractData||{}).filter((c,i,a)=>i===a.findIndex(x=>x.na
 FORMAT: ${CTX.isSF?'SUPERFLEX PPR — QBs 30-40% premium. Elite QBs are top 5 assets. Never roster zero at QB.':'1QB PPR — RB scarcity drives top values. Elite WRs dominant.'}
 LEAGUE: ${CTX.league?.name||'Dynasty League'} | ${CTX.allTeams?.length||0} teams | Season ${CTX.league?.season||2026}
 
-THIS MANAGER (@${CTX.myTeam?.username||'?'}): ${CTX.myTeam?.wins||0}W-${CTX.myTeam?.losses||0}L | Value: ${(CTX.myTeam?.total||0).toLocaleString()} | Rank: #${(CTX.allTeams?.findIndex(t=>t.isMe)||0)+1} of ${CTX.allTeams?.length||0}
+⚠️ ROSTER + LEAGUE CONTEXT IS LOADED ON DEMAND:
+The user's roster, other managers' rosters, recent trades, and league-wide standings are ONLY injected when you need them. If the user mentions trades, asks about their team, or names another manager, that data WILL be injected below. If the user asks a generic player or strategy question, that data won't be loaded — and you should not pretend you have it. Just answer based on the player data and analytics that ARE injected.
 
-⚠️ DYNASTY ROSTER (players THIS MANAGER owns in BYX Dynasty — NOT the same as NFL team rosters):
-PLAYERS: ${(CTX.myRoster||[]).map(p=>p.name+'('+p.pos+',val='+p.value+')').join(' | ')}
-MY DRAFT PICKS IN BYX DYNASTY (from Sleeper draft order + traded picks — exact slots):
-${(()=>{
-  // Primary: use pickOwnership grid built from draft_order + traded_picks
-  const po=CTX.pickOwnership||{};
-  const myTeam=(CTX.allTeams||[]).find(t=>t.isMe);
-  if(!myTeam)return 'Roster not loaded';
+If you need roster/league data and it's not present, ask the user "Want me to pull your roster / [manager]'s roster / recent league trades?" — but do not invent the data.
 
-  const myPicks=Object.values(po).filter(p=>p.owner?.roster_id===myTeam.roster_id)
-    .sort((a,b)=>a.season-b.season||a.round-b.round||a.slot-b.slot);
 
-  if(myPicks.length){
-    return myPicks.map(p=>{
-      const slot=p.slot?String(p.round)+'.'+String(p.slot).padStart(2,'0'):p.round+'.??';
-      const yr=p.season;
-      const traded=p.is_traded?' (from '+p.original?.username+')':' (own)';
-      return yr+' '+slot+traded;
-    }).join(', ');
-  }
-
-  // Fallback: myPicks from rosterPicks
-  const rp=(CTX.myPicks||[]);
-  if(rp.length) return rp.map(p=>p.label||p.season+' R'+p.round).join(', ');
-
-  return 'PICKS NOT LOADED — draft order may not be set up yet in Sleeper';
-})()}
-
-IMPORTANT: If a player is NOT in the above roster list, they are NOT owned by this manager in BYX Dynasty. That does NOT mean they are a free agent in the NFL — they have an NFL team which you can find in the team context data above. Never confuse dynasty league ownership with NFL team assignment.
-
-ALL MANAGERS (name: record, value, top 4 players):
-${(CTX.allTeams||[]).map(t=>{
-  const roster=(t.players||[]).slice(0,35).map(p=>p.name+'('+p.pos+(p.slot&&p.slot!=='Active'?','+p.slot:'')+')').join(', ');
-  const picks=(t.picks||[]).map(p=>p.season+' R'+p.round).join(', ');
-  return t.username+(t.isMe?' [YOU]':'')+' [BYX DYNASTY ROSTER ONLY]: '+t.wins+'W-'+t.losses+'L val='+t.total+
-    '\nPLAYERS: '+roster+
-    (picks?'\nDRAFT PICKS OWNED: '+picks:'\nDRAFT PICKS OWNED: none');
-}).join('\n\n')}
-
-CROSS-LEAGUE INTEL — OTHER LEAGUES ONLY (NOT BYX Dynasty — these are separate leagues this manager plays in):
-⚠️ Do NOT mix cross-league rosters with BYX Dynasty rosters above. Each manager's BYX roster is in ALL MANAGERS above.
-${Object.entries(CTX.crossLeague||{}).map(([un,p])=>{
-  const rosters=(p.rosters||[]).map(r=>{
-    const picks=(r.picks||[]).map(pk=>pk.label).join(',');
-    const trades=(r.trades||[]).slice(0,8).map(t=>{
-      const dateStr=t.date||('WK'+t.week);
-      const sides=t.sides.map(s=>s.gets.slice(0,4).join('+')).join(' / ');
-      return dateStr+': '+sides;
-    }).join(' | ');
-    return r.league+': '+(r.players||[]).map(x=>x.name).join(',')+
-      (picks?' PICKS:'+picks:'')+
-      (trades?' TRADES:'+trades:'');
-  }).join(' || ');
-  const multi=(p.fav_players||[]).filter(x=>x.leagues>1).map(x=>x.name+'('+x.leagues+'L)').join(',');
-  const drafts=(p.draft_patterns||[]).map(d=>d.league+'('+d.status+'): '+(d.picks||[]).map(pk=>pk.slot+' '+pk.player).join(',')).join(' | ');
-  return '@'+un+': '+rosters+(multi?' | MULTI-LEAGUE: '+multi:'')+(drafts?' | ACTIVE DRAFTS: '+drafts:'');
-}).join('\n')||'Cross-league loading...'}
-
-MANAGER TENDENCIES:
-${Object.entries(CTX.tRec||{}).map(([un,r])=>un+': '+r.trades+'trades posFlow='+JSON.stringify(r.posFlow)).join(' | ')||'Loading...'}
-
-RECENT TRADES (last 12):
-${(CTX.allTrades||[]).slice(-20).map(t=>{
-  const date=t.date||(t.week?'WK'+t.week:'?');
-  const sides=(t.roster_ids||[]).map(rid=>{
-    const team=(CTX.allTeams||[]).find(tm=>tm.roster_id===rid);
-    const adds=Object.entries(t.adds||{}).filter(([,r])=>r===rid).map(([id])=>CTX.playerNames[id]||id);
-    const picks=(t.draft_picks||[]).filter(pk=>pk.owner_id===rid).map(pk=>pk.season+' '+pk.round+'rd');
-    return(team?.username||'?')+' got ['+ [...adds,...picks].join(',')+']';
-  });
-  return date+' '+sides.join(' / ');
-}).join(' | ')||'No trades'}
 
 DYNASTY MARKET INTELLIGENCE (aggregated from ${CTX.marketIntel?.leagues_sampled||0} Sleeper leagues, ${CTX.marketIntel?.trades_analyzed||0} trades):
 MOST TRADED (high buy/sell activity = market is moving on these):
@@ -1771,7 +1703,7 @@ If a player has historical data from 2024 or earlier → they are an established
 2025 NFL DRAFTEES (confirmed by historical values — already played full rookie season, NOT available in 2026 dynasty draft):
 ${(CTX.class2025||[]).slice(0,30).join(', ')||'Cam Ward, Shedeur Sanders, Travis Hunter, Ashton Jeanty, Tetairoa McMillan, Tyler Warren, Colston Loveland, Emeka Egbuka, Omarion Hampton, Matthew Golden, Jaxson Dart, Quinshon Judkins, Luther Burden, RJ Harvey, TreVeyon Henderson, Harold Fannin, Bucky Irving, Brian Thomas Jr, Jayden Higgins, Kyle Williams, Jaydon Blue, Tank Dell'}
 
-KEY RULE: If someone asks about a 2025 draftee in the context of the 2026 rookie draft, tell them clearly that player is already a rostered veteran — check who owns them using the ALL MANAGERS roster data above.
+KEY RULE: If someone asks about a 2025 draftee in the context of the 2026 rookie draft, tell them clearly that player is already a rostered veteran. If you need to know who owns them, ask the user "Want me to check who owns [player] in your league?" — roster data loads on demand.
 
 2026 NFL DRAFT CLASS (drafted April 24-26 2026 — these are the ACTUAL 2026 dynasty rookies available NOW):
 NFL pick → Player(pos, NFL team):
@@ -1835,6 +1767,57 @@ Format requirement: "[Name] (value: [X from list])" — the value must match the
 If a player is value 5,000+, the minimum acceptable return is the raw value × tier multiplier. Anything less is a loss for the seller — flag it explicitly.
 
 Always show: raw_value × multiplier = adjusted_value, then compare to incoming package raw total.
+
+⚠️ ASSET CONSOLIDATION PRINCIPLE — APPLIES TO ELITE ASSETS (6,000+ value):
+
+The math (raw value × tier multiplier) tells you if a trade is FAIR. Asset consolidation tells you if a fair trade is SMART. These are TWO different checks. A trade can clear the math AND fail the consolidation check.
+
+DIRECTION MATTERS — same trade is good or bad depending on which side:
+
+WHEN THE USER IS ACQUIRING AN ELITE ASSET (value 6,000+):
+- This is "consolidating up" — combining lesser pieces into one anchor.
+- 2-for-1 in your favor (you send 2, get 1) when math supports = IDEAL trade.
+- 3-for-1 in your favor = excellent IF the user can absorb depth loss.
+- Encourage offering bench depth + picks to acquire roster anchors.
+- Frame: "Consolidation play — you're paying premium in pieces to acquire one starting-caliber asset. Smart move."
+
+WHEN THE USER IS TRADING AWAY AN ELITE ASSET (value 6,000+):
+- This is the dangerous direction. Math alone is NOT enough.
+- 1-for-1 same tier or better = FAIR (math threshold applies)
+- 1-for-1 with tier-up + small filler = IDEAL
+- 1-for-2 pieces (user gets 2 back) = REQUIRES CONSOLIDATION TAX
+- 1-for-3+ pieces = REQUIRES HEAVY TAX OR REJECT
+
+CONSOLIDATION TAX (when user trades 1 elite for multiple pieces):
+- Receiving 2 pieces back: incoming raw total must clear adjusted_value × 1.15
+- Receiving 3+ pieces back: incoming raw total must clear adjusted_value × 1.25
+- If math clears standard adjusted but fails the tax: FLAG IT, don't accept.
+- Frame: "The math works at standard pricing but the structure costs you a starter for bench depth. Demand more, or push for a 1-for-1 with tier-up."
+
+WORKED EXAMPLE (trading away elite):
+Drake London (6,837) for Josh Jacobs (4,529) + 3rd (1,200) = 5,729 raw incoming.
+- London adjusted floor: 6,837 × 1.30 = 8,888
+- Standard math: 5,729 < 8,888 → REJECT, no consolidation tax needed.
+
+Drake London for Tyler Warren (6,142) + Jacobs (4,529) + 3rd (1,200) = 11,871 raw.
+- 3-piece return — apply 1.25 tax
+- Required: 8,888 × 1.25 = 11,110
+- Incoming clears 11,110 → ACCEPTABLE but flag structure.
+- Better counter: ask for 1 elite + 1 piece (2-piece tax = 10,221) and demand a tier-up name.
+
+WORKED EXAMPLE (acquiring elite):
+User acquires Drake London for Pickens (5,837) + 1.10 (3,960) = 9,797 raw.
+- London adjusted from their side: 8,888 (their sell floor)
+- User sending 9,797 raw — paying premium to consolidate up.
+- VERDICT: GOOD. User is the consolidator, paying small premium for a roster anchor.
+
+WHY THIS ASYMMETRY EXISTS:
+- Elite assets are scarce. Trading 1 elite for multiple pieces fills bench, not lineup.
+- Other manager is consolidating up at the user's expense.
+- Roster spots and starting lineup quality matter more than total raw value.
+- The cost of bad advice when SELLING elite is asymmetric — better to err on rejecting a fair-ish deal than accept a deal that's 15% under what should have been demanded.
+
+Apply this principle whenever an elite asset (6,000+) is on either side of a proposed trade. Math is the floor, consolidation is the ceiling. Both must clear.
 
 DRAFT PICK VALUES (use these when evaluating any trade involving picks):
 ${(()=>{
@@ -1920,7 +1903,7 @@ function startChat(){
     </div>`;
 
   // Opening message
-  const opener=`${CTX.myRoster?.length?`Alright @${CTX.username} — I've got your full league loaded. ${CTX.allTeams.length} managers, ${CTX.allTrades.length} trades pulled across ${CTX.chain?.length||1} seasons, all rosters valued out.\n\nYour squad is sitting at ${CTX.myTeam?.total?.toLocaleString()||'?'} in dynasty value. ${CTX.myTeam?'That puts you '+(CTX.allTeams.findIndex(t=>t.isMe)+1)+' of '+CTX.allTeams.length+' in the league.':''}\n\nWhat do you want to work on?`:'Hey — I\'m loaded up. What do you want to dig into?'}`;
+  const opener=CTX.username?`Alright @${CTX.username} — what do you want to work on?`:'Hey — what do you want to dig into?';
   addMessage('coach',opener);
 }
 
@@ -2039,6 +2022,201 @@ async function fetchPlayerStats(playerName){
     return null;
   }catch(e){return null;}
 }
+
+// Extract player names mentioned in a message
+// ── INTENT DETECTION (Lazy Loading) ──
+// Determines which tiers of data to inject based on user message
+function detectIntent(msg){
+  const txt=(msg||'').toLowerCase();
+  
+  // Tier 3: Trade/roster keywords
+  const tradeKw=/\b(trade|deal|offer|package|swap|sell|buy|target|acquire|move|drop|pick up|waiver)\b/;
+  const myTeamKw=/\b(my team|my roster|my squad|my picks|my players|should i|who should i|i own|i have)\b/;
+  
+  // Tier 4: League-wide keywords
+  const leagueKw=/\b(league|standings|rankings|power rank|compare|other managers|league average|league-wide|every team|all teams|league context)\b/;
+  
+  // Mentioned managers (Tier 3 trigger)
+  const allUsernames=(CTX.allTeams||[]).map(t=>t.username).filter(Boolean);
+  const crossUsernames=Object.keys(CTX.crossLeague||{});
+  const allMgrs=[...new Set([...allUsernames,...crossUsernames])];
+  const mentionedManagers=allMgrs.filter(un=>{
+    if(!un)return false;
+    const re=new RegExp('\\b'+un.toLowerCase().replace(/[^a-z0-9]/g,'')+'\\b','i');
+    return re.test(txt.replace(/[^a-z0-9 ]/g,''));
+  });
+  
+  return {
+    needsTrade: tradeKw.test(txt) || myTeamKw.test(txt) || mentionedManagers.length>0,
+    needsLeague: leagueKw.test(txt),
+    needsRoster: myTeamKw.test(txt) || tradeKw.test(txt),
+    mentionedManagers
+  };
+}
+
+// ── TIER 2: Per-player extras (ADP, recent trades for player, draft history) ──
+function getPlayerTier2Extras(playerName){
+  const norm=s=>(s||'').toLowerCase().replace(/[^a-z]/g,'');
+  const nn=norm(playerName);
+  const parts=[];
+  
+  // Startup ADP
+  const adp=(CTX.startupAdp||[]).find(p=>norm(p.name)===nn);
+  if(adp){
+    parts.push(`STARTUP ADP: slot ${adp.adp||adp.avg_pick||'?'} (n=${adp.drafts||CTX.adpDraftCount||'?'} drafts) — live market position`);
+  }
+  
+  // Rookie ADP
+  const rookieAdp=(CTX.rookieAdp||[]).find(p=>norm(p.name)===nn);
+  if(rookieAdp){
+    parts.push(`ROOKIE ADP: pick ${rookieAdp.adp||rookieAdp.avg_pick||'?'} (n=${rookieAdp.drafts||'?'} rookie drafts)`);
+  }
+  
+  // Recent trades involving this player (BYX Dynasty)
+  const playerTrades=[];
+  for(const t of (CTX.allTrades||[])){
+    const adds=Object.entries(t.adds||{});
+    const playerInTrade=adds.some(([id])=>norm(CTX.playerNames[id]||'')===nn);
+    if(playerInTrade){
+      const sides=(t.roster_ids||[]).map(rid=>{
+        const team=(CTX.allTeams||[]).find(tm=>tm.roster_id===rid);
+        const got=Object.entries(t.adds||{}).filter(([,r])=>r===rid).map(([id])=>CTX.playerNames[id]||id);
+        const picks=(t.draft_picks||[]).filter(pk=>pk.owner_id===rid).map(pk=>`${pk.season||'?'} ${pk.round||'?'}rd`);
+        return`${team?.username||'?'} got [${[...got,...picks].join(',')}]`;
+      });
+      const date=t.date||(t.week?'WK'+t.week:'?');
+      playerTrades.push(`${date}: ${sides.join(' / ')}`);
+    }
+  }
+  if(playerTrades.length){
+    parts.push(`BYX LEAGUE TRADES involving ${playerName}: ${playerTrades.slice(-3).join(' | ')}`);
+  }
+  
+  // Cross-league trades for this player
+  const crossPlayerTrades=[];
+  for(const[un,mgr]of Object.entries(CTX.crossLeague||{})){
+    for(const r of (mgr.rosters||[])){
+      for(const t of (r.trades||[])){
+        const allGets=(t.sides||[]).flatMap(s=>s.gets||[]);
+        if(allGets.some(g=>norm(g)===nn)){
+          const dateStr=t.date||('WK'+t.week);
+          const sides=t.sides.map(s=>s.gets.slice(0,4).join('+')).join(' / ');
+          crossPlayerTrades.push(`${r.league} ${dateStr}: ${sides} (involves @${un})`);
+        }
+      }
+    }
+  }
+  if(crossPlayerTrades.length){
+    parts.push(`CROSS-LEAGUE TRADES for ${playerName}: ${crossPlayerTrades.slice(0,3).join(' | ')}`);
+  }
+  
+  // NFL draft history (rookies + 2nd-yr players)
+  const dh=CTX.draftHistory?.players?.[playerName]||
+    Object.entries(CTX.draftHistory?.players||{}).find(([k])=>norm(k)===nn)?.[1];
+  if(dh){
+    const c=dh.combine||{};
+    const cmb=[c.forty?`40:${c.forty}`:null,c.wt?`wt:${c.wt}`:null,c.vert?`vert:${c.vert}`:null].filter(Boolean).join(', ');
+    parts.push(`NFL DRAFT: R${dh.round}P${dh.pick} ${dh.year} (${dh.team}, ${dh.college})${cmb?' | Combine: '+cmb:''}`);
+  }
+  
+  // Trending market signal for THIS player
+  const trendAdd=(CTX.trendingAdds||[]).find(p=>norm(p.name)===nn);
+  const trendDrop=(CTX.trendingDrops||[]).find(p=>norm(p.name)===nn);
+  if(trendAdd)parts.push(`MARKET SIGNAL: +${trendAdd.adds} adds in last 48hr (BUY signal)`);
+  if(trendDrop)parts.push(`MARKET SIGNAL: -${trendDrop.drops} drops in last 48hr (SELL signal)`);
+  
+  return parts.length?'\n'+parts.join('\n'):'';
+}
+
+// ── TIER 3: Trade/roster context (rosters of you + counterparties + recent trades) ──
+function buildTradeContext(mentionedManagers){
+  const parts=[];
+  
+  // Your full roster
+  const myTeam=CTX.myTeam;
+  const myRoster=CTX.myRoster||[];
+  if(myTeam && myRoster.length){
+    parts.push(`\n========== YOUR ROSTER (@${CTX.username}) ==========`);
+    parts.push(`Total Value: ${myTeam.total?.toLocaleString()||'?'} | ${myTeam.wins||0}W-${myTeam.losses||0}L`);
+    parts.push('PLAYERS: '+myRoster.map(p=>`${p.name}(${p.pos},${p.value?.toLocaleString()})`).join(', '));
+    
+    // Your picks
+    const myPicks=(CTX.myPicks||[]).map(p=>p.label||`${p.season} R${p.round}`).join(', ');
+    if(myPicks)parts.push('PICKS: '+myPicks);
+  }
+  
+  // Mentioned counterparty rosters
+  for(const un of mentionedManagers){
+    if(un===CTX.username)continue;
+    const team=(CTX.allTeams||[]).find(t=>t.username===un);
+    if(team){
+      parts.push(`\n========== @${un}'s ROSTER (BYX Dynasty) ==========`);
+      parts.push(`Total Value: ${team.total?.toLocaleString()} | ${team.wins||0}W-${team.losses||0}L`);
+      parts.push('PLAYERS: '+(team.players||[]).map(p=>`${p.name}(${p.pos},${p.value?.toLocaleString()})`).join(', '));
+    }
+    
+    // Cross-league for this manager
+    const cross=CTX.crossLeague?.[un];
+    if(cross?.rosters?.length){
+      parts.push(`\n@${un} CROSS-LEAGUE INTEL:`);
+      for(const r of cross.rosters.slice(0,3)){
+        const recentTrades=(r.trades||[]).slice(0,5).map(t=>{
+          const dateStr=t.date||('WK'+t.week);
+          const sides=t.sides.map(s=>s.gets.slice(0,3).join('+')).join(' / ');
+          return`${dateStr}: ${sides}`;
+        }).join(' | ');
+        parts.push(`  ${r.league}: ${(r.players||[]).slice(0,15).map(x=>x.name).join(',')}${recentTrades?'\n    Recent trades: '+recentTrades:''}`);
+      }
+    }
+  }
+  
+  // Recent BYX trades (last 8)
+  const recent=(CTX.allTrades||[]).slice(-8).map(t=>{
+    const date=t.date||(t.week?'WK'+t.week:'?');
+    const sides=(t.roster_ids||[]).map(rid=>{
+      const team=(CTX.allTeams||[]).find(tm=>tm.roster_id===rid);
+      const got=Object.entries(t.adds||{}).filter(([,r])=>r===rid).map(([id])=>CTX.playerNames[id]||id);
+      const picks=(t.draft_picks||[]).filter(pk=>pk.owner_id===rid).map(pk=>`${pk.season} ${pk.round}rd`);
+      return`${team?.username||'?'} got [${[...got,...picks].join(',')}]`;
+    });
+    return`${date}: ${sides.join(' / ')}`;
+  }).join(' | ');
+  if(recent)parts.push(`\nRECENT BYX TRADES (last 8): ${recent}`);
+  
+  // Pick values
+  const picks=CTX.picks||{};
+  if(Object.keys(picks).length){
+    const pickEntries=Object.entries(picks).filter(([k])=>!k.startsWith('2024')&&!k.startsWith('2025')).slice(0,16);
+    parts.push('\nPICK VALUES: '+pickEntries.map(([name,val])=>{
+      const v=Array.isArray(val.sf)?val.sf[val.sf.length-1]:(val.value||val.sf||0);
+      return`${name}=${v}`;
+    }).join(' | '));
+  }
+  
+  return parts.length?parts.join('\n')+'\n':'';
+}
+
+// ── TIER 4: League-wide overview ──
+function buildLeagueContext(){
+  const parts=[];
+  
+  // All teams
+  const teams=(CTX.allTeams||[]).map(t=>{
+    const top=(t.players||[]).slice(0,5).map(p=>`${p.name}(${p.value?.toLocaleString()})`).join('/');
+    return`@${t.username}${t.isMe?'[YOU]':''}: ${t.wins||0}W-${t.losses||0}L total=${t.total?.toLocaleString()} | top5: ${top}`;
+  }).join('\n');
+  if(teams)parts.push('========== LEAGUE STANDINGS / VALUES ==========\n'+teams);
+  
+  // Manager tendencies
+  const tend=Object.entries(CTX.tRec||{}).map(([un,r])=>{
+    const flows=Object.entries(r.posFlow||{}).filter(([,v])=>Math.abs(v)>=2).map(([pos,v])=>v>0?`+${pos}`:pos+v).join(',');
+    return`@${un}:${r.trades}trades${flows?' flow:'+flows:''}`;
+  }).join(' | ');
+  if(tend)parts.push('\nMANAGER TENDENCIES: '+tend);
+  
+  return parts.length?parts.join('\n')+'\n':'';
+}
+
 
 // Extract player names mentioned in a message
 function extractPlayerNames(text){
@@ -2277,6 +2455,10 @@ async function sendMessage(text){
   try{
     // On-demand player stats lookup
     let playerStatsContext='';
+    // ── INTENT DETECTION ──
+    const intent=detectIntent(msg);
+    let tierLog=['Tier1'];
+
     if(CTX.statsAvailable){
       const mentionedPlayers=extractPlayerNames(msg);
       if(mentionedPlayers.length>0){
@@ -2290,6 +2472,7 @@ async function sendMessage(text){
           const statsStr=statsResults[i]?formatPlayerStats(statsResults[i]):'';
           const analyticsStr=getPlayerAnalytics(name);
           const profileStr=getPlayerProfile(name);
+          const tier2Extras=getPlayerTier2Extras(name);  // ADP + recent trades + draft history
           
           // On-demand team context — find player's 2026 team by searching team rosters
           let teamCtxStr='';
@@ -2328,21 +2511,46 @@ async function sendMessage(text){
             teamsLoaded.add(team);
           }
           
-          if(statsStr||analyticsStr||profileStr||teamCtxStr){
-            statsParts.push(`====== INJECTED DATA FOR ${name} ======${analyticsStr}${statsStr}${profileStr}${teamCtxStr}\n====== END INJECTED DATA FOR ${name} ======`);
+          if(statsStr||analyticsStr||profileStr||teamCtxStr||tier2Extras){
+            statsParts.push(`====== INJECTED DATA FOR ${name} ======${analyticsStr}${tier2Extras}${statsStr}${profileStr}${teamCtxStr}\n====== END INJECTED DATA FOR ${name} ======`);
           } else {
-            console.warn(`No data found for ${name} — analytics:${!!analyticsStr} stats:${!!statsStr} profile:${!!profileStr} team:${!!teamCtxStr}`);
+            console.warn(`No data found for ${name}`);
             statsParts.push(`====== ${name} ======\n[NO DATA AVAILABLE — player not in analytics, stats, or team rosters. Tell user data is missing.]\n====== END ${name} ======`);
           }
         }
         if(statsParts.length>0){
-          playerStatsContext='\n\nPLAYER DATA (stats + scouting + team context):\n'+statsParts.join('\n');
+          playerStatsContext='\n\nPLAYER DATA (analytics + ADP + trades + scouting + team context):\n'+statsParts.join('\n');
+          tierLog.push('Tier2('+mentionedPlayers.length+'p)');
           console.log('Loaded data for:',mentionedPlayers.join(', '),'| Teams:',[...teamsLoaded].join(','));
         }
       }
     }
 
-    const systemPrompt=buildSystemPrompt()+playerStatsContext;
+    // ── TIER 3: Trade/roster context (lazy) ──
+    let tradeContext='';
+    if(intent.needsTrade || intent.needsRoster){
+      tradeContext=buildTradeContext(intent.mentionedManagers);
+      if(tradeContext){
+        tierLog.push('Tier3(trade'+(intent.mentionedManagers.length?'+'+intent.mentionedManagers.length+'mgrs':'')+')');
+      }
+    }
+
+    // ── TIER 4: League-wide context (lazy) ──
+    let leagueContext='';
+    if(intent.needsLeague){
+      leagueContext=buildLeagueContext();
+      if(leagueContext)tierLog.push('Tier4(league)');
+    }
+
+    const fullContext=playerStatsContext+
+      (tradeContext?'\n\n========== ROSTER + TRADE CONTEXT (loaded for this question) ==========\n'+tradeContext:'')+
+      (leagueContext?'\n\n========== LEAGUE-WIDE CONTEXT (loaded for this question) ==========\n'+leagueContext:'');
+
+    const systemPrompt=buildSystemPrompt()+fullContext;
+    
+    // Token estimate (rough: 1 token ≈ 4 chars)
+    const estTokens=Math.round(systemPrompt.length/4);
+    console.log('🎯 Loaded:',tierLog.join(' + '),'| ~'+estTokens.toLocaleString()+' tokens');
     const response=await fetch('/api/chat',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
