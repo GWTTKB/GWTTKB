@@ -1015,9 +1015,8 @@ async function loadDynastyData(){
   CTX.sfVals={};CTX.qbVals={};CTX.playerNames={};CTX.playerPos={};
 
   try{
-    const[cRes,gRes,hRes,pkRes,contractsRes,patternsRes,statsMetaRes,startupAdpRes,mktRes,dcRes,ppRes,analyticsRes]=await Promise.all([
-      fetch('/data/consensus.json'),
-      fetch('/data/leland-rankings.json'),
+    const[cRes,hRes,pkRes,contractsRes,patternsRes,statsMetaRes,startupAdpRes,mktRes,dcRes,ppRes,analyticsRes]=await Promise.all([
+      fetch('/data/consensus.json').catch(()=>null),
       fetch('/data/historical-players.json').catch(()=>null),
       fetch('/data/historical-picks.json').catch(()=>null),
       fetch('/data/nfl-contracts.json').catch(()=>null),
@@ -1031,8 +1030,9 @@ async function loadDynastyData(){
     ]);
 
     // Consensus
-    if(cRes.ok){
-      const c=await cRes.json();
+    if(cRes?.ok){
+      try{
+        const c=await cRes.json();
       const sfp=c.formats?.sf_ppr?.players||c.players||[];
       const qp=c.formats?.qb1_ppr?.players||[];
       for(const p of sfp){
@@ -1048,13 +1048,7 @@ async function loadDynastyData(){
       }
       for(const p of qp)CTX.qbVals[n(p.name)]=p.value;
       CTX.consensusTop=CTX.consensusTop.slice(0,600); // all players
-    }
-
-    // GWTTKB
-    if(gRes.ok){
-      const g=await gRes.json();
-      const sfp=g.formats?.sf_ppr||[];
-      CTX.gwttkbTop=sfp.slice(0,100).map(p=>({name:p.name,value:p.value,rank:p.rank}));
+      }catch(e){console.warn('Consensus parse error:',e);}
     }
 
     // Historical picks
@@ -1309,9 +1303,6 @@ function buildSystemPrompt(){
 
   // Top 150 consensus (expanded - all major players)
   const top60=CTX.consensusTop.slice(0,150).map((p,i)=>`${i+1}.${p.name}(${p.pos},${CTX.isSF?p.sf:(CTX.qbVals[n(p.name)]||p.sf)})`).join(', ');
-
-  // GWTTKB top 40
-  const gwttkbSummary=CTX.gwttkbTop.slice(0,40).map((p,i)=>`${i+1}.${p.name}:${p.value}`).join(', ');
 
   // My roster
   const myRosterStr=myRoster.slice(0,20).map(p=>`${p.name}(${p.pos},${p.value})`).join(', ');
