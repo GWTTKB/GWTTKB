@@ -1690,6 +1690,14 @@ ${(()=>{
   return sorted.map(([name,v],i)=>`${i+1}.${name}(ADP:${v.adp},n=${v.count})`).join(', ');
 })()}
 
+CROSS-LEAGUE ROOKIE DRAFT INTEL:
+When a manager is mentioned in a trade context, their actual rookie draft picks across their other leagues are injected (look for "ROOKIE DRAFT PICKS (across their leagues)"). This shows you what they ACTUALLY picked in completed and in-progress drafts. This is real behavioral data — use it.
+- Status "COMPLETED" = draft is finished, those are real picks they made.
+- Status "IN PROGRESS" = draft is currently happening, picks made so far are shown.
+- If the manager has no draft picks shown in their cross-league section, it means none of their other leagues have started rookie drafts yet (or they had no picks in those drafts).
+- NEVER say "I don't have live draft data" if the data is injected — read it and use it.
+- NEVER claim to know about drafts happening "right now this minute" — what you see is the latest snapshot of completed/in-progress drafts.
+
 NFL COACHING (HC/OC/scheme all 32):
 ${Object.entries(CTX.coaching||{}).slice(0,16).map(([t,c])=>t+':'+c.hc+'/'+c.oc+'('+c.scheme+')').join(', ')}
 
@@ -2167,6 +2175,16 @@ function buildTradeContext(mentionedManagers){
         }).join(' | ');
         parts.push(`  ${r.league}: ${(r.players||[]).slice(0,15).map(x=>x.name).join(',')}${recentTrades?'\n    Recent trades: '+recentTrades:''}`);
       }
+      
+      // Draft picks across their leagues (completed + in-progress drafts)
+      if(cross.draft_patterns?.length){
+        parts.push(`\n  @${un} ROOKIE DRAFT PICKS (across their leagues):`);
+        for(const dp of cross.draft_patterns.slice(0,5)){
+          const status=dp.status==='in_progress'?'IN PROGRESS':'COMPLETED';
+          const picks=dp.picks.map(pk=>`${pk.slot} ${pk.player}`).join(', ');
+          parts.push(`    ${dp.league} ${dp.season} (${status}): ${picks}`);
+        }
+      }
     }
   }
   
@@ -2479,6 +2497,9 @@ async function sendMessage(text){
           let team=null;
           // Search all teams' 2026 rosters to find this player
           const nameNorm=name.toLowerCase().replace(/[^a-z]/g,'');
+          // Last name only for fallback fuzzy match (catches typos like Jaylin/Jaylen)
+          const lastNorm=name.split(/\s+/).pop().toLowerCase().replace(/[^a-z]/g,'');
+          // PASS 1: Exact normalized full-name match
           for(const[teamAbbr,d]of Object.entries(CTX.teamContext||{})){
             const c=d['2026']||{};
             const allPlayers=[c.qb,c.qb2,c.wr1,c.wr2,c.wr3,c.wr4,c.wr5,c.wr6,c.wr7,
@@ -2489,6 +2510,23 @@ async function sendMessage(text){
               }
             }
             if(team)break;
+          }
+          // PASS 2: Last-name fallback (handles typos in data)
+          if(!team && lastNorm.length>=4){
+            for(const[teamAbbr,d]of Object.entries(CTX.teamContext||{})){
+              const c=d['2026']||{};
+              const allPlayers=[c.qb,c.qb2,c.wr1,c.wr2,c.wr3,c.wr4,c.wr5,c.wr6,c.wr7,
+                c.rb1,c.rb2,c.rb3,c.rb4,c.te1,c.te2].filter(Boolean);
+              for(const pName of allPlayers){
+                const pLast=pName.split(/\s+/).pop().toLowerCase().replace(/[^a-z]/g,'');
+                if(pLast===lastNorm){
+                  team=teamAbbr;
+                  console.log('Fuzzy team match:',name,'→',teamAbbr,'via last name on',pName);
+                  break;
+                }
+              }
+              if(team)break;
+            }
           }
           
           if(team && !teamsLoaded.has(team) && CTX.teamContext?.[team]){
