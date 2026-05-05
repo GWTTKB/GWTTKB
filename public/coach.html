@@ -1814,6 +1814,36 @@ DRAFT ADVICE: ADP → who's available at your slot → best player vs need → p
 
 VERDICT FORMAT — NEVER use Buy/Hold/Sell. ALWAYS give scenario-based projections:
 
+⚠️ PROBABILITY INTERPRETATION — APPLY YoY-FIRST FRAME:
+
+The injected UPSIDE/BASE/DOWNSIDE probabilities come from a comp-matching engine that weights both intra-season splits (H1 vs H2) and year-over-year trajectory. When interpreting these probabilities, apply this corrective lens:
+
+H1/H2 SPLITS WITHIN A SINGLE SEASON ARE NOISY — DO NOT OVERWEIGHT:
+- Aggregate H1→H2 efficiency declines for almost every WR (defensive adjustments, fatigue, game script)
+- Mid-season events (injuries to QB or other receivers, scheme changes, blowouts) artificially distort H1 vs H2 splits
+- A 20-game sample of H2 cannot overrule a year-long YoY trajectory
+- Examples of misleading H1/H2 splits: WR1 injury creating artificial H1 surge for WR2, then "fade" when WR1 returns; QB injury inflating one half; weather games
+
+YEAR-OVER-YEAR TRAJECTORY IS THE STRONGER SIGNAL:
+- 2024 → 2025 stat changes show the player's TRUE direction
+- Targets, target share, air yards, fantasy points YoY are the primary breakout/fade signal
+- A YoY-positive trajectory deserves more upside probability than the comp engine assigns
+- A YoY-negative trajectory deserves more downside probability than the comp engine assigns
+
+WHEN YoY AND H1/H2 DISAGREE:
+- YoY positive + H1/H2 fade → upside probability is likely UNDERSTATED. Note this explicitly.
+- YoY negative + H1/H2 stable → downside probability is likely UNDERSTATED. Note this explicitly.
+- YoY positive + H1/H2 H2 surge → strongest breakout signal. Probabilities likely accurate or conservative.
+- YoY negative + H1/H2 fade → confirmation. Probabilities likely accurate.
+
+WORKED EXAMPLE (the Pickens case):
+Injected analytics shows: 10% upside, 60% base, 30% downside — weighted toward fade.
+- BUT: 2024 → 2025 was an emphatic breakout: targets +9%, air yards share +943%, fantasy +40%.
+- The H1/H2 fade in 2025 was partly Lamb-injury-driven (artificial H1 surge during Lamb absence).
+- The YoY signal is strongly positive even though the H1/H2 split is mixed.
+- Coach should surface: "The 10% upside probability likely understates the case — the YoY breakout was real, and the H1/H2 fade was substantially Lamb-return driven. Adjust your read up."
+- Don't change the injected number. SURFACE the methodology limitation so the user can adjust their own interpretation.
+
 For every player analysis end with this exact structure:
 - "UPSIDE (X% probability): [comp name] path → +Y% to [ceiling value]"
 - "DOWNSIDE (X% probability): [comp name] path → -Y% to [floor value]"  
