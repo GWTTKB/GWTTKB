@@ -758,6 +758,7 @@ async function loadAllContext(){
             .sort((a,b)=>b[1]-a[1])
             .map(([team,cnt])=>({team,count:cnt}));
 
+          profile.cached_at=Date.now();
           CTX.crossLeague[opp.username]=profile;
         }catch(e){console.warn('Cross-league failed for',opp.username,e.message);}
       }
@@ -1389,69 +1390,16 @@ async function loadDynastyData(){
 
 // ── SYSTEM PROMPT BUILDER ──
 function buildSystemPrompt(){
-  const me=CTX.myTeam;
-  const myRoster=CTX.myRoster||[];
+  // Top 250 consensus list (covers every player who comes up in dynasty discussion)
+  const top250=CTX.consensusTop.slice(0,250).map((p,i)=>`${i+1}.${p.name}(${p.pos},${CTX.isSF?p.sf:(CTX.qbVals[n(p.name)]||p.sf)})`).join(', ');
 
-  // Top 150 consensus (expanded - all major players)
-  const top60=CTX.consensusTop.slice(0,150).map((p,i)=>`${i+1}.${p.name}(${p.pos},${CTX.isSF?p.sf:(CTX.qbVals[n(p.name)]||p.sf)})`).join(', ');
-
-  // My roster
-  const myRosterStr=myRoster.slice(0,20).map(p=>`${p.name}(${p.pos},${p.value})`).join(', ');
-
-  // All teams (compact)
-  const teamsStr=(CTX.allTeams||[]).map(t=>`${t.username}${t.isMe?' [YOU]':''}:${t.wins}W-${t.losses}L val=${t.total} top=${(t.players||[]).slice(0,4).map(p=>p.name+' '+p.value).join('/')}`).join(' | ');
-
-  // Manager tendencies
-  const tendStr=Object.entries(CTX.tRec||{}).map(([un,r])=>{
-    const flows=Object.entries(r.posFlow||{}).filter(([,v])=>Math.abs(v)>=2).map(([pos,v])=>v>0?`+${pos}`:pos+v).join(',');
-    return`${un}:${r.trades}trades${flows?' flow:'+flows:''}`;
-  }).join(' | ');
-
-  // Recent trades (last 12)
-  const recentTrades=(CTX.allTrades||[]).slice(-12).map(t=>{
-    const sides=(t.roster_ids||[]).map(rid=>{
-      const team=(CTX.allTeams||[]).find(tm=>tm.roster_id===rid);
-      const adds=Object.entries(t.adds||{}).filter(([,r])=>r===rid).map(([id])=>CTX.playerNames[id]||id);
-      const picks=(t.draft_picks||[]).filter(pk=>pk.owner_id===rid).map(pk=>`${pk.season||'?'} ${pk.round||'?'}rd`);
-      return`${team?.username||'?'} got [${[...adds,...picks].join(',')}]`;
-    });
-    return`WK${t.week||'?'} ${sides.join(' / ')}`;
-  }).join(' | ');
-
-  // Trending adds + drops
+  // Trending adds + drops (universal — small, useful everywhere, kept in Tier 1)
   const trendAdds=(CTX.trendingAdds||CTX.trending||[]).slice(0,12).map(p=>`${p.name}(${p.pos},+${p.adds}adds/48hr)`).join(', ');
   const trendDrops=(CTX.trendingDrops||[]).slice(0,8).map(p=>`${p.name}(${p.pos},-${p.drops}drops/48hr)`).join(', ');
 
-  // Breakout signals
+  // Breakout signals (universal — kept in Tier 1)
   const signals=CTX.dynasty?.breakout_signals?
     Object.entries(CTX.dynasty.breakout_signals).map(([pos,sigs])=>`${pos.toUpperCase()}: ${sigs.join('; ')}`).join(' | '):'';
-
-  // NFL contract data for my roster (from OTC via nflverse)
-  const myRosterContracts=(CTX.myRoster||[]).map(p=>{
-    const c=CTX.nflContractData?.[p.name]||CTX.nflContractData?.[p.name?.toLowerCase()];
-    if(!c)return null;
-    return`${p.name}(${c.team},$${c.apy}M/yr,${c.years_remaining}yrs_left,${c.status},guaranteed:$${c.guaranteed}M)`;
-  }).filter(Boolean).join(' | ');
-
-  // Top expiring contracts league-wide (dynasty sell signals)
-  const expiringContracts=Object.values(CTX.nflContractData||{})
-    .filter((c,i,a)=>i===a.findIndex(x=>x.name===c.name)) // dedupe
-    .filter(c=>c.status==='expiring'&&['QB','RB','WR','TE'].includes(c.pos))
-    .sort((a,b)=>b.apy-a.apy)
-    .slice(0,15)
-    .map(c=>`${c.name}(${c.pos},${c.team},$${c.apy}M/yr)`)
-    .join(', ');
-
-  // League-wide contract/age context
-  const leagueAgeContext=(CTX.allTeams||[]).map(t=>{
-    const avgAge=(t.players||[]).filter(p=>p.age>0).reduce((s,p,_,a)=>s+p.age/a.length,0)||0;
-    const rookies=(t.players||[]).filter(p=>{
-      const c=Object.values(CTX.nflContracts||{}).find(x=>x.name===p.name);
-      return c&&c.years_exp<=1;
-    }).length;
-    return`${t.username}:avgAge=${avgAge.toFixed(1)},rookies=${rookies}`;
-  }).join(' | ');
-
 
   // 2025 draft class — from NFLverse (accurate)
   const draft2025=(CTX.draftHistory?.drafts?.['2025']?.all_picks||[]).slice(0,30)
@@ -1490,6 +1438,9 @@ DYNASTY PHILOSOPHY:
 
 GWTTKB TRADE FORMULA (always apply, always show the math):
 Top 10: ×1.60 | 8000-8999: ×1.45 | 6000-7999: ×1.30 | 4000-5999: ×1.10 | 2000-3999: ×1.02 | <2000: ×1.0
+
+CONSENSUS TOP 250 — CURRENT DYNASTY VALUES (use these EXACT values when discussing any player):
+${top250}
 
 WHAT YOU KNOW — DATA SOURCES:
 
@@ -1591,118 +1542,17 @@ ${Object.entries(CTX.teamContext||{}).slice(0,32).map(([team,d])=>{
   return team+': '+hc+' | '+roster;
 }).filter(Boolean).join('\n')}
 
-NFL CONTRACTS (per OverTheCap via nflverse — cite this source):
-${(CTX.myRoster||[]).map(p=>{const c=CTX.nflContractData?.[p.name];return c?p.name+'($'+c.apy+'M/yr,'+c.years_remaining+'yrs,'+c.status+')':null;}).filter(Boolean).join(' | ')||'Loading...'}
-
-EXPIRING CONTRACTS LEAGUE-WIDE (dynasty sell signals):
-${Object.values(CTX.nflContractData||{}).filter((c,i,a)=>i===a.findIndex(x=>x.name===c.name)&&c.status==='expiring'&&['QB','RB','WR','TE'].includes(c.pos)).sort((a,b)=>b.apy-a.apy).slice(0,12).map(c=>c.name+'('+c.pos+','+c.team+',$'+c.apy+'M)').join(', ')||''}
-
 FORMAT: ${CTX.isSF?'SUPERFLEX PPR — QBs 30-40% premium. Elite QBs are top 5 assets. Never roster zero at QB.':'1QB PPR — RB scarcity drives top values. Elite WRs dominant.'}
 LEAGUE: ${CTX.genericMode||!CTX.username?'GENERIC MODE — no Sleeper league connected. The user is asking general questions. Do not reference any specific roster, manager, or league.':`${CTX.league?.name||'Dynasty League'} | ${CTX.allTeams?.length||0} teams | Season ${CTX.league?.season||2026}`}
 
 ⚠️ ROSTER + LEAGUE CONTEXT IS LOADED ON DEMAND:
-The user's roster, other managers' rosters, recent trades, and league-wide standings are ONLY injected when you need them. If the user mentions trades, asks about their team, or names another manager, that data WILL be injected below. If the user asks a generic player or strategy question, that data won't be loaded — and you should not pretend you have it. Just answer based on the player data and analytics that ARE injected.
+The user's roster, other managers' rosters, recent trades, market intelligence, league transactions, and league-wide standings are ONLY injected when you need them. If the user mentions trades, asks about their team, or names another manager, that data WILL be injected below. If the user asks a generic player or strategy question, that data won't be loaded — and you should not pretend you have it. Just answer based on the player data and analytics that ARE injected.
 
 ${CTX.genericMode||!CTX.username?'⚠️ GENERIC MODE: This user has NOT connected their Sleeper account. You can answer player questions, dynasty strategy, draft advice, and trade frameworks. You cannot reference their roster, their league, or other specific managers because that data does not exist. If they ask about "their team" or "their league," tell them to click "Connect Sleeper" at the top to plug in their league for personalized analysis.':'If you need roster/league data and it\'s not present, ask the user "Want me to pull your roster / [manager]\'s roster / recent league trades?" — but do not invent the data.'}
 
-
-
-DYNASTY MARKET INTELLIGENCE (aggregated from ${CTX.marketIntel?.leagues_sampled||0} Sleeper leagues, ${CTX.marketIntel?.trades_analyzed||0} trades):
-MOST TRADED (high buy/sell activity = market is moving on these):
-${(CTX.marketIntel?.most_traded||[]).slice(0,15).map(p=>p.name+'('+p.pos+','+p.trades+'trades)').join(', ')||'Loading'}
-
-BUY SIGNALS (getting added across leagues right now):
-${(CTX.marketIntel?.buy_signals||[]).slice(0,10).map(p=>p.name+'('+p.pos+',+'+p.adds+'adds/-'+p.drops+'drops)').join(', ')||'Loading'}
-
-SELL SIGNALS (getting dropped across leagues right now):
-${(CTX.marketIntel?.sell_signals||[]).slice(0,10).map(p=>p.name+'('+p.pos+',-'+p.drops+'drops/+'+p.adds+'adds)').join(', ')||'Loading'}
-
-TRADE CONTEXT (what players are being traded for across Sleeper):
-${(CTX.marketIntel?.trade_context||[]).slice(0,15).map(p=>p.name+' traded for: '+Object.entries(p.tradedFor).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k,v])=>k+'(x'+v+')').join(',')).join(' | ')||'Loading'}
-
-LEAGUE TRANSACTIONS (recent waiver adds/drops in ${CTX.league?.name||'this league'}):
-${(CTX.recentWaiverAdds||[]).slice(0,10).map(tx=>{
-  const adds=tx.adds.map(p=>p.name+'('+p.pos+') added by '+p.owner).join(', ');
-  const drops=tx.drops.map(p=>p.name+'('+p.pos+') dropped').join(', ');
-  return 'WK'+tx.week+': '+(adds||'')+(drops?' | DROPPED: '+drops:'');
-}).filter(Boolean).join(' || ')||'No recent transactions'}
-
-LIVE SLEEPER MARKET (48hrs — league-wide across all Sleeper):
+LIVE SLEEPER MARKET (48hrs — universal trending signal across all dynasty leagues):
 ADDS: ${(CTX.trendingAdds||[]).slice(0,12).map(p=>p.name+'('+p.pos+',+'+p.adds+')').join(', ')||'Loading'}
 DROPS: ${(CTX.trendingDrops||[]).slice(0,8).map(p=>p.name+'('+p.pos+',-'+p.drops+')').join(', ')||''}
-
-2026 ROOKIE DRAFT — COMPLETE PICK OWNERSHIP MAP:
-${(()=>{
-  // Build complete pick grid from ALL roster pick assets across ALL teams
-  // Format: round → pick slot → owner
-  const grid={}; // 'R.S' → {owner, isMe, original_owner}
-  const numTeams=(CTX.allTeams||[]).length||10;
-
-  for(const team of (CTX.allTeams||[])){
-    // From rosterPicks (what's literally on their Sleeper roster)
-    for(const pk of (team.rosterPicks||[])){
-      if(!pk.season||pk.season<2026)continue;
-      const parts=(pk.id||'').split('_');
-      // Sleeper pick ID format: YYYY_ROUND_SLOT_origRosterId_curRosterId
-      const round=pk.round||parseInt(parts[1]);
-      const slot=parseInt(parts[2])||null;
-      if(!round)continue;
-      const key=pk.season+'.'+(round<10?'0':'')+round+'.'+(slot?String(slot).padStart(2,'0'):'??');
-      grid[key]={owner:team.username,isMe:team.isMe,round,slot,season:pk.season,
-        label:pk.label,original:(pk.id||'').includes(team.roster_id?.toString?.())?'own':'traded'};
-    }
-  }
-
-  if(!Object.keys(grid).length) return 'Pick grid not loaded — roster pick data unavailable';
-
-  // Show by year and round
-  const years=[2026,2027,2028];
-  const rounds=[1,2,3,4];
-  let out='';
-
-  for(const yr of years){
-    const yrPicks=Object.entries(grid).filter(([k])=>k.startsWith(yr+'.'));
-    if(!yrPicks.length)continue;
-    out+=`\n${yr} PICKS:\n`;
-    for(const rd of rounds){
-      const rdPicks=yrPicks.filter(([k])=>k.includes('.'+String(rd).padStart(2,'0')+'.')).sort((a,b)=>{
-        const sa=parseInt(a[0].split('.')[2])||99;
-        const sb=parseInt(b[0].split('.')[2])||99;
-        return sa-sb;
-      });
-      if(!rdPicks.length)continue;
-      out+=`  R${rd}: `+rdPicks.map(([k,v])=>{
-        const slot=k.split('.')[2];
-        return `${yr}.${rd}.${slot}→${v.owner}${v.isMe?'[YOU]':''}`;
-      }).join(' | ')+' \n';
-    }
-  }
-
-  // Draft order from R1 2026 picks
-  const r1_2026=Object.entries(grid)
-    .filter(([k])=>k.startsWith('2026.01.'))
-    .sort((a,b)=>(a[1].slot||99)-(b[1].slot||99));
-
-  if(r1_2026.length){
-    out+='\nDRAFT ORDER AT MY PICK:\n';
-    const myIdx=r1_2026.findIndex(([,v])=>v.isMe);
-    if(myIdx>=0){
-      out+=`My position: ${myIdx+1} of ${r1_2026.length}\n`;
-      out+='Before me: '+r1_2026.slice(0,myIdx).map(([,v])=>v.owner).join(' → ')+'\n';
-      out+='After me: '+r1_2026.slice(myIdx+1).map(([,v])=>v.owner).join(' → ');
-    }
-  }
-
-  // If draft is live, show picks made
-  const rd=CTX.leagueRookieDraft;
-  if(rd){
-    out+=`\n\nDRAFT STATUS: ${rd.status}`;
-    const made=(rd.picks||[]).filter(p=>p.player_name);
-    if(made.length) out+='\nPICKS MADE: '+made.map(p=>`${p.slot} ${p.player_name}(${p.pos})→${p.owner}`).join(', ');
-  }
-
-  return out||'No pick data available';
-})()}
 
 2026 ROOKIE CONSENSUS VALUES (cross-reference with ADP to know who will be gone):
 ${(()=>{
@@ -1804,7 +1654,7 @@ Top 10 players: x1.60 | 8000-8999: x1.45 | 6000-7999: x1.30 | 4000-5999: x1.10 |
 ⚠️ TRADE TARGET SUGGESTIONS — STRICT VERIFICATION REQUIRED:
 When suggesting specific players as trade targets, you MUST:
 
-1. Locate the player's name in the CONSENSUS TOP 150 list above (the format is "rank.Name(POS,VALUE)").
+1. Locate the player's name in the CONSENSUS TOP 250 list above (the format is "rank.Name(POS,VALUE)").
 2. Copy the exact value from that list. NEVER write a value you didn't read directly from the list.
 3. If you cannot find the player in the list, DO NOT suggest them. Pick someone who IS in the list.
 
@@ -2230,6 +2080,14 @@ function buildTradeContext(mentionedManagers){
     // Your picks
     const myPicks=(CTX.myPicks||[]).map(p=>p.label||`${p.season} R${p.round}`).join(', ');
     if(myPicks)parts.push('PICKS: '+myPicks);
+    
+    // Your roster's NFL contract context (relevant for trade/sell decisions)
+    const myRosterContracts=myRoster.map(p=>{
+      const c=CTX.nflContractData?.[p.name]||CTX.nflContractData?.[p.name?.toLowerCase()];
+      if(!c)return null;
+      return`${p.name}(${c.team},$${c.apy}M/yr,${c.years_remaining}yrs_left,${c.status})`;
+    }).filter(Boolean).join(' | ');
+    if(myRosterContracts)parts.push('YOUR ROSTER CONTRACTS: '+myRosterContracts);
   }
   
   // Mentioned counterparty rosters
@@ -2245,6 +2103,9 @@ function buildTradeContext(mentionedManagers){
     // Cross-league for this manager
     const cross=CTX.crossLeague?.[un];
     if(cross?.rosters?.length){
+      const ageMs=cross.cached_at?Date.now()-cross.cached_at:0;
+      const ageMin=Math.round(ageMs/60000);
+      console.log(`Cross-league cache HIT for ${un} (age ${ageMin}m)`);
       parts.push(`\n@${un} CROSS-LEAGUE INTEL:`);
       for(const r of cross.rosters.slice(0,3)){
         const recentTrades=(r.trades||[]).slice(0,5).map(t=>{
@@ -2289,6 +2150,75 @@ function buildTradeContext(mentionedManagers){
       return`${name}=${v}`;
     }).join(' | '));
   }
+  
+  // Dynasty market intelligence (aggregated cross-Sleeper signals — only relevant for trade/value questions)
+  if(CTX.marketIntel){
+    parts.push('\n========== DYNASTY MARKET INTELLIGENCE ==========');
+    parts.push(`(aggregated from ${CTX.marketIntel.leagues_sampled||0} Sleeper leagues, ${CTX.marketIntel.trades_analyzed||0} trades)`);
+    const mostTraded=(CTX.marketIntel.most_traded||[]).slice(0,15).map(p=>`${p.name}(${p.pos},${p.trades}trades)`).join(', ');
+    const buys=(CTX.marketIntel.buy_signals||[]).slice(0,10).map(p=>`${p.name}(${p.pos},+${p.adds}adds/-${p.drops}drops)`).join(', ');
+    const sells=(CTX.marketIntel.sell_signals||[]).slice(0,10).map(p=>`${p.name}(${p.pos},-${p.drops}drops/+${p.adds}adds)`).join(', ');
+    const tradeCtx=(CTX.marketIntel.trade_context||[]).slice(0,15).map(p=>`${p.name} traded for: ${Object.entries(p.tradedFor||{}).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k,v])=>k+'(x'+v+')').join(',')}`).join(' | ');
+    if(mostTraded)parts.push('MOST TRADED: '+mostTraded);
+    if(buys)parts.push('BUY SIGNALS: '+buys);
+    if(sells)parts.push('SELL SIGNALS: '+sells);
+    if(tradeCtx)parts.push('TRADE CONTEXT: '+tradeCtx);
+  }
+  
+  // League-wide expiring contracts (dynasty sell signals)
+  const expiring=Object.values(CTX.nflContractData||{})
+    .filter((c,i,a)=>i===a.findIndex(x=>x.name===c.name))
+    .filter(c=>c.status==='expiring'&&['QB','RB','WR','TE'].includes(c.pos))
+    .sort((a,b)=>b.apy-a.apy)
+    .slice(0,12)
+    .map(c=>`${c.name}(${c.pos},${c.team},$${c.apy}M)`)
+    .join(', ');
+  if(expiring)parts.push('\nEXPIRING CONTRACTS LEAGUE-WIDE (dynasty sell signals): '+expiring);
+  
+  // Recent waiver/transactions in this league
+  const waiver=(CTX.recentWaiverAdds||[]).slice(0,10).map(tx=>{
+    const adds=(tx.adds||[]).map(p=>`${p.name}(${p.pos}) added by ${p.owner}`).join(', ');
+    const drops=(tx.drops||[]).map(p=>`${p.name}(${p.pos}) dropped`).join(', ');
+    return`WK${tx.week}: ${adds||''}${drops?' | DROPPED: '+drops:''}`;
+  }).filter(Boolean).join(' || ');
+  if(waiver)parts.push(`\nLEAGUE TRANSACTIONS (${CTX.league?.name||'this league'}): `+waiver);
+  
+  // 2026 rookie draft pick ownership map (only relevant for trade/draft questions)
+  const pickGrid=(()=>{
+    const grid={};
+    for(const team of (CTX.allTeams||[])){
+      for(const pk of (team.rosterPicks||[])){
+        if(!pk.season||pk.season<2026)continue;
+        const ptParts=(pk.id||'').split('_');
+        const round=pk.round||parseInt(ptParts[1]);
+        const slot=parseInt(ptParts[2])||null;
+        if(!round)continue;
+        const key=pk.season+'.'+(round<10?'0':'')+round+'.'+(slot?String(slot).padStart(2,'0'):'??');
+        grid[key]={owner:team.username,isMe:team.isMe,round,slot,season:pk.season};
+      }
+    }
+    if(!Object.keys(grid).length)return '';
+    let out='';
+    for(const yr of [2026,2027,2028]){
+      const yrPicks=Object.entries(grid).filter(([k])=>k.startsWith(yr+'.'));
+      if(!yrPicks.length)continue;
+      out+=`\n${yr} PICKS:\n`;
+      for(const rd of [1,2,3,4]){
+        const rdPicks=yrPicks.filter(([k])=>k.includes('.'+String(rd).padStart(2,'0')+'.'))
+          .sort((a,b)=>(a[1].slot||99)-(b[1].slot||99));
+        if(!rdPicks.length)continue;
+        out+=`  R${rd}: `+rdPicks.map(([k,v])=>`${yr}.${rd}.${k.split('.')[2]}→${v.owner}${v.isMe?'[YOU]':''}`).join(' | ')+'\n';
+      }
+    }
+    const rd=CTX.leagueRookieDraft;
+    if(rd){
+      out+=`\nDRAFT STATUS: ${rd.status}`;
+      const made=(rd.picks||[]).filter(p=>p.player_name);
+      if(made.length)out+='\nPICKS MADE: '+made.map(p=>`${p.slot} ${p.player_name}(${p.pos})→${p.owner}`).join(', ');
+    }
+    return out;
+  })();
+  if(pickGrid)parts.push('\n2026 ROOKIE DRAFT — PICK OWNERSHIP MAP:'+pickGrid);
   
   return parts.length?parts.join('\n')+'\n':'';
 }
@@ -2663,11 +2593,15 @@ async function sendMessage(text){
       (tradeContext?'\n\n========== ROSTER + TRADE CONTEXT (loaded for this question) ==========\n'+tradeContext:'')+
       (leagueContext?'\n\n========== LEAGUE-WIDE CONTEXT (loaded for this question) ==========\n'+leagueContext:'');
 
-    const systemPrompt=buildSystemPrompt()+fullContext;
+    const tier1Prompt=buildSystemPrompt();
+    const dynamicContext=fullContext;  // tier 2/3/4 (varies per request, NOT cached)
     
     // Token estimate (rough: 1 token ≈ 4 chars)
-    const estTokens=Math.round(systemPrompt.length/4);
-    console.log('🎯 Loaded:',tierLog.join(' + '),'| ~'+estTokens.toLocaleString()+' tokens');
+    const tier1Tokens=Math.round(tier1Prompt.length/4);
+    const dynamicTokens=Math.round(dynamicContext.length/4);
+    const estTokens=tier1Tokens+dynamicTokens;
+    console.log('🎯 Loaded:',tierLog.join(' + '),'| ~'+estTokens.toLocaleString()+' tokens (T1 cached: '+tier1Tokens.toLocaleString()+', dynamic: '+dynamicTokens.toLocaleString()+')');
+    
     const response=await fetch('/api/chat',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -2675,7 +2609,16 @@ async function sendMessage(text){
         model:'claude-sonnet-4-5',
         max_tokens:1024,
         stream:true,
-        system:systemPrompt,
+        // System prompt as array enables prompt caching on the Tier 1 portion
+        // Cache hits = 90% off input cost on the cached portion
+        system:[
+          {
+            type:'text',
+            text:tier1Prompt,
+            cache_control:{type:'ephemeral'}  // 5-min TTL cache
+          },
+          ...(dynamicContext?[{type:'text',text:dynamicContext}]:[])
+        ],
         messages:MESSAGES.map(m=>({role:m.role,content:m.content}))
       })
     });
