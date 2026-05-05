@@ -205,7 +205,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Barlow',sans-serif;displ
   </div>
 </div>
 
-<!-- LIMIT MODAL -->
+<!-- LIMIT MODAL — initial (3 free questions used) -->
 <div class="modal-overlay" id="limitModal" style="display:none">
   <div class="modal">
     <div class="modal-icon" style="font-size:32px;text-align:center;margin-bottom:12px;color:var(--teal);font-family:'Bebas Neue',sans-serif;letter-spacing:3px;">GWTTKB</div>
@@ -219,6 +219,21 @@ body{background:var(--bg);color:var(--txt);font-family:'Barlow',sans-serif;displ
     <input class="modal-email" id="modalEmail" type="email" placeholder="your@email.com">
     <button class="modal-btn" onclick="submitEmail()">GET 5 MORE QUESTIONS →</button>
     <button class="modal-skip" onclick="closeModal()">No thanks, I'm good with 3</button>
+  </div>
+</div>
+
+<!-- LIMIT MODAL — final cap (8 used after email) -->
+<div class="modal-overlay" id="finalLimitModal" style="display:none">
+  <div class="modal">
+    <div class="modal-icon" style="font-size:32px;text-align:center;margin-bottom:12px;color:var(--gold);font-family:'Bebas Neue',sans-serif;letter-spacing:3px;">GWTTKB</div>
+    <div class="modal-title">DAILY LIMIT REACHED</div>
+    <div class="modal-sub">You've hit your 8 questions for today. Reset at midnight. Want unlimited access? Paid tiers launching soon — get early access pricing when we open the gates.</div>
+    <div class="modal-perks">
+      <div class="perk">Standard tier: 12 questions/day</div>
+      <div class="perk">Premium tier: 30 questions/day</div>
+      <div class="perk">First-on-launch pricing for beta users</div>
+    </div>
+    <button class="modal-btn" onclick="closeFinalModal()">SOUNDS GOOD — SEE YOU TOMORROW</button>
   </div>
 </div>
 
@@ -2802,18 +2817,46 @@ function resetChat(){
 
 // ── LIMIT MODAL ──
 function showLimitModal(){
-  document.getElementById('limitModal').style.display='flex';
+  const hasEmail=!!localStorage.getItem('coach_email');
+  if(hasEmail){
+    // User already gave email and used all 8 questions — show final modal
+    document.getElementById('finalLimitModal').style.display='flex';
+  }else{
+    // First time hitting limit — show email capture modal
+    document.getElementById('limitModal').style.display='flex';
+    setTimeout(()=>{
+      const input=document.getElementById('modalEmail');
+      if(input)input.focus();
+    },100);
+  }
 }
 function closeModal(){
   document.getElementById('limitModal').style.display='none';
 }
-function submitEmail(){
+function closeFinalModal(){
+  document.getElementById('finalLimitModal').style.display='none';
+}
+async function submitEmail(){
   const email=document.getElementById('modalEmail').value.trim();
   if(!email||!email.includes('@')){alert('Enter a valid email');return;}
-  // Store email + give bonus questions
+  const btn=document.querySelector('.modal-btn');
+  if(btn){btn.disabled=true;btn.textContent='SAVING...';}
+  
+  // Send to backend (non-blocking — even if it fails, user still gets bonus questions)
+  try{
+    const r=await fetch('/api/email-signup',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email,source:'beta-modal'})
+    });
+    if(!r.ok){console.warn('Email signup failed:',r.status);}
+  }catch(e){console.warn('Email signup error:',e);}
+  
+  // Grant the bonus regardless of backend success
   localStorage.setItem('coach_email',email);
   localStorage.setItem('coach_bonus','5');
   closeModal();
+  if(btn){btn.disabled=false;btn.textContent='GET 5 MORE QUESTIONS →';}
   updateQCounter();
   addMessage('coach','Welcome to the list. You\'ve got 5 more questions loaded. Let\'s get back to work — what do you want to tackle?');
 }
