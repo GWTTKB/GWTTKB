@@ -52,9 +52,9 @@ body{background:var(--bg);color:var(--txt);font-family:'Barlow',sans-serif;overf
 .hero::after{content:'';position:absolute;top:-20%;left:-10%;width:80vw;height:80vh;background:radial-gradient(ellipse,rgba(0,212,255,0.06) 0%,transparent 65%);pointer-events:none;}
 .hero-eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:4px;color:var(--teal);text-transform:uppercase;margin-bottom:20px;opacity:0;animation:fadeUp 0.6s 0.2s ease both;display:flex;align-items:center;gap:12px;}
 .hero-eyebrow::before{content:'';width:40px;height:1px;background:var(--teal);}
-.hero-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(64px,10vw,140px);line-height:0.92;letter-spacing:2px;color:var(--txt);max-width:900px;opacity:0;animation:fadeUp 0.7s 0.35s ease both;}
+.hero-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,8vw,108px);line-height:0.94;letter-spacing:2px;color:var(--txt);max-width:1100px;opacity:0;animation:fadeUp 0.7s 0.35s ease both;}
 .hero-title em{font-style:normal;color:var(--teal);}
-.hero-title .outline{-webkit-text-stroke:1px rgba(0,212,255,0.35);color:transparent;}
+.hero-title .outline{-webkit-text-stroke:1px rgba(0,212,255,0.55);color:transparent;}
 .hero-sub{margin-top:28px;font-size:clamp(15px,2vw,18px);font-weight:300;color:var(--txt2);max-width:620px;line-height:1.65;opacity:0;animation:fadeUp 0.7s 0.5s ease both;}
 .format-pills{display:flex;align-items:center;gap:10px;margin-top:16px;opacity:0;animation:fadeUp 0.7s 0.55s ease both;}
 .format-pill{padding:4px 14px;border-radius:100px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;}
@@ -143,6 +143,9 @@ body{background:var(--bg);color:var(--txt);font-family:'Barlow',sans-serif;overf
 .tool-card:hover::before{opacity:1;}
 .tool-card.featured{grid-column:span 2;background:linear-gradient(135deg,var(--s2) 0%,var(--s3) 100%);border-color:var(--bdr2);}
 .tool-card.featured::before{opacity:1;background:linear-gradient(90deg,var(--teal),var(--purple));}
+.tool-card.disabled{opacity:0.55;cursor:default;pointer-events:none;}
+.tool-card.disabled:hover{transform:none;background:var(--s1);border-color:var(--bdr);}
+.tool-card.disabled:hover::before{opacity:0;}
 .tool-icon{width:40px;height:40px;border-radius:10px;background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;}
 .tool-card.featured .tool-icon{width:52px;height:52px;font-size:24px;}
 .tool-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-family:var(--mono);font-size:9px;letter-spacing:1.5px;font-weight:600;align-self:flex-start;}
@@ -209,7 +212,7 @@ body{background:var(--bg);color:var(--txt);font-family:'Barlow',sans-serif;overf
   .tool-card.featured{grid-column:span 1;}
 }
 @media(max-width:600px){
-  .hero-title{font-size:52px;}
+  .hero-title{font-size:42px;}
   .hero-stats{gap:28px;}
   .footer-top{grid-template-columns:1fr;}
 }
@@ -250,38 +253,43 @@ body{background:var(--bg);color:var(--txt);font-family:'Barlow',sans-serif;overf
 <section class="hero">
   <div class="hero-eyebrow">Guys Who Think They Know Ball · Fantasy Intelligence Platform</div>
   <h1 class="hero-title">
-    WE BUILD<br>
-    <em>FANTASY</em><br>
-    <span class="outline">CHAMPIONS</span>
+    <em>DYNASTY.</em> <em>REDRAFT.</em><br>
+    <span class="outline">ALL OF IT.</span><br>
+    ONE COACH KNOWS<br>
+    THE WHOLE FIELD.
   </h1>
   <p class="hero-sub">
-    The most advanced analytics platform in fantasy football. Real market data, millions of data points, AI coaching, and 6 years of value history — most of it completely free.
+    Six years of daily player values. Every NFL stat. Every trade in your league. Every move your opponents have ever made — across every league they're in.
+    <br><br>
+    <strong style="color:var(--txt);font-weight:500;">The fantasy intelligence platform that changes everything.</strong>
+    <br><br>
+    All the data is free. Subscribers get The Coach: the AI that synthesizes all of it, instantly.
   </p>
   <div class="format-pills">
     <span class="format-pill live">⚡ Dynasty — Live Now</span>
     <span class="format-sep">+</span>
-    <span class="format-pill soon">🏈 Redraft — Coming Summer 2026</span>
+    <span class="format-pill soon">🏈 Redraft — Coming Soon</span>
   </div>
   <div class="hero-actions">
     <a href="/coach.html" class="btn-primary">⚡ ASK THE COACH</a>
-    <a href="/league.html" class="btn-secondary">ANALYZE MY LEAGUE →</a>
+    <a href="#tools-section" class="btn-secondary">EXPLORE THE PLATFORM →</a>
   </div>
   <div class="hero-stats">
     <div>
-      <div class="hero-stat-v">100K+</div>
-      <div class="hero-stat-l">Leagues Analyzed</div>
+      <div class="hero-stat-v">6 YRS</div>
+      <div class="hero-stat-l">Daily Player Values</div>
     </div>
     <div>
-      <div class="hero-stat-v">6.1 YRS</div>
-      <div class="hero-stat-l">Historical Value Data</div>
+      <div class="hero-stat-v">10M+</div>
+      <div class="hero-stat-l">Stat × Value Combinations</div>
     </div>
     <div>
-      <div class="hero-stat-v">Millions</div>
-      <div class="hero-stat-l">Weekly Data Points</div>
+      <div class="hero-stat-v">THOUSANDS</div>
+      <div class="hero-stat-l">Cross-League Trades Tracked</div>
     </div>
     <div>
-      <div class="hero-stat-v">FREE</div>
-      <div class="hero-stat-l">All Core Tools</div>
+      <div class="hero-stat-v">$0</div>
+      <div class="hero-stat-l">All Data, Forever</div>
     </div>
   </div>
 </section>
@@ -433,16 +441,37 @@ body{background:var(--bg);color:var(--txt);font-family:'Barlow',sans-serif;overf
 </section>
 
 <!-- TOOLS -->
-<section class="tools-section">
+<section class="tools-section" id="tools-section">
   <div class="section-eyebrow">The Platform</div>
-  <h2 class="section-title">EVERY TOOL YOU NEED.<br>ALL FREE.</h2>
-  <p class="section-sub" style="max-width:500px;margin-bottom:48px;">Built for serious managers who want an edge. No paywalls on data. No tricks.</p>
+  <h2 class="section-title">EVERYTHING THE COACH KNOWS.<br>ALL OPEN TO YOU.</h2>
+  <p class="section-sub" style="max-width:640px;margin-bottom:48px;">The Coach synthesizes every tool below. You can use them individually too — free, forever. The data layer is yours. The AI brain is the upgrade.</p>
   <div class="tools-grid">
+    <a href="/coach.html" class="tool-card featured">
+      <div class="tool-icon">🤖</div>
+      <span class="tool-badge badge-coach">THE COACH</span>
+      <div class="tool-name">The Coach — Dynasty AI</div>
+      <div class="tool-desc">The first fantasy AI that synthesizes everything — your roster, your opponents, every cross-league move they've ever made, six years of value data, every NFL stat. All connected. Instantly. Free during beta.</div>
+      <div class="tool-arrow">ASK THE COACH →</div>
+    </a>
+    <a href="/scouting.html" class="tool-card">
+      <div class="tool-icon">🕵️</div>
+      <span class="tool-badge badge-free">FREE</span>
+      <div class="tool-name">GM Scouting Report</div>
+      <div class="tool-desc">Know your league mates better than they know themselves. Enter any Sleeper username — get their full intelligence profile, every league they're in, every trade, every draft, every tendency.</div>
+      <div class="tool-arrow">SCOUT A MANAGER →</div>
+    </a>
+    <a href="/league.html" class="tool-card">
+      <div class="tool-icon">🔭</div>
+      <span class="tool-badge badge-free">FREE</span>
+      <div class="tool-name">League Analyzer</div>
+      <div class="tool-desc">Power rankings, competitive tiers, positional grades, trajectory forecasts, and head-to-head comparison for every team in your league.</div>
+      <div class="tool-arrow">ANALYZE LEAGUE →</div>
+    </a>
     <a href="/rankings.html" class="tool-card">
       <div class="tool-icon">🏆</div>
       <span class="tool-badge badge-free">FREE</span>
       <div class="tool-name">Dynasty Rankings</div>
-      <div class="tool-desc">Real startup ADP from thousands of actual Sleeper drafts. SF PPR and 1QB PPR. Updated every morning.</div>
+      <div class="tool-desc">Real consensus values built from hundreds of Sleeper league trades and startup drafts. SF PPR and 1QB PPR. Updated daily.</div>
       <div class="tool-arrow">VIEW RANKINGS →</div>
     </a>
     <a href="/trade.html" class="tool-card">
@@ -451,27 +480,6 @@ body{background:var(--bg);color:var(--txt);font-family:'Barlow',sans-serif;overf
       <div class="tool-name">Trade Calculator</div>
       <div class="tool-desc">Real-time dynasty values with picks included. See exactly what each side is getting. Package deals handled correctly.</div>
       <div class="tool-arrow">CALCULATE TRADE →</div>
-    </a>
-    <a href="/league.html" class="tool-card">
-      <div class="tool-icon">🔭</div>
-      <span class="tool-badge badge-free">FREE</span>
-      <div class="tool-name">League Analyzer</div>
-      <div class="tool-desc">Power rankings, competitive tiers, positional grades, trajectory forecasts, and H2H comparison for every team.</div>
-      <div class="tool-arrow">ANALYZE LEAGUE →</div>
-    </a>
-    <a href="/scouting.html" class="tool-card">
-      <div class="tool-icon">🕵️</div>
-      <span class="tool-badge badge-free">FREE</span>
-      <div class="tool-name">GM Scouting Report</div>
-      <div class="tool-desc">Enter any Sleeper username. Get a full intelligence profile — all their leagues, trade history, waiver patterns, and negotiating tendencies.</div>
-      <div class="tool-arrow">SCOUT A MANAGER →</div>
-    </a>
-    <a href="/coach.html" class="tool-card featured">
-      <div class="tool-icon">🤖</div>
-      <span class="tool-badge badge-coach">THE COACH</span>
-      <div class="tool-name">The Coach — Dynasty AI</div>
-      <div class="tool-desc">The most advanced fantasy football AI ever built. Knows your roster, your opponents, your league's full history, and millions of statistical data points. Free tier gets 3 questions/day — upgrade for 15 or unlimited.</div>
-      <div class="tool-arrow">ASK THE COACH →</div>
     </a>
     <a href="/grades.html" class="tool-card">
       <div class="tool-icon">📋</div>
@@ -484,15 +492,8 @@ body{background:var(--bg);color:var(--txt);font-family:'Barlow',sans-serif;overf
       <div class="tool-icon">🎓</div>
       <span class="tool-badge badge-free">FREE</span>
       <div class="tool-name">Draft Grades</div>
-      <div class="tool-desc">Grade every manager's startup and rookie draft history. Who consistently finds value and who reaches every single year?</div>
+      <div class="tool-desc">Grade every manager's startup and rookie draft history. Who consistently finds value, who reaches every single year, and who's quietly the best drafter in your league.</div>
       <div class="tool-arrow">VIEW DRAFT GRADES →</div>
-    </a>
-    <a href="/waiver.html" class="tool-card">
-      <div class="tool-icon">💸</div>
-      <span class="tool-badge badge-new">COMING SOON</span>
-      <div class="tool-name">Waiver Intelligence</div>
-      <div class="tool-desc">Historical waiver bid data from 100K+ leagues. Know what managers actually pay in similar situations before you ever submit a bid.</div>
-      <div class="tool-arrow">LEARN MORE →</div>
     </a>
     <a href="/stats.html" class="tool-card">
       <div class="tool-icon">📉</div>
@@ -505,9 +506,16 @@ body{background:var(--bg);color:var(--txt);font-family:'Barlow',sans-serif;overf
       <div class="tool-icon">🏥</div>
       <span class="tool-badge badge-free">FREE</span>
       <div class="tool-name">Injury History</div>
-      <div class="tool-desc">Complete injury history for every player. Frequency, severity, recovery time, and the dynasty value impact of every significant injury ever recorded.</div>
+      <div class="tool-desc">Complete injury history for every player. Frequency, severity, recovery time, and the dynasty value impact of every significant injury.</div>
       <div class="tool-arrow">VIEW INJURIES →</div>
     </a>
+    <div class="tool-card disabled">
+      <div class="tool-icon">💸</div>
+      <span class="tool-badge badge-new">COMING SOON</span>
+      <div class="tool-name">Waiver Intelligence</div>
+      <div class="tool-desc">Historical waiver bid data from across Sleeper. Know what managers actually pay in similar situations before you ever submit a bid.</div>
+      <div class="tool-arrow" style="opacity:0.5">IN DEVELOPMENT</div>
+    </div>
   </div>
 </section>
 
@@ -593,7 +601,6 @@ body{background:var(--bg);color:var(--txt);font-family:'Barlow',sans-serif;overf
         <li><a href="/draft.html">Draft Grades</a></li>
         <li><a href="/stats.html">Stats Database</a></li>
         <li><a href="/injuries.html">Injury History</a></li>
-        <li><a href="/waiver.html">Waiver Intel</a></li>
       </ul>
     </div>
     <div>
