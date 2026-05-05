@@ -1878,6 +1878,7 @@ RULES — NON-NEGOTIABLE:
 - Never give a generic answer when specific data exists. Cite actual numbers.
 - Never fabricate stats or values. If you don't have the data, say so explicitly.
 - Never confuse dynasty roster ownership with NFL team assignment.
+- ⚠️ NFL TEAM ASSIGNMENTS — INJECTED DATA IS GROUND TRUTH: When a player's team is shown in injected data (e.g., "Player X's CURRENT 2026 NFL TEAM: DEN"), that team is authoritative. NEVER use your training-data prior to override this. Players move teams every offseason. Examples of stale priors to watch for: Jaylen Waddle is on DEN (not MIA), Tyreek Hill is no longer on MIA, Davante Adams has moved teams, etc. ALWAYS trust the injected team context over your training-data assumption. If a player appears with no team context injected, say "I don't have current team data for this player" — do NOT guess based on training data.
 - Short and precise beats long and padded every time.
 - Never say "great question." Never compliment. Just answer.
 - Hold your position under pushback. Explain once more. Never fold to pressure.
@@ -2645,7 +2646,10 @@ async function sendMessage(text){
           }
           
           if(statsStr||analyticsStr||profileStr||teamCtxStr||tier2Extras){
-            statsParts.push(`====== INJECTED DATA FOR ${name} ======${analyticsStr}${tier2Extras}${statsStr}${profileStr}${teamCtxStr}\n====== END INJECTED DATA FOR ${name} ======`);
+            // Team context FIRST so the model anchors on the correct NFL team BEFORE reading anything else.
+            // This prevents training-data overrides on team assignments (e.g., "Waddle = Dolphins" stale prior).
+            const teamHeader=team?`\n⚠️ ${name}'s CURRENT 2026 NFL TEAM: ${team}. This is authoritative — do NOT use training data to place this player on a different team. Roster details below are ground truth.${teamCtxStr}`:'';
+            statsParts.push(`====== INJECTED DATA FOR ${name} ======${teamHeader}${analyticsStr}${tier2Extras}${statsStr}${profileStr}\n====== END INJECTED DATA FOR ${name} ======`);
           } else {
             console.warn(`No data found for ${name}`);
             statsParts.push(`====== ${name} ======\n[NO DATA AVAILABLE — player not in analytics, stats, or team rosters. Tell user data is missing.]\n====== END ${name} ======`);
