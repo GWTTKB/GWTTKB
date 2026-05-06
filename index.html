@@ -57,9 +57,12 @@ body{background:var(--bg);color:var(--txt);font-family:'Barlow',sans-serif;overf
 .hero-title .outline{-webkit-text-stroke:1px rgba(0,212,255,0.55);color:transparent;}
 .hero-sub{margin-top:28px;font-size:clamp(15px,2vw,18px);font-weight:300;color:var(--txt2);max-width:620px;line-height:1.65;opacity:0;animation:fadeUp 0.7s 0.5s ease both;}
 .format-pills{display:flex;align-items:center;gap:10px;margin-top:16px;opacity:0;animation:fadeUp 0.7s 0.55s ease both;}
-.format-pill{padding:4px 14px;border-radius:100px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;}
+.format-pill{padding:5px 14px;border-radius:100px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;display:inline-flex;align-items:center;gap:8px;}
+.format-pill::before{content:'';width:6px;height:6px;border-radius:50%;}
 .format-pill.live{background:rgba(0,212,255,0.12);border:1px solid rgba(0,212,255,0.3);color:var(--teal);}
+.format-pill.live::before{background:var(--teal);box-shadow:0 0 8px var(--teal);}
 .format-pill.soon{background:rgba(255,183,0,0.1);border:1px solid rgba(255,183,0,0.25);color:var(--gold);}
+.format-pill.soon::before{background:var(--gold);}
 .format-sep{color:var(--txt3);font-size:11px;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;}
 .hero-actions{margin-top:40px;display:flex;gap:14px;flex-wrap:wrap;align-items:center;opacity:0;animation:fadeUp 0.7s 0.65s ease both;}
 .btn-primary{display:inline-flex;align-items:center;gap:10px;padding:14px 32px;background:var(--teal);color:#000;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:3px;text-decoration:none;border-radius:8px;transition:all 0.15s;}
@@ -96,8 +99,11 @@ body{background:var(--bg);color:var(--txt);font-family:'Barlow',sans-serif;overf
 .data-callout{padding:16px 20px;background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.15);border-left:3px solid var(--teal);border-radius:8px;font-size:13px;color:var(--txt2);line-height:1.6;}
 .data-callout strong{color:var(--teal);}
 .data-cards{display:flex;flex-direction:column;gap:12px;}
-.data-card{background:var(--s1);border:1px solid var(--bdr);border-radius:10px;padding:18px;transition:border-color 0.15s;}
-.data-card:hover{border-color:var(--bdr2);}
+.data-panel{background:var(--s1);border:1px solid var(--bdr);border-radius:10px;padding:18px 20px;transition:border-color 0.15s;}
+.data-panel:hover{border-color:var(--bdr2);}
+.dp-label{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--teal);margin-bottom:12px;}
+.dp-stats{display:flex;flex-wrap:wrap;gap:6px;}
+.dp-stats span{padding:4px 10px;background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.12);border-radius:4px;font-family:var(--mono);font-size:11px;color:var(--txt2);}
 .dc-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
 .dc-title{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--txt);}
 .dc-label{font-family:var(--mono);font-size:9px;color:var(--teal);letter-spacing:1px;}
@@ -113,7 +119,8 @@ body{background:var(--bg);color:var(--txt);font-family:'Barlow',sans-serif;overf
 .coach-chat{background:var(--s2);border:1px solid var(--bdr2);border-radius:16px;padding:24px;position:relative;}
 .coach-chat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--teal),var(--purple));border-radius:16px 16px 0 0;}
 .chat-header{display:flex;align-items:center;gap:10px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--bdr);}
-.chat-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--purple));display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.chat-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--purple));display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#000;}
+.chat-avatar svg{width:18px;height:18px;}
 .chat-title{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--txt);}
 .chat-status{font-size:11px;color:var(--green);display:flex;align-items:center;gap:4px;}
 .chat-status::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s ease infinite;}
@@ -123,6 +130,46 @@ body{background:var(--bg);color:var(--txt);font-family:'Barlow',sans-serif;overf
 .chat-msg.user{background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.15);color:var(--txt2);align-self:flex-end;max-width:88%;border-radius:10px 10px 2px 10px;}
 .chat-msg.ai{background:var(--s3);border:1px solid var(--bdr);color:var(--txt);border-radius:10px 10px 10px 2px;}
 .chat-msg.ai strong{color:var(--teal);}
+
+/* COACH OUTPUT BLOCKS — render to look like real Coach data screenshots */
+.coach-block{background:rgba(0,0,0,0.25);border:1px solid var(--bdr);border-radius:8px;padding:14px;margin-top:8px;font-family:var(--mono);}
+.coach-block.flag{border-color:rgba(255,183,0,0.3);background:rgba(255,183,0,0.04);}
+.cb-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--bdr);}
+.cb-tag{font-size:9px;letter-spacing:2px;color:var(--teal);background:rgba(0,212,255,0.1);padding:3px 8px;border-radius:3px;border:1px solid rgba(0,212,255,0.2);}
+.cb-name{font-size:12px;letter-spacing:1.5px;color:var(--txt);font-weight:600;}
+.cb-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:4px;}
+.cb-stat{flex:1;min-width:100px;padding:10px;background:rgba(0,212,255,0.04);border:1px solid var(--bdr);border-radius:6px;}
+.cs-l{font-size:9px;letter-spacing:1.5px;color:var(--txt3);margin-bottom:4px;}
+.cs-v{font-size:14px;font-weight:600;color:var(--txt);}
+.cs-v.up{color:var(--green);}
+.cs-v.down{color:var(--red);}
+.cb-section{margin-top:12px;}
+.cb-section-label{font-size:9px;letter-spacing:2px;color:var(--txt3);margin-bottom:8px;}
+.cb-line{display:flex;justify-content:space-between;font-size:11px;padding:5px 0;border-bottom:1px solid rgba(0,212,255,0.05);}
+.cb-line:last-child{border-bottom:none;}
+.cb-line span:first-child{color:var(--txt2);}
+.cb-line span:last-child{color:var(--txt);font-weight:500;}
+.cb-line .up{color:var(--green);}
+.cb-line .down{color:var(--red);}
+
+/* SCENARIO BLOCKS */
+.coach-block.scenarios{padding:0;background:transparent;border:none;}
+.scenario{padding:12px 14px;border-radius:6px;margin-bottom:8px;border:1px solid;}
+.scenario:last-child{margin-bottom:0;}
+.scenario.up{background:rgba(0,230,118,0.05);border-color:rgba(0,230,118,0.25);}
+.scenario.base{background:rgba(0,212,255,0.05);border-color:rgba(0,212,255,0.2);}
+.scenario.down{background:rgba(255,61,87,0.05);border-color:rgba(255,61,87,0.2);}
+.sc-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px;}
+.sc-prob{font-family:var(--mono);font-size:14px;font-weight:700;}
+.scenario.up .sc-prob{color:var(--green);}
+.scenario.base .sc-prob{color:var(--teal);}
+.scenario.down .sc-prob{color:var(--red);}
+.sc-label{font-size:9px;letter-spacing:2px;font-weight:700;color:var(--txt2);}
+.sc-comp{font-family:var(--mono);font-size:10px;color:var(--txt3);margin-left:auto;}
+.sc-body{font-family:'Barlow',sans-serif;font-size:12px;line-height:1.55;color:var(--txt2);}
+.sc-body strong{color:var(--txt);}
+
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);display:inline-block;margin-right:6px;}
 .verdict{margin-top:8px;padding-top:8px;border-top:1px solid var(--bdr);font-family:var(--mono);font-size:11px;color:var(--green);}
 .chat-input-row{margin-top:16px;padding-top:16px;border-top:1px solid var(--bdr);display:flex;gap:8px;}
 .chat-input-fake{flex:1;padding:9px 12px;background:var(--s3);border:1px solid var(--bdr);border-radius:7px;font-family:var(--mono);font-size:11px;color:var(--txt3);}
@@ -130,7 +177,8 @@ body{background:var(--bg);color:var(--txt);font-family:'Barlow',sans-serif;overf
 .chat-send:hover{background:var(--teal2);}
 .coach-features{display:flex;flex-direction:column;gap:12px;margin-bottom:36px;}
 .coach-feature{display:flex;gap:14px;align-items:flex-start;padding:14px 16px;background:var(--s2);border:1px solid var(--bdr);border-radius:9px;}
-.cf-icon{width:32px;height:32px;flex-shrink:0;border-radius:8px;background:rgba(0,212,255,0.1);display:flex;align-items:center;justify-content:center;font-size:15px;}
+.cf-icon{width:32px;height:32px;flex-shrink:0;border-radius:8px;background:rgba(0,212,255,0.1);display:flex;align-items:center;justify-content:center;color:var(--teal);}
+.cf-icon svg{width:16px;height:16px;}
 .cf-title{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--txt);margin-bottom:2px;}
 .cf-desc{font-size:12px;color:var(--txt3);line-height:1.5;}
 
@@ -146,8 +194,10 @@ body{background:var(--bg);color:var(--txt);font-family:'Barlow',sans-serif;overf
 .tool-card.disabled{opacity:0.55;cursor:default;pointer-events:none;}
 .tool-card.disabled:hover{transform:none;background:var(--s1);border-color:var(--bdr);}
 .tool-card.disabled:hover::before{opacity:0;}
-.tool-icon{width:40px;height:40px;border-radius:10px;background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;}
-.tool-card.featured .tool-icon{width:52px;height:52px;font-size:24px;}
+.tool-icon{width:40px;height:40px;border-radius:10px;background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.2);display:flex;align-items:center;justify-content:center;color:var(--teal);}
+.tool-icon svg{width:20px;height:20px;}
+.tool-card.featured .tool-icon{width:52px;height:52px;}
+.tool-card.featured .tool-icon svg{width:26px;height:26px;}
 .tool-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-family:var(--mono);font-size:9px;letter-spacing:1.5px;font-weight:600;align-self:flex-start;}
 .badge-free{background:rgba(0,230,118,0.12);color:var(--green);border:1px solid rgba(0,230,118,0.25);}
 .badge-coach{background:rgba(0,212,255,0.12);color:var(--teal);border:1px solid rgba(0,212,255,0.25);}
@@ -196,7 +246,8 @@ body{background:var(--bg);color:var(--txt);font-family:'Barlow',sans-serif;overf
 .footer-logo{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:5px;color:var(--teal);margin-bottom:12px;}
 .footer-tagline{font-size:13px;color:var(--txt3);line-height:1.6;max-width:280px;margin-bottom:20px;}
 .footer-social{display:flex;gap:10px;}
-.footer-social a{width:34px;height:34px;border:1px solid var(--bdr);border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--txt3);text-decoration:none;font-size:14px;transition:all 0.15s;}
+.footer-social a{width:34px;height:34px;border:1px solid var(--bdr);border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--txt3);text-decoration:none;transition:all 0.15s;}
+.footer-social a svg{width:16px;height:16px;}
 .footer-social a:hover{border-color:var(--teal);color:var(--teal);}
 .fcol-title{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--txt3);margin-bottom:16px;}
 .footer-links{list-style:none;display:flex;flex-direction:column;gap:9px;}
@@ -266,12 +317,12 @@ body{background:var(--bg);color:var(--txt);font-family:'Barlow',sans-serif;overf
     All the data is free. Subscribers get The Coach: the AI that synthesizes all of it, instantly.
   </p>
   <div class="format-pills">
-    <span class="format-pill live">⚡ Dynasty — Live Now</span>
+    <span class="format-pill live">Dynasty — Live Now</span>
     <span class="format-sep">+</span>
-    <span class="format-pill soon">🏈 Redraft — Coming Soon</span>
+    <span class="format-pill soon">Redraft — Coming Soon</span>
   </div>
   <div class="hero-actions">
-    <a href="/coach.html" class="btn-primary">⚡ ASK THE COACH</a>
+    <a href="/coach.html" class="btn-primary">ASK THE COACH</a>
     <a href="#tools-section" class="btn-secondary">EXPLORE THE PLATFORM →</a>
   </div>
   <div class="hero-stats">
@@ -313,65 +364,62 @@ body{background:var(--bg);color:var(--txt);font-family:'Barlow',sans-serif;overf
   <div class="data-inner">
     <div>
       <div class="section-eyebrow">The Data Layer</div>
-      <h2 class="section-title">MILLIONS OF DATA POINTS. EVERY WEEK.</h2>
-      <p class="section-sub">We track every statistical category imaginable — not just the basics. Every metric, every week, every player, paired against 6 years of dynasty value history. The Coach uses all of it simultaneously.</p>
-      <div class="stat-chips">
-        <span class="stat-chip hl">Target Share</span>
-        <span class="stat-chip hl">Air Yards</span>
-        <span class="stat-chip hl">Boom Rate</span>
-        <span class="stat-chip hl">Bust Rate</span>
-        <span class="stat-chip">Separation Rate</span>
-        <span class="stat-chip">Drop Rate</span>
-        <span class="stat-chip">Route Participation</span>
-        <span class="stat-chip">ADOT</span>
-        <span class="stat-chip">Snap Count %</span>
-        <span class="stat-chip">Pressure Rate</span>
-        <span class="stat-chip">Time to Throw</span>
-        <span class="stat-chip">Yards After Contact</span>
-        <span class="stat-chip">PPG</span>
-        <span class="stat-chip">Red Zone Share</span>
-        <span class="stat-chip">Carry Share</span>
-        <span class="stat-chip">PPR Pts/Route</span>
-        <span class="stat-chip">Breakaway %</span>
-        <span class="stat-chip">True Catch %</span>
-        <span class="stat-chip">+ Dozens More</span>
-      </div>
+      <h2 class="section-title">MILLIONS OF DATA POINTS.<br>EVERY WEEK.</h2>
+      <p class="section-sub">Daily player values going back to 2020. Every NFL stat at the player-week level. Cross-analyzed against six years of dynasty value movement. The Coach reads all of it at once — every question.</p>
       <div class="data-callout">
-        <strong>The Coach can say:</strong> "In the last 6 years, when a WR under 24 saw target share increase 4%+ in back-to-back weeks with an OC change, they outperformed their ADP by 1.8 rounds the following season — 71% of the time. Three current players match this pattern."
+        <strong>The Coach can say:</strong> "In the last 6 years, every WR who posted 28%+ target share with 38%+ air yards share over a 4-week stretch increased in dynasty value by an average of 18% within 60 days. Two players match this pattern right now."
       </div>
     </div>
     <div class="data-cards">
-      <div class="data-card">
-        <div class="dc-header">
-          <div class="dc-title">Breakout Detection Model</div>
-          <div class="dc-label">LIVE</div>
+      <div class="data-panel">
+        <div class="dp-label">RECEIVING METRICS</div>
+        <div class="dp-stats">
+          <span>Target Share</span>
+          <span>Air Yards Share</span>
+          <span>WOPR</span>
+          <span>aDOT</span>
+          <span>Separation</span>
+          <span>Cushion</span>
+          <span>YAC over Expected</span>
+          <span>Drop Rate</span>
+          <span>Contested Catch %</span>
+          <span>Route Participation</span>
         </div>
-        <div class="dc-bar"><div class="dc-fill" style="width:84%;background:linear-gradient(90deg,var(--green),var(--teal))"></div></div>
-        <div class="dc-meta"><span>Predictive Accuracy</span><span style="color:var(--green)">84%</span></div>
       </div>
-      <div class="data-card">
-        <div class="dc-header">
-          <div class="dc-title">Dynasty Value Correlation</div>
-          <div class="dc-label">6 YRS DATA</div>
+      <div class="data-panel">
+        <div class="dp-label">RUSHING METRICS</div>
+        <div class="dp-stats">
+          <span>Carry Share</span>
+          <span>Yards After Contact</span>
+          <span>Broken Tackles</span>
+          <span>Rush EPA</span>
+          <span>Stuff Rate</span>
+          <span>Breakaway %</span>
+          <span>Snap Count %</span>
         </div>
-        <div class="dc-bar"><div class="dc-fill" style="width:91%;background:linear-gradient(90deg,var(--teal),var(--purple))"></div></div>
-        <div class="dc-meta"><span>Stat → Value Correlation</span><span style="color:var(--teal)">91%</span></div>
       </div>
-      <div class="data-card">
-        <div class="dc-header">
-          <div class="dc-title">Trade Market Intelligence</div>
-          <div class="dc-label">REAL-TIME</div>
+      <div class="data-panel">
+        <div class="dp-label">PASSING METRICS</div>
+        <div class="dp-stats">
+          <span>CPOE</span>
+          <span>Pass EPA</span>
+          <span>Time to Throw</span>
+          <span>Pressure Rate</span>
+          <span>Air Yards / Att</span>
+          <span>Completion %</span>
         </div>
-        <div class="dc-bar"><div class="dc-fill" style="width:100%;background:linear-gradient(90deg,var(--gold),var(--orange,#ff8c00))"></div></div>
-        <div class="dc-meta"><span>Leagues Monitored</span><span style="color:var(--gold)">100K+</span></div>
       </div>
-      <div class="data-card">
-        <div class="dc-header">
-          <div class="dc-title">Historical Baseline</div>
-          <div class="dc-label">DAILY UPDATES</div>
+      <div class="data-panel">
+        <div class="dp-label">VALUE + MARKET DATA</div>
+        <div class="dp-stats">
+          <span>Daily Dynasty Values</span>
+          <span>6 Years of History</span>
+          <span>Startup ADP</span>
+          <span>Rookie ADP</span>
+          <span>Cross-League Trades</span>
+          <span>Pick Values</span>
+          <span>Trade Volume</span>
         </div>
-        <div class="dc-bar"><div class="dc-fill" style="width:78%;background:linear-gradient(90deg,var(--purple),var(--teal))"></div></div>
-        <div class="dc-meta"><span>Years of Value Tracking</span><span style="color:var(--purple)">6.1 Years</span></div>
       </div>
     </div>
   </div>
@@ -382,19 +430,85 @@ body{background:var(--bg);color:var(--txt);font-family:'Barlow',sans-serif;overf
   <div class="coach-inner">
     <div class="coach-chat">
       <div class="chat-header">
-        <div class="chat-avatar">🏈</div>
+        <div class="chat-avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v2M5.6 5.6l1.4 1.4M3 12h2M5.6 18.4l1.4-1.4M12 21v-2M18.4 18.4l-1.4-1.4M21 12h-2M18.4 5.6l-1.4 1.4"/><circle cx="12" cy="12" r="4"/></svg></div>
         <div>
           <div class="chat-title">The Coach</div>
           <div class="chat-status">Online · Full Intelligence Mode</div>
         </div>
       </div>
       <div class="chat-messages">
-        <div class="chat-msg user">Should I accept Malik Nabers for my Jayden Daniels + 2027 early 1st?</div>
+
+        <!-- DEMO 1: PLAYER ANALYSIS -->
+        <div class="chat-msg user">How is George Pickens looking right now? Should I be holding or selling?</div>
         <div class="chat-msg ai">
-          <strong>Hard pass.</strong> Daniels (9,114) + early 2027 first (~6,400) = ~15,500 in total value. Nabers (9,104) alone doesn't come close.<br><br>
-          More importantly — your opponent @James87 has made 14 trades across his 3 leagues this offseason and WRs are his weakness. He consistently overpays for receivers and he's been trying to add Nabers-level talent all spring. He wants this trade more than you do. Counter with Daniels straight up — his pattern says he takes it.
-          <div class="verdict">⚡ VERDICT: DECLINE — Counter with Daniels straight up</div>
+          <div class="coach-block">
+            <div class="cb-header">
+              <span class="cb-tag">PLAYER ANALYSIS</span>
+              <span class="cb-name">GEORGE PICKENS · WR · DAL</span>
+            </div>
+            <div class="cb-row">
+              <div class="cb-stat"><div class="cs-l">CONSENSUS VALUE</div><div class="cs-v">5,965</div></div>
+              <div class="cb-stat"><div class="cs-l">POS RANK</div><div class="cs-v">WR21</div></div>
+              <div class="cb-stat"><div class="cs-l">YoY VALUE</div><div class="cs-v up">+1,402 (+30%)</div></div>
+            </div>
+            <div class="cb-section">
+              <div class="cb-section-label">2025 BREAKOUT SIGNALS (vs 2024)</div>
+              <div class="cb-line"><span>Air Yards Share</span><span class="up">+943%</span></div>
+              <div class="cb-line"><span>Targets</span><span class="up">+9%</span></div>
+              <div class="cb-line"><span>Fantasy PPG</span><span class="up">+40%</span></div>
+              <div class="cb-line"><span>WOPR</span><span class="up">+62%</span></div>
+            </div>
+          </div>
+          <p style="margin-top:14px;">The 2024→2025 trajectory is real and emphatic — this is a true breakout, not noise. The question is what happens next. Three scenarios:</p>
+          <div class="coach-block scenarios">
+            <div class="scenario up">
+              <div class="sc-head"><span class="sc-prob">20%</span><span class="sc-label">UPSIDE</span><span class="sc-comp">Comp: Nico Collins 2023 ascension</span></div>
+              <div class="sc-body">If Pickens absorbs the alpha role in Dallas with Lamb suspended/limited stretches, he ascends to top-8 WR territory. Projected ceiling: <strong>9,200+ value</strong> (+54%). The path is real and huge — but it requires specific conditions to unlock.</div>
+            </div>
+            <div class="scenario base">
+              <div class="sc-head"><span class="sc-prob">55%</span><span class="sc-label">BASE CASE</span><span class="sc-comp">Comp: Tee Higgins career arc</span></div>
+              <div class="sc-body">Reliable WR2 with WR1 weeks. Holds value in the 5,800–6,400 range. Trade or hold both fine — no rush to decide.</div>
+            </div>
+            <div class="scenario down">
+              <div class="sc-head"><span class="sc-prob">25%</span><span class="sc-label">DOWNSIDE</span><span class="sc-comp">Comp: Mike Evans 2020 fade</span></div>
+              <div class="sc-body">Lamb returns fully healthy, Pickens fades to WR3 territory. Floor near <strong>4,800 value</strong> (-19%).</div>
+            </div>
+          </div>
+          <p style="margin-top:14px;">My read: <strong>upside is the most exciting scenario but not the most likely.</strong> If you need to decide now, the math is roughly +9% expected value over 12 months — slight buy. But it depends on your roster context and Lamb's injury status.</p>
         </div>
+
+        <!-- DEMO 2: OPPONENT ANALYSIS -->
+        <div class="chat-msg user">Tell me about @JohnDoe in my league. I want to make a move on him.</div>
+        <div class="chat-msg ai">
+          <div class="coach-block">
+            <div class="cb-header">
+              <span class="cb-tag">GM SCOUTING</span>
+              <span class="cb-name">@JOHNDOE · 4 ACTIVE LEAGUES</span>
+            </div>
+            <div class="cb-row">
+              <div class="cb-stat"><div class="cs-l">TOTAL TRADES</div><div class="cs-v">47</div></div>
+              <div class="cb-stat"><div class="cs-l">WIN RATE</div><div class="cs-v">.612</div></div>
+              <div class="cb-stat"><div class="cs-l">STYLE</div><div class="cs-v">Aggressive</div></div>
+            </div>
+          </div>
+          <p style="margin-top:14px;">Here's the move you're looking for:</p>
+          <div class="coach-block flag">
+            <div class="cb-section-label" style="color:var(--gold);">RECENT CROSS-LEAGUE ACTIVITY · 7 DAYS</div>
+            <div style="font-size:13px;line-height:1.55;color:var(--txt);">
+              <strong>@JohnDoe traded 2027 1st + 2027 3rd for A.J. Brown</strong> in his "BigBalls Dynasty" league last Tuesday. He's actively building a now-window, paying premium for veteran WRs.
+            </div>
+          </div>
+          <p style="margin-top:14px;">You own A.J. Brown in your league. He just told us his price.</p>
+          <div class="coach-block">
+            <div class="cb-section-label">PATTERN MATCH (last 18 months)</div>
+            <div class="cb-line"><span>Veteran WR acquisitions</span><span>6 of 6 paid 2+ rookie picks</span></div>
+            <div class="cb-line"><span>Avg overpay vs market</span><span class="up">+8.4% premium</span></div>
+            <div class="cb-line"><span>Time to respond to offers</span><span>under 12 hrs</span></div>
+            <div class="cb-line"><span>Counter rate</span><span>only 23%</span></div>
+          </div>
+          <p style="margin-top:14px;">Open with <strong>A.J. Brown for his 2026 1st + 2027 1st + a flier</strong>. Math says you'll net +1,200 value. Pattern says he accepts or counters small. Your move.</p>
+        </div>
+
       </div>
       <div class="chat-input-row">
         <div class="chat-input-fake">Ask anything about trades, players, or your league...</div>
@@ -403,32 +517,32 @@ body{background:var(--bg);color:var(--txt);font-family:'Barlow',sans-serif;overf
     </div>
     <div>
       <div class="section-eyebrow">The Coach</div>
-      <h2 class="section-title">YOUR PERSONAL DYNASTY STRATEGIST</h2>
+      <h2 class="section-title">YOUR PERSONAL FANTASY STRATEGIST</h2>
       <p class="section-sub">The first fantasy AI with real intelligence — your full league context, every manager's cross-league history, and millions of statistical data points. All working together, instantly.</p>
       <div class="coach-features">
         <div class="coach-feature">
-          <div class="cf-icon">📊</div>
+          <div class="cf-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="6" y="14" width="3" height="5"/><rect x="11" y="9" width="3" height="10"/><rect x="16" y="5" width="3" height="14"/></svg></div>
           <div class="cf-text">
             <div class="cf-title">Trade Analysis with Real Context</div>
             <div class="cf-desc">Values every asset using live market data, your specific roster, and your opponent's tendencies across all their leagues.</div>
           </div>
         </div>
         <div class="coach-feature">
-          <div class="cf-icon">🔍</div>
+          <div class="cf-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></div>
           <div class="cf-text">
             <div class="cf-title">GM Scouting Reports</div>
             <div class="cf-desc">Full intelligence profiles on any manager — waiver bids, draft tendencies, trade patterns, and negotiating blind spots. Free for everyone.</div>
           </div>
         </div>
         <div class="coach-feature">
-          <div class="cf-icon">📈</div>
+          <div class="cf-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg></div>
           <div class="cf-text">
-            <div class="cf-title">Breakout & Decline Prediction</div>
+            <div class="cf-title">Breakout &amp; Decline Prediction</div>
             <div class="cf-desc">Pattern-matches against 6 years of stats + value data to identify which players are about to rise or fall before the market catches on.</div>
           </div>
         </div>
         <div class="coach-feature">
-          <div class="cf-icon">🎓</div>
+          <div class="cf-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>
           <div class="cf-text">
             <div class="cf-title">Custom Draft Intelligence</div>
             <div class="cf-desc">Knows what every manager in your draft typically picks, when they reach, and what your team needs at every point in the draft.</div>
@@ -447,70 +561,70 @@ body{background:var(--bg);color:var(--txt);font-family:'Barlow',sans-serif;overf
   <p class="section-sub" style="max-width:640px;margin-bottom:48px;">The Coach synthesizes every tool below. You can use them individually too — free, forever. The data layer is yours. The AI brain is the upgrade.</p>
   <div class="tools-grid">
     <a href="/coach.html" class="tool-card featured">
-      <div class="tool-icon">🤖</div>
+      <div class="tool-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v2M5.6 5.6l1.4 1.4M3 12h2M5.6 18.4l1.4-1.4M12 21v-2M18.4 18.4l-1.4-1.4M21 12h-2M18.4 5.6l-1.4 1.4"/><circle cx="12" cy="12" r="4"/></svg></div>
       <span class="tool-badge badge-coach">THE COACH</span>
-      <div class="tool-name">The Coach — Dynasty AI</div>
-      <div class="tool-desc">The first fantasy AI that synthesizes everything — your roster, your opponents, every cross-league move they've ever made, six years of value data, every NFL stat. All connected. Instantly. Free during beta.</div>
+      <div class="tool-name">The Coach — Fantasy Intelligence</div>
+      <div class="tool-desc">The first AI that synthesizes everything — your roster, your opponents, every cross-league move they've ever made, six years of value data, every NFL stat. All connected. Instantly. Free during beta.</div>
       <div class="tool-arrow">ASK THE COACH →</div>
     </a>
     <a href="/scouting.html" class="tool-card">
-      <div class="tool-icon">🕵️</div>
+      <div class="tool-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/><circle cx="11" cy="11" r="2.5"/></svg></div>
       <span class="tool-badge badge-free">FREE</span>
       <div class="tool-name">GM Scouting Report</div>
       <div class="tool-desc">Know your league mates better than they know themselves. Enter any Sleeper username — get their full intelligence profile, every league they're in, every trade, every draft, every tendency.</div>
       <div class="tool-arrow">SCOUT A MANAGER →</div>
     </a>
     <a href="/league.html" class="tool-card">
-      <div class="tool-icon">🔭</div>
+      <div class="tool-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-7"/><circle cx="7" cy="14" r="1.5"/><circle cx="11" cy="10" r="1.5"/><circle cx="14" cy="13" r="1.5"/><circle cx="19" cy="6" r="1.5"/></svg></div>
       <span class="tool-badge badge-free">FREE</span>
       <div class="tool-name">League Analyzer</div>
       <div class="tool-desc">Power rankings, competitive tiers, positional grades, trajectory forecasts, and head-to-head comparison for every team in your league.</div>
       <div class="tool-arrow">ANALYZE LEAGUE →</div>
     </a>
     <a href="/rankings.html" class="tool-card">
-      <div class="tool-icon">🏆</div>
+      <div class="tool-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="14" y2="6"/><line x1="3" y1="12" x2="11" y2="12"/><line x1="3" y1="18" x2="8" y2="18"/><path d="M17 4v14m-3-3 3 3 3-3"/></svg></div>
       <span class="tool-badge badge-free">FREE</span>
       <div class="tool-name">Dynasty Rankings</div>
       <div class="tool-desc">Real consensus values built from hundreds of Sleeper league trades and startup drafts. SF PPR and 1QB PPR. Updated daily.</div>
       <div class="tool-arrow">VIEW RANKINGS →</div>
     </a>
     <a href="/trade.html" class="tool-card">
-      <div class="tool-icon">⚖️</div>
+      <div class="tool-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 5h13l-3-3M17 19H4l3 3"/><path d="M20 5v3M4 19v-3"/></svg></div>
       <span class="tool-badge badge-free">FREE</span>
       <div class="tool-name">Trade Calculator</div>
       <div class="tool-desc">Real-time dynasty values with picks included. See exactly what each side is getting. Package deals handled correctly.</div>
       <div class="tool-arrow">CALCULATE TRADE →</div>
     </a>
     <a href="/grades.html" class="tool-card">
-      <div class="tool-icon">📋</div>
+      <div class="tool-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/><path d="m17.5 14.5 1.5 1.5 2-2.5"/></svg></div>
       <span class="tool-badge badge-free">FREE</span>
       <div class="tool-name">Trade Grades</div>
       <div class="tool-desc">Grade every trade in your league's history using values at the exact time of the trade. Who won? Who lost? By how much?</div>
       <div class="tool-arrow">GRADE TRADES →</div>
     </a>
     <a href="/draft.html" class="tool-card">
-      <div class="tool-icon">🎓</div>
+      <div class="tool-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>
       <span class="tool-badge badge-free">FREE</span>
       <div class="tool-name">Draft Grades</div>
       <div class="tool-desc">Grade every manager's startup and rookie draft history. Who consistently finds value, who reaches every single year, and who's quietly the best drafter in your league.</div>
       <div class="tool-arrow">VIEW DRAFT GRADES →</div>
     </a>
     <a href="/stats.html" class="tool-card">
-      <div class="tool-icon">📉</div>
+      <div class="tool-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="9" r="1.5"/><circle cx="11" cy="6" r="1.5"/><circle cx="14" cy="14" r="1.5"/><circle cx="18" cy="10" r="1.5"/><circle cx="9" cy="17" r="1.5"/><path d="M3 21h18M3 3v18" stroke-width="1.5"/></svg></div>
       <span class="tool-badge badge-free">FREE</span>
       <div class="tool-name">Stats Database</div>
       <div class="tool-desc">Every stat, every player, every week. Interactive scatterplots mapping production against value. Find the outliers before anyone else does.</div>
       <div class="tool-arrow">EXPLORE STATS →</div>
     </a>
     <a href="/injuries.html" class="tool-card">
-      <div class="tool-icon">🏥</div>
+      <div class="tool-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/><path d="M12 9v6M9 12h6" stroke="var(--bg)" stroke-width="2"/></svg></div>
       <span class="tool-badge badge-free">FREE</span>
       <div class="tool-name">Injury History</div>
       <div class="tool-desc">Complete injury history for every player. Frequency, severity, recovery time, and the dynasty value impact of every significant injury.</div>
       <div class="tool-arrow">VIEW INJURIES →</div>
     </a>
     <div class="tool-card disabled">
-      <div class="tool-icon">💸</div>
+      <div class="tool-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
       <span class="tool-badge badge-new">COMING SOON</span>
       <div class="tool-name">Waiver Intelligence</div>
       <div class="tool-desc">Historical waiver bid data from across Sleeper. Know what managers actually pay in similar situations before you ever submit a bid.</div>
@@ -522,59 +636,59 @@ body{background:var(--bg);color:var(--txt);font-family:'Barlow',sans-serif;overf
 <!-- PRICING -->
 <section class="pricing-section">
   <div class="pricing-eyebrow">The Coach — Pricing</div>
-  <h2 class="pricing-title">SAME <em>INTELLIGENCE.</em><br>YOU CHOOSE THE VOLUME.</h2>
-  <p class="pricing-sub">Every tier gets the exact same AI quality — the same data, the same intelligence, the same answers. The only difference is how many questions you can ask per day.</p>
+  <h2 class="pricing-title">FREE DURING BETA.<br><em>FOUNDERS PRICING</em> WHEN WE LAUNCH.</h2>
+  <p class="pricing-sub">Right now? Everything's free. Sign up, ask The Coach, find out what it can actually do. When we launch paid tiers, beta users get locked-in founders pricing for life — never going up.</p>
   <p class="pricing-key">All data tools, GM Scouting, Trade Grades, Draft Grades — free forever. Always.</p>
   <div class="pricing-grid">
 
     <div class="price-card">
       <div class="price-tier">Fan — Free</div>
       <div class="price-amount"><span class="cur">$</span>0<span class="per">/mo</span></div>
-      <div class="price-limit">3 Coach questions / day</div>
-      <div class="price-desc">Perfect for getting started. 3 questions a day is enough to see exactly what The Coach can do — and get you hooked.</div>
+      <div class="price-limit">3 Coach questions / day · 8 with email</div>
+      <div class="price-desc">For trying The Coach. 3 questions a day is enough to see what it can do. Drop your email and get 5 more daily — on us, no card required.</div>
       <div class="price-features">
-        <div class="pf">All data tools — rankings, trade calc, league analyzer</div>
-        <div class="pf">GM Scouting Reports</div>
-        <div class="pf">Trade Grades & Draft Grades</div>
-        <div class="pf">The Coach — 3 questions/day</div>
-        <div class="pf muted">Full Coach intelligence included</div>
+        <div class="pf">Every data tool — rankings, trade calc, league analyzer, GM Scouting</div>
+        <div class="pf">Trade Grades &amp; Draft Grades</div>
+        <div class="pf">The Coach — 3 questions/day (8 with email)</div>
+        <div class="pf muted">Full Coach intelligence on every question</div>
       </div>
       <a href="/coach.html" class="price-btn ghost">GET STARTED FREE</a>
     </div>
 
     <div class="price-card">
       <div class="price-tier">Competitor</div>
-      <div class="price-amount"><span class="cur">$</span>4<span class="per">.99/mo</span></div>
-      <div class="price-limit">15 Coach questions / day</div>
-      <div class="price-desc">For the serious hobbyist. 15 questions a day is more than enough for most managers — especially during the season.</div>
+      <div class="price-amount"><span class="cur">$</span>6<span class="per">.99/mo</span></div>
+      <div class="price-limit">12 Coach questions / day</div>
+      <div class="price-desc">For the serious manager. 12 questions a day handles every trade decision, every player check, every opponent scout — even during peak season.</div>
       <div class="price-features">
         <div class="pf">Everything in Free</div>
-        <div class="pf">The Coach — 15 questions/day</div>
+        <div class="pf">The Coach — 12 questions/day</div>
         <div class="pf">Full statistical intelligence layer</div>
-        <div class="pf">Breakout & decline analysis</div>
+        <div class="pf">Breakout &amp; decline analysis</div>
         <div class="pf">Custom draft reports</div>
         <div class="pf">Cross-league opponent profiling</div>
       </div>
-      <a href="/coach.html" class="price-btn ghost">START COMPETING</a>
+      <a href="/coach.html" class="price-btn ghost">FREE DURING BETA</a>
     </div>
 
     <div class="price-card champion">
       <div class="price-tier">Champion</div>
-      <div class="price-amount"><span class="cur">$</span>12<span class="per">.99/mo</span></div>
-      <div class="price-limit">No cap — unlimited questions every day</div>
-      <div class="price-desc">For the obsessed. Ask The Coach everything, every day. No limits, no waiting, no throttling. Ever.</div>
+      <div class="price-amount"><span class="cur">$</span>14<span class="per">.99/mo</span></div>
+      <div class="price-limit">30 Coach questions / day</div>
+      <div class="price-desc">For the obsessed. 30 questions a day means The Coach is always there — every roster decision, every opponent move, every breakout signal, exactly when you need it.</div>
       <div class="price-features">
         <div class="pf">Everything in Competitor</div>
-        <div class="pf">The Coach — no daily cap, ever</div>
-        <div class="pf">Waiver market intelligence</div>
+        <div class="pf">The Coach — 30 questions/day</div>
+        <div class="pf">Waiver market intelligence (when launched)</div>
         <div class="pf">ADP momentum alerts</div>
         <div class="pf">Full historical pattern analysis</div>
         <div class="pf">Priority access to new features</div>
       </div>
-      <a href="/coach.html" class="price-btn solid">BECOME A CHAMPION</a>
+      <a href="/coach.html" class="price-btn solid">FREE DURING BETA</a>
     </div>
 
   </div>
+  <p style="text-align:center;margin-top:32px;font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--txt3);text-transform:uppercase;">Beta users keep founders pricing forever · No card required to try</p>
 </section>
 
 <!-- FOOTER -->
@@ -585,9 +699,9 @@ body{background:var(--bg);color:var(--txt);font-family:'Barlow',sans-serif;overf
       <p style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;color:var(--txt3);text-transform:uppercase;margin-bottom:12px;">Guys Who Think They Know Ball</p>
       <p class="footer-tagline">The dynasty and redraft fantasy football intelligence platform. Built for serious managers who want a real edge.</p>
       <div class="footer-social">
-        <a href="#" title="TikTok">📱</a>
-        <a href="#" title="YouTube">▶</a>
-        <a href="#" title="Twitter">𝕏</a>
+        <a href="#" title="TikTok" aria-label="TikTok"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5.8 20.1a6.34 6.34 0 0 0 10.86-4.43V8.84a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.84-.27z"/></svg></a>
+        <a href="#" title="YouTube" aria-label="YouTube"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.6 3.6 12 3.6 12 3.6s-7.6 0-9.4.5A3 3 0 0 0 .5 6.2C0 8 0 12 0 12s0 4 .5 5.8a3 3 0 0 0 2.1 2.1c1.8.5 9.4.5 9.4.5s7.6 0 9.4-.5a3 3 0 0 0 2.1-2.1C24 16 24 12 24 12s0-4-.5-5.8zM9.6 15.6V8.4l6.4 3.6-6.4 3.6z"/></svg></a>
+        <a href="#" title="X (Twitter)" aria-label="X"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
       </div>
     </div>
     <div>
